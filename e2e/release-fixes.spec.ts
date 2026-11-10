@@ -271,3 +271,20 @@ test('play form fields are named and their borders clear the background', async 
   const border = await page.locator('#play-input-location').evaluate((el) => getComputedStyle(el).borderTopColor);
   check('장소 칸 테두리가 #898B8D', border === 'rgb(137, 139, 141)', border);
 });
+
+test('kakao and catalog filters are named', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 700 });
+  await page.goto('/', { waitUntil: 'networkidle' });
+  await page.locator('#nav-tab-games').click();
+  await page.locator('#games-kakao-share-btn').click();
+  await page.getByRole('button', { name: /일부 선택 공유/ }).click();
+  await visible('카카오 장르 선택', page.getByRole('combobox', { name: '장르 선택' }));
+  await visible('카카오 난이도', page.getByRole('combobox', { name: '난이도 (웨이트)' }));
+  await visible('카카오 게임 검색', page.getByRole('textbox', { name: '게임 직접 검색' }));
+  await visible('카카오 상단 메시지', page.getByRole('textbox', { name: /카카오톡 공유 상단 메시지/ }));
+  await page.locator('#kakao-share-modal-overlay button[aria-label="닫기"]').click();
+
+  await page.locator('#games-print-catalog-btn').click();
+  await visible('도록 검색', page.getByRole('textbox', { name: '도록 내 검색' }));
+  await visible('도록 상태', page.getByRole('combobox', { name: '소장 상태' }));
+});

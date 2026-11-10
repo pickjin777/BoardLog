@@ -309,6 +309,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                 </button>
                 <button
                   type="button"
+                  aria-pressed={viewMode === 'cards'}
                   onClick={() => setViewMode('cards')}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold transition-colors ${
                     viewMode === 'cards' ? 'bg-[#4834D4] text-white shadow-xs' : 'text-[#636E72] hover:text-[#1E272E]'
@@ -319,6 +320,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                 </button>
                 <button
                   type="button"
+                  aria-pressed={viewMode === 'index'}
                   onClick={() => setViewMode('index')}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold transition-colors ${
                     viewMode === 'index' ? 'bg-[#4834D4] text-white shadow-xs' : 'text-[#636E72] hover:text-[#1E272E]'
@@ -332,8 +334,15 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
               {/* Search & Status Filter */}
               <div className="flex items-center gap-2 flex-1 sm:flex-initial">
                 <div className="relative flex-1 sm:w-48">
-                  <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#636E72]" />
+                  <label htmlFor="catalog-search-input" className="sr-only">
+                    도록 내 검색
+                  </label>
+                  <Search
+                    className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#636E72]"
+                    aria-hidden="true"
+                  />
                   <input
+                    id="catalog-search-input"
                     type="text"
                     placeholder="도록 내 검색..."
                     value={searchQuery}
@@ -342,7 +351,11 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                   />
                 </div>
 
+                <label htmlFor="catalog-status-filter" className="sr-only">
+                  소장 상태
+                </label>
                 <select
+                  id="catalog-status-filter"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as GameOwnershipStatus | '전체')}
                   className="px-2.5 py-1.5 bg-white border border-[#E9ECEF] rounded-full text-xs font-bold text-[#1E272E] focus:outline-hidden focus:border-[#4834D4]"
@@ -373,6 +386,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                   <button
                     key={opt.id}
                     type="button"
+                    aria-pressed={sortOption === opt.id}
                     onClick={() => setSortOption(opt.id)}
                     className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-all ${
                       sortOption === opt.id
