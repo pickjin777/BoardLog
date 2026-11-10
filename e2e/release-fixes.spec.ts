@@ -257,3 +257,17 @@ test('game form labels reach their fields, and a reversed player count is refuse
   await visible('인원 순서 오류', page.getByText('최소 인원이 최대 인원보다 큽니다.'));
   await visible('폼이 닫히지 않음', page.locator('#game-form-modal-overlay'));
 });
+
+test('play form fields are named and their borders clear the background', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/', { waitUntil: 'networkidle' });
+  await page.locator('#dashboard-add-play-cta').click();
+  await page.locator('#play-input-location').waitFor();
+
+  await visible('장소 라벨', page.getByRole('textbox', { name: '장소' }));
+  await visible('날짜 라벨', page.getByRole('textbox', { name: '플레이 날짜' }));
+  await visible('시작 시간 라벨', page.getByRole('textbox', { name: '시작' }));
+  await visible('나의 결과 묶음', page.getByRole('group', { name: /나의 결과/ }));
+  const border = await page.locator('#play-input-location').evaluate((el) => getComputedStyle(el).borderTopColor);
+  check('장소 칸 테두리가 #898B8D', border === 'rgb(137, 139, 141)', border);
+});

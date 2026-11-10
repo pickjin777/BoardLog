@@ -604,8 +604,10 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
             {/* 1. Game Selection & Search Section */}
             <div className="space-y-2.5">
               <div className="flex items-center justify-between">
-                {/* biome-ignore lint/a11y/noLabelWithoutControl: TBD-018: label is not yet associated with its input (htmlFor/id) */}
-                <label className="text-xs font-bold text-[#1E272E] flex items-center gap-1.5">
+                <label
+                  htmlFor="play-game-search-input"
+                  className="text-xs font-bold text-[#1E272E] flex items-center gap-1.5"
+                >
                   <Dices className="w-3.5 h-3.5 text-[#4834D4]" />
                   <span>플레이한 보드게임</span>
                   <span className="text-[#EB4D4B]">*</span>
@@ -669,7 +671,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                       className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all shrink-0 ${
                         searchCategory === 'all'
                           ? 'bg-[#4834D4] text-white shadow-xs'
-                          : 'bg-white text-[#636E72] border border-[#E9ECEF] hover:bg-[#F1F3F5]'
+                          : 'bg-white text-[#636E72] border border-[#898B8D] hover:bg-[#F1F3F5]'
                       }`}
                     >
                       전체 DB ({combinedCatalog.length})
@@ -680,7 +682,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                       className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all shrink-0 ${
                         searchCategory === 'db'
                           ? 'bg-[#1B7A43] text-white shadow-xs'
-                          : 'bg-white text-[#636E72] border border-[#E9ECEF] hover:bg-[#F1F3F5]'
+                          : 'bg-white text-[#636E72] border border-[#898B8D] hover:bg-[#F1F3F5]'
                       }`}
                     >
                       카페 / 인기 게임 DB ({SEED_GAMES.length})
@@ -692,7 +694,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                         className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all shrink-0 ${
                           searchCategory === 'owned'
                             ? 'bg-[#4834D4] text-white shadow-xs'
-                            : 'bg-white text-[#636E72] border border-[#E9ECEF] hover:bg-[#F1F3F5]'
+                            : 'bg-white text-[#636E72] border border-[#898B8D] hover:bg-[#F1F3F5]'
                         }`}
                       >
                         내 소장 게임 ({userGames.length})
@@ -702,7 +704,10 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
 
                   {/* Search Input Bar */}
                   <div className="relative">
-                    <Search className="w-4 h-4 text-[#636E72] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <Search
+                      className="w-4 h-4 text-[#636E72] absolute left-3.5 top-1/2 -translate-y-1/2"
+                      aria-hidden="true"
+                    />
                     <input
                       id="play-game-search-input"
                       type="text"
@@ -722,7 +727,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                           }
                         }
                       }}
-                      className="w-full pl-9 pr-8 py-2.5 bg-white border border-[#E9ECEF] rounded-2xl text-xs font-bold text-[#1E272E] focus:outline-hidden focus:border-[#4834D4] focus:ring-2 focus:ring-[#4834D4]/10 transition-all"
+                      className="w-full pl-9 pr-8 py-2.5 bg-white border border-[#898B8D] rounded-2xl text-xs font-bold text-[#1E272E] focus:outline-hidden focus:border-[#4834D4] focus:ring-2 focus:ring-[#4834D4]/10 transition-all"
                     />
                     {gameSearchQuery && (
                       <button
@@ -759,12 +764,11 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                   <div className="max-h-48 overflow-y-auto space-y-1.5 pr-0.5">
                     {searchResults.length > 0 ? (
                       searchResults.map((game) => (
-                        // biome-ignore lint/a11y/noStaticElementInteractions: TBD-018: clickable non-semantic element has no role yet
-                        // biome-ignore lint/a11y/useKeyWithClickEvents: TBD-018: clickable element has no keyboard handler yet
-                        <div
+                        <button
                           key={`${game.isOwned ? 'owned' : 'seed'}-${game.id || game.title}`}
+                          type="button"
                           onClick={() => handleSelectGame(game)}
-                          className="p-2 rounded-xl bg-white hover:bg-[#F1F3F5] border border-[#E9ECEF] cursor-pointer flex items-center justify-between gap-2.5 transition-all active:scale-[0.99]"
+                          className="w-full p-2 rounded-xl bg-white hover:bg-[#F1F3F5] border border-[#898B8D] cursor-pointer flex items-center justify-between gap-2.5 transition-all active:scale-[0.99] text-left"
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
                             <img
@@ -805,7 +809,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                           </div>
 
                           <ChevronRight className="w-3.5 h-3.5 text-[#636E72] shrink-0" />
-                        </div>
+                        </button>
                       ))
                     ) : (
                       <div className="p-4 text-center text-xs text-[#636E72] bg-white rounded-xl border border-[#E9ECEF]">
@@ -835,8 +839,10 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
             <div className="p-3.5 sm:p-4 bg-[#F8F9FA] rounded-2xl border border-[#E9ECEF] space-y-3 text-xs">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
                 <div>
-                  {/* biome-ignore lint/a11y/noLabelWithoutControl: TBD-018: label is not yet associated with its input (htmlFor/id) */}
-                  <label className="block text-[11px] font-bold text-[#1E272E] mb-1 flex items-center gap-1">
+                  <label
+                    htmlFor="play-input-date"
+                    className="block text-[11px] font-bold text-[#1E272E] mb-1 flex items-center gap-1"
+                  >
                     <Calendar className="w-3 h-3 text-[#4834D4]" />
                     <span>플레이 날짜</span>
                   </label>
@@ -846,13 +852,15 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                     placeholder="YYYY.MM.DD"
                     value={playDate}
                     onChange={(e) => setPlayDate(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-[#E9ECEF] rounded-xl text-xs font-semibold text-[#1E272E] focus:outline-hidden focus:border-[#4834D4] transition-colors"
+                    className="w-full px-3 py-2 bg-white border border-[#898B8D] rounded-xl text-xs font-semibold text-[#1E272E] focus:outline-hidden focus:border-[#4834D4] transition-colors"
                   />
                 </div>
 
                 <div>
-                  {/* biome-ignore lint/a11y/noLabelWithoutControl: TBD-018: label is not yet associated with its input (htmlFor/id) */}
-                  <label className="block text-[11px] font-bold text-[#1E272E] mb-1 flex items-center gap-1">
+                  <label
+                    htmlFor="play-input-location"
+                    className="block text-[11px] font-bold text-[#1E272E] mb-1 flex items-center gap-1"
+                  >
                     <MapPin className="w-3 h-3 text-[#4834D4]" />
                     <span>장소</span>
                   </label>
@@ -862,7 +870,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                     placeholder="예: 보드게임 카페, 우리 집, 모임 장소"
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-[#E9ECEF] rounded-xl text-xs font-semibold text-[#1E272E] focus:outline-hidden focus:border-[#4834D4] transition-colors"
+                    className="w-full px-3 py-2 bg-white border border-[#898B8D] rounded-xl text-xs font-semibold text-[#1E272E] focus:outline-hidden focus:border-[#4834D4] transition-colors"
                   />
                 </div>
               </div>
@@ -881,7 +889,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                       className={`px-2.5 py-1 rounded-full text-[10px] font-bold shrink-0 transition-colors border ${
                         isSelected
                           ? 'bg-[#4834D4] text-white border-[#4834D4] shadow-2xs'
-                          : 'bg-white text-[#636E72] border-[#E9ECEF] hover:bg-[#F1F3F5]'
+                          : 'bg-white text-[#636E72] border-[#898B8D] hover:bg-[#F1F3F5]'
                       }`}
                     >
                       {loc}
@@ -893,11 +901,10 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
               {/* Time & Duration Section (Clean, non-overlapping design) */}
               <div className="pt-3 border-t border-[#E9ECEF] space-y-2">
                 <div className="flex items-center justify-between">
-                  {/* biome-ignore lint/a11y/noLabelWithoutControl: TBD-018: label is not yet associated with its input (htmlFor/id) */}
-                  <label className="text-[11px] font-bold text-[#1E272E] flex items-center gap-1">
+                  <div className="text-[11px] font-bold text-[#1E272E] flex items-center gap-1">
                     <Clock className="w-3 h-3 text-[#4834D4]" />
                     <span>시작 / 종료 시간</span>
-                  </label>
+                  </div>
 
                   {/* Total Duration Highlight Pill */}
                   <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#4834D4]/10 border border-[#4834D4]/20 rounded-full text-xs font-black text-[#4834D4]">
@@ -910,9 +917,12 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
 
                 {/* Time Pickers (Ample room for native pickers) */}
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="bg-white px-3 py-2 rounded-xl border border-[#E9ECEF] flex flex-col justify-center">
-                    <span className="text-[9px] text-[#636E72] font-bold block mb-0.5">시작</span>
+                  <div className="bg-white px-3 py-2 rounded-xl border border-[#898B8D] flex flex-col justify-center">
+                    <label htmlFor="play-input-start-time" className="text-[9px] text-[#636E72] font-bold block mb-0.5">
+                      시작
+                    </label>
                     <input
+                      id="play-input-start-time"
                       type="time"
                       value={startTime}
                       onChange={(e) => setStartTime(e.target.value)}
@@ -920,9 +930,12 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                     />
                   </div>
 
-                  <div className="bg-white px-3 py-2 rounded-xl border border-[#E9ECEF] flex flex-col justify-center">
-                    <span className="text-[9px] text-[#636E72] font-bold block mb-0.5">종료</span>
+                  <div className="bg-white px-3 py-2 rounded-xl border border-[#898B8D] flex flex-col justify-center">
+                    <label htmlFor="play-input-end-time" className="text-[9px] text-[#636E72] font-bold block mb-0.5">
+                      종료
+                    </label>
                     <input
+                      id="play-input-end-time"
                       type="time"
                       value={endTime}
                       onChange={(e) => setEndTime(e.target.value)}
@@ -950,7 +963,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                       className={`px-2 py-0.5 rounded-md text-[10px] font-bold shrink-0 transition-colors border ${
                         durationMinutes === mins
                           ? 'bg-[#4834D4]/10 text-[#4834D4] border-[#4834D4]/30'
-                          : 'bg-white text-[#636E72] border-[#E9ECEF] hover:bg-[#F1F3F5]'
+                          : 'bg-white text-[#636E72] border-[#898B8D] hover:bg-[#F1F3F5]'
                       }`}
                     >
                       {mins < 60 ? `+${mins}분` : `+${mins / 60}시간${mins % 60 !== 0 ? ` ${mins % 60}분` : ''}`}
@@ -961,20 +974,20 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
             </div>
 
             {/* 3. My Result Selection */}
-            <div>
-              {/* biome-ignore lint/a11y/noLabelWithoutControl: TBD-018: label is not yet associated with its input (htmlFor/id) */}
-              <label className="block text-xs font-bold text-[#1E272E] mb-1.5 flex items-center gap-1.5">
+            <fieldset className="border-0 p-0 m-0 min-w-0">
+              <legend className="block text-xs font-bold text-[#1E272E] mb-1.5 flex items-center gap-1.5">
                 <Trophy className="w-3.5 h-3.5 text-[#4834D4]" />
                 <span>나의 결과</span>
                 {!myResult && (
                   <span className="font-medium text-[#636E72]">· 아래에서 승자를 탭하면 자동으로 정해져요</span>
                 )}
-              </label>
+              </legend>
               <div className="grid grid-cols-4 gap-2">
                 {MY_RESULT_OPTIONS.map((res) => (
                   <button
                     key={res}
                     type="button"
+                    aria-pressed={myResult === res}
                     onClick={() => {
                       setMyResult(res);
                       // sync with participant '나'
@@ -985,23 +998,22 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                         ? res === '승리'
                           ? 'bg-[#4834D4] text-white border-[#4834D4] shadow-[0_2px_8px_rgba(72,52,212,0.3)]'
                           : 'bg-[#1E272E] text-white border-[#1E272E] shadow-xs'
-                        : 'bg-[#F8F9FA] text-[#636E72] border-[#E9ECEF] hover:bg-[#F1F3F5]'
+                        : 'bg-[#F8F9FA] text-[#636E72] border-[#898B8D] hover:bg-[#F1F3F5]'
                     }`}
                   >
                     {res === '승리' ? '👑 승리' : res}
                   </button>
                 ))}
               </div>
-            </div>
+            </fieldset>
 
             {/* 4. Participants, Scores & Ranks */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                {/* biome-ignore lint/a11y/noLabelWithoutControl: TBD-018: label is not yet associated with its input (htmlFor/id) */}
-                <label className="text-xs font-bold text-[#1E272E] flex items-center gap-1.5">
+                <div className="text-xs font-bold text-[#1E272E] flex items-center gap-1.5">
                   <Users className="w-3.5 h-3.5 text-[#636E72]" />
                   <span>참여자 & 점수/순위</span>
-                </label>
+                </div>
                 <button
                   type="button"
                   onClick={addParticipant}
@@ -1043,28 +1055,38 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                         type="button"
                         onClick={() => updateParticipant(idx, { isWinner: !p.isWinner })}
                         title="승자 토글"
+                        aria-label="승자 토글"
+                        aria-pressed={p.isWinner}
                         className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 border transition-all ${
                           p.isWinner
                             ? 'bg-[#4834D4] text-white border-[#4834D4] shadow-xs'
-                            : 'bg-white text-[#636E72] border-[#E9ECEF]'
+                            : 'bg-white text-[#636E72] border-[#898B8D]'
                         }`}
                       >
                         <Trophy className="w-3.5 h-3.5" />
                       </button>
                       <input
+                        id={`play-participant-${idx}-name`}
                         type="text"
+                        aria-label={`참여자 ${idx + 1} 이름`}
                         placeholder="이름"
                         value={p.name}
                         onChange={(e) => updateParticipant(idx, { name: e.target.value })}
-                        className="w-full px-2.5 py-1.5 bg-white border border-[#E9ECEF] rounded-xl text-xs font-bold text-[#1E272E] focus:outline-hidden focus:border-[#4834D4]"
+                        className="w-full px-2.5 py-1.5 bg-white border border-[#898B8D] rounded-xl text-xs font-bold text-[#1E272E] focus:outline-hidden focus:border-[#4834D4]"
                       />
                     </div>
 
                     {/* Rank & Score */}
                     <div className="flex items-center gap-2 w-full sm:w-1/2">
                       <div className="flex items-center gap-1 flex-1">
-                        <span className="text-[10px] text-[#636E72] shrink-0 font-medium">순위:</span>
+                        <label
+                          htmlFor={`play-participant-${idx}-rank`}
+                          className="text-[10px] text-[#636E72] shrink-0 font-medium"
+                        >
+                          순위:
+                        </label>
                         <input
+                          id={`play-participant-${idx}-rank`}
                           type="number"
                           placeholder="순위"
                           value={p.rank || ''}
@@ -1073,12 +1095,18 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                               rank: e.target.value === '' ? null : Number(e.target.value)
                             })
                           }
-                          className="w-full px-2 py-1.5 bg-white border border-[#E9ECEF] rounded-xl text-xs text-center font-bold text-[#1E272E] focus:outline-hidden focus:border-[#4834D4]"
+                          className="w-full px-2 py-1.5 bg-white border border-[#898B8D] rounded-xl text-xs text-center font-bold text-[#1E272E] focus:outline-hidden focus:border-[#4834D4]"
                         />
                       </div>
                       <div className="flex items-center gap-1 flex-1">
-                        <span className="text-[10px] text-[#636E72] shrink-0 font-medium">점수:</span>
+                        <label
+                          htmlFor={`play-participant-${idx}-score`}
+                          className="text-[10px] text-[#636E72] shrink-0 font-medium"
+                        >
+                          점수:
+                        </label>
                         <input
+                          id={`play-participant-${idx}-score`}
                           type="number"
                           placeholder="점수"
                           value={p.score ?? ''}
@@ -1087,7 +1115,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                               score: e.target.value === '' ? null : Number(e.target.value)
                             })
                           }
-                          className="w-full px-2 py-1.5 bg-white border border-[#E9ECEF] rounded-xl text-xs text-center font-bold text-[#1E272E] focus:outline-hidden focus:border-[#4834D4]"
+                          className="w-full px-2 py-1.5 bg-white border border-[#898B8D] rounded-xl text-xs text-center font-bold text-[#1E272E] focus:outline-hidden focus:border-[#4834D4]"
                         />
                       </div>
                     </div>
@@ -1097,6 +1125,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                       type="button"
                       onClick={() => removeParticipant(idx)}
                       className="p-1.5 text-[#636E72] hover:text-[#EB4D4B] rounded-full ml-auto hover:bg-[#F1F3F5] transition-colors"
+                      aria-label="참여자 삭제"
                       title="참여자 삭제"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -1109,8 +1138,10 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
             {/* 5. Photos Upload (Max 6, canvas compressed, rotate, caption, delete) */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                {/* biome-ignore lint/a11y/noLabelWithoutControl: TBD-018: label is not yet associated with its input (htmlFor/id) */}
-                <label className="text-xs font-bold text-[#1E272E] flex items-center gap-1.5">
+                <label
+                  htmlFor="play-photo-input"
+                  className="text-xs font-bold text-[#1E272E] flex items-center gap-1.5"
+                >
                   <Camera className="w-3.5 h-3.5 text-[#636E72]" />
                   <span>플레이 현장 사진 (최대 6장)</span>
                 </label>
@@ -1118,6 +1149,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
               </div>
 
               <input
+                id="play-photo-input"
                 type="file"
                 ref={fileInputRef}
                 accept="image/jpeg,image/png,image/webp"
@@ -1145,6 +1177,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                         type="button"
                         onClick={() => handleRotatePhoto(pIdx)}
                         className="p-1 text-white hover:text-[#B8860B] transition-colors"
+                        aria-label="90도 회전"
                         title="90도 회전"
                       >
                         <RotateCw className="w-3 h-3" />
@@ -1153,6 +1186,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                         type="button"
                         onClick={() => handleDeletePhoto(pIdx)}
                         className="p-1 text-white hover:text-[#EB4D4B] transition-colors"
+                        aria-label="사진 삭제"
                         title="사진 삭제"
                       >
                         <Trash2 className="w-3 h-3" />
@@ -1163,6 +1197,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                     <div className="absolute bottom-0 inset-x-0 bg-black/60 backdrop-blur-xs p-1.5">
                       <input
                         type="text"
+                        aria-label={`사진 ${pIdx + 1} 설명`}
                         placeholder="사진 설명"
                         value={photo.caption}
                         onChange={(e) => handleUpdateCaption(pIdx, e.target.value)}
@@ -1188,14 +1223,15 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
 
             {/* 6. Rating (Stars) & Review Note */}
             <div className="space-y-3 pt-1">
-              <div>
-                {/* biome-ignore lint/a11y/noLabelWithoutControl: TBD-018: label is not yet associated with its input (htmlFor/id) */}
-                <label className="block text-xs font-bold text-[#1E272E] mb-1.5">이번 플레이 만족도</label>
+              <fieldset className="border-0 p-0 m-0 min-w-0">
+                <legend className="block text-xs font-bold text-[#1E272E] mb-1.5">이번 플레이 만족도</legend>
                 <div className="flex items-center gap-2">
                   {[1, 2, 3, 4, 5].map((starVal) => (
                     <button
                       key={starVal}
                       type="button"
+                      aria-label={`${starVal}점`}
+                      aria-pressed={rating === starVal}
                       onClick={() => setRating(starVal)}
                       className="p-1 text-[#636E72] hover:text-[#B8860B] transition-colors"
                     >
@@ -1206,18 +1242,19 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                   ))}
                   <span className="text-xs font-bold text-[#4834D4] ml-2">{rating}점 / 5점</span>
                 </div>
-              </div>
+              </fieldset>
 
               <div>
-                {/* biome-ignore lint/a11y/noLabelWithoutControl: TBD-018: label is not yet associated with its input (htmlFor/id) */}
-                <label className="block text-xs font-bold text-[#1E272E] mb-1">플레이 후기 & 전략 메모</label>
+                <label htmlFor="play-input-review" className="block text-xs font-bold text-[#1E272E] mb-1">
+                  플레이 후기 & 전략 메모
+                </label>
                 <textarea
                   id="play-input-review"
                   rows={3}
                   placeholder="승리 요인, 하이라이트 순간, 인상 깊었던 전략이나 소감을 남겨보세요."
                   value={review}
                   onChange={(e) => setReview(e.target.value)}
-                  className="w-full p-3 bg-[#F8F9FA] border border-[#E9ECEF] rounded-2xl text-xs text-[#1E272E] focus:bg-white focus:outline-hidden focus:border-[#4834D4] focus:ring-2 focus:ring-[#4834D4]/10 transition-all"
+                  className="w-full p-3 bg-[#F8F9FA] border border-[#898B8D] rounded-2xl text-xs text-[#1E272E] focus:bg-white focus:outline-hidden focus:border-[#4834D4] focus:ring-2 focus:ring-[#4834D4]/10 transition-all"
                 />
               </div>
             </div>
