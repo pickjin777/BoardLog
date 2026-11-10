@@ -33,7 +33,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth }) => {
             title="브라우저 고속 IndexedDB 가동 중 (새로고침 후에도 영구 유지)"
             className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#F1F3F5] border border-[#E9ECEF] text-[11px] text-[#636E72] font-medium"
           >
-            <Database className="w-3 h-3 text-[#27AE60]" />
+            <Database className="w-3 h-3 text-[#1B7A43]" />
             <span>로컬 DB</span>
           </div>
 

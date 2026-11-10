@@ -161,7 +161,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
             {/* Quick Meta Grid */}
             <div className="grid grid-cols-3 gap-2 p-3.5 bg-[#F8F9FA] rounded-2xl border border-[#E9ECEF] text-center">
               <div>
-                <div className="flex items-center justify-center gap-1 text-[#A8ABAF] mb-0.5">
+                <div className="flex items-center justify-center gap-1 text-[#636E72] mb-0.5">
                   <Users className="w-3.5 h-3.5" />
                   <span className="text-[10px] font-bold">추천 인원</span>
                 </div>
@@ -176,21 +176,21 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
               </div>
 
               <div className="border-x border-[#E9ECEF]">
-                <div className="flex items-center justify-center gap-1 text-[#A8ABAF] mb-0.5">
+                <div className="flex items-center justify-center gap-1 text-[#636E72] mb-0.5">
                   <Clock className="w-3.5 h-3.5" />
                   <span className="text-[10px] font-bold">플레이 타임</span>
                 </div>
                 <p className="text-xs font-black text-[#1E272E]">{game.playTime}분</p>
-                <span className="text-[9px] text-[#A8ABAF]">{game.recommendedAge}세 이상</span>
+                <span className="text-[9px] text-[#636E72]">{game.recommendedAge}세 이상</span>
               </div>
 
               <div>
-                <div className="flex items-center justify-center gap-1 text-[#A8ABAF] mb-0.5">
+                <div className="flex items-center justify-center gap-1 text-[#636E72] mb-0.5">
                   <Flame className="w-3.5 h-3.5 text-[#4834D4]" />
                   <span className="text-[10px] font-bold">난이도</span>
                 </div>
                 <p className="text-xs font-black text-[#1E272E]">{game.weight.toFixed(1)} / 5.0</p>
-                <span className="text-[9px] text-[#A8ABAF]">
+                <span className="text-[9px] text-[#636E72]">
                   {game.weight <= 1.5 ? '입문' : game.weight <= 2.8 ? '보통' : game.weight <= 3.8 ? '중상' : '헤비'}
                 </span>
               </div>
@@ -220,7 +220,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
             </div>
 
             <div id="game-detail-play-list" className="space-y-1.5">
-              <h4 className="text-[11px] font-bold text-[#A8ABAF]">이 게임의 플레이 기록</h4>
+              <h4 className="text-[11px] font-bold text-[#636E72]">이 게임의 플레이 기록</h4>
               {gamePlays.length === 0 ? (
                 <p id="game-detail-plays-empty" className="text-xs text-[#636E72]">
                   아직 이 게임의 기록이 없어요.
@@ -254,7 +254,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
             {/* Genres */}
             {game.genre && game.genre.length > 0 && (
               <div>
-                <h4 className="text-[11px] font-bold text-[#A8ABAF] mb-1.5 flex items-center gap-1">
+                <h4 className="text-[11px] font-bold text-[#636E72] mb-1.5 flex items-center gap-1">
                   <Tag className="w-3 h-3" />
                   <span>장르 & 태그</span>
                 </h4>
@@ -274,21 +274,21 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
             {/* Storage, Purchase Date & Publisher */}
             <div className="grid grid-cols-3 gap-2 text-xs">
               <div className="p-3 bg-[#F8F9FA] rounded-2xl border border-[#E9ECEF]">
-                <span className="text-[10px] text-[#A8ABAF] block mb-0.5">구매일시</span>
+                <span className="text-[10px] text-[#636E72] block mb-0.5">구매일시</span>
                 <span className="font-bold text-[#1E272E] flex items-center gap-1 text-[11px]">
                   <Calendar className="w-3 h-3 text-[#4834D4] shrink-0" />
                   <span className="truncate">{game.purchaseDate || '미지정'}</span>
                 </span>
               </div>
               <div className="p-3 bg-[#F8F9FA] rounded-2xl border border-[#E9ECEF]">
-                <span className="text-[10px] text-[#A8ABAF] block mb-0.5">보관 장소</span>
+                <span className="text-[10px] text-[#636E72] block mb-0.5">보관 장소</span>
                 <span className="font-bold text-[#1E272E] flex items-center gap-1 text-[11px]">
                   <MapPin className="w-3 h-3 text-[#4834D4] shrink-0" />
                   <span className="truncate">{game.storageLocation || '미지정'}</span>
                 </span>
               </div>
               <div className="p-3 bg-[#F8F9FA] rounded-2xl border border-[#E9ECEF]">
-                <span className="text-[10px] text-[#A8ABAF] block mb-0.5">제작사 / 유통사</span>
+                <span className="text-[10px] text-[#636E72] block mb-0.5">제작사 / 유통사</span>
                 <span className="font-bold text-[#1E272E] truncate block text-[11px]">
                   {game.publisher || '미입력'}
                 </span>
@@ -308,27 +308,27 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
 
                 <div className="grid grid-cols-3 gap-2 text-center pt-1 text-xs">
                   <div className="p-2 bg-[#F8F9FA] rounded-xl border border-[#E9ECEF]">
-                    <span className="text-[9px] text-[#A8ABAF] block">구매가</span>
+                    <span className="text-[9px] text-[#636E72] block">구매가</span>
                     <span className="font-black text-[#1E272E]">{formatWon(game.purchasePrice)}</span>
                   </div>
                   <div className="p-2 bg-[#F8F9FA] rounded-xl border border-[#E9ECEF]">
-                    <span className="text-[9px] text-[#A8ABAF] block">정가</span>
+                    <span className="text-[9px] text-[#636E72] block">정가</span>
                     <span className="font-bold text-[#636E72]">{formatWon(game.originalPrice)}</span>
                   </div>
                   <div className="p-2 bg-[#F8F9FA] rounded-xl border border-[#E9ECEF]">
-                    <span className="text-[9px] text-[#A8ABAF] block">중고 시세</span>
+                    <span className="text-[9px] text-[#636E72] block">중고 시세</span>
                     <span className="font-bold text-[#636E72]">{formatWon(game.marketPrice)}</span>
                   </div>
                 </div>
 
-                {game.priceMeta?.source && <p className="text-[10px] text-[#A8ABAF]">출처: {game.priceMeta.source}</p>}
+                {game.priceMeta?.source && <p className="text-[10px] text-[#636E72]">출처: {game.priceMeta.source}</p>}
               </div>
             )}
 
             {/* Notes */}
             {game.notes && (
               <div className="p-3.5 bg-[#F8F9FA] rounded-2xl border border-[#E9ECEF] text-xs text-[#636E72]">
-                <span className="text-[10px] font-bold text-[#A8ABAF] block mb-1">메모</span>
+                <span className="text-[10px] font-bold text-[#636E72] block mb-1">메모</span>
                 <p className="leading-relaxed whitespace-pre-line">{game.notes}</p>
               </div>
             )}

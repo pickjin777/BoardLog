@@ -17,6 +17,12 @@
   outline-offset: 2px !important;
 }
 
+/* Placeholder gray was below AA. Opacity must stay 1 or the browser fades it again. */
+::placeholder {
+  color: #636e72;
+  opacity: 1;
+}
+
 /* Dedicated Print Styles for Book Catalogue & PDF Export */
 @media print {
   @page {

@@ -179,7 +179,7 @@ test('kakao quick select keeps weight, and game detail lists only that game', as
   await page.getByRole('button', { name: '2인 추천/전용' }).click();
   await visible('헤비만 선택됨', page.getByText('1/2개 선택됨'));
 
-  await page.locator('#kakao-share-modal-overlay').getByRole('button', { name: '닫기' }).click();
+  await page.locator('#kakao-share-modal-overlay button[aria-label="닫기"]').click();
   await hidden('카카오 모달 닫힘', page.locator('#kakao-share-modal-overlay'));
 
   await page.locator('#game-card-game_heavy').click();
@@ -210,4 +210,28 @@ test('kakao quick select keeps weight, and game detail lists only that game', as
   await hasText('연결 기록과 이름 기록을 함께 셈', again, '이 게임 기록 2회');
   const againText = (await again.textContent()) ?? '';
   check('다른 게임 장소는 여전히 없음', !againText.includes('다른 장소'));
+});
+
+test('home secondary text and win rate meet AA, and the game form close button is named', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/', { waitUntil: 'networkidle' });
+
+  const label = await page
+    .locator('#home-kpi-games span')
+    .first()
+    .evaluate((el) => getComputedStyle(el).color);
+  check('보유 게임 라벨이 #636E72', label === 'rgb(99, 110, 114)', label);
+  const win = await page.locator('#home-kpi-winrate').evaluate((el) => getComputedStyle(el).color);
+  check('승률 숫자가 #1B7A43', win === 'rgb(27, 122, 67)', win);
+
+  await page.locator('#nav-tab-games').click();
+  const placeholder = await page
+    .locator('#games-search-input')
+    .evaluate((el) => getComputedStyle(el, '::placeholder').color);
+  check('검색 플레이스홀더가 #636E72', placeholder === 'rgb(99, 110, 114)', placeholder);
+
+  await page.locator('#games-add-game-btn').click();
+  const closeName = await page.locator('#game-form-close-btn').evaluate((el) => el.getAttribute('aria-label'));
+  check('게임 등록 닫기 이름이 닫기', closeName === '닫기', closeName ?? '');
+  await visible('게임명 입력에 라벨이 연결됨', page.getByRole('textbox', { name: /게임명/ }));
 });

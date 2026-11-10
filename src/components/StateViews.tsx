@@ -13,7 +13,7 @@ export const LoadingState: React.FC<LoadingStateProps> = ({ message = '데이터
       </div>
     </div>
     <p className="text-sm font-bold text-[#1E272E]">{message}</p>
-    <p className="text-xs text-[#A8ABAF] mt-1">잠시만 기다려 주세요</p>
+    <p className="text-xs text-[#636E72] mt-1">잠시만 기다려 주세요</p>
   </div>
 );
 
@@ -62,7 +62,7 @@ export const NoSearchResultState: React.FC<NoSearchResultStateProps> = ({ query,
     id="no-search-results-view"
     className="flex flex-col items-center justify-center py-12 px-6 text-center bg-white rounded-[28px] border border-[#E9ECEF] my-4 shadow-sm"
   >
-    <div className="w-12 h-12 rounded-2xl bg-[#F1F3F5] flex items-center justify-center mb-3 text-[#A8ABAF]">
+    <div className="w-12 h-12 rounded-2xl bg-[#F1F3F5] flex items-center justify-center mb-3 text-[#636E72]">
       <SearchX className="w-6 h-6" />
     </div>
     <h3 className="text-base font-black italic text-[#1E272E] mb-1">

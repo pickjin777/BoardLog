@@ -150,7 +150,7 @@ export const MyPageView: React.FC<MyPageViewProps> = ({ onOpenAuth, onOpenCatalo
                       setNickInput(user?.nickname || '');
                       setIsEditingNick(true);
                     }}
-                    className="text-[10px] text-[#A8ABAF] hover:text-[#4834D4] underline"
+                    className="text-[10px] text-[#636E72] hover:text-[#4834D4] underline"
                   >
                     수정
                   </button>
@@ -171,8 +171,8 @@ export const MyPageView: React.FC<MyPageViewProps> = ({ onOpenAuth, onOpenCatalo
 
         {/* Status Tag */}
         <div className="p-3 bg-[#F8F9FA] rounded-2xl border border-[#E9ECEF] text-xs text-[#636E72] flex items-center justify-between">
-          <span className="text-[#A8ABAF]">데이터 저장 상태</span>
-          <span className="font-bold text-[#27AE60] flex items-center gap-1">
+          <span className="text-[#636E72]">데이터 저장 상태</span>
+          <span className="font-bold text-[#1B7A43] flex items-center gap-1">
             <CheckCircle2 className="w-3.5 h-3.5" />
             사용자별 독립 격리 완료
           </span>
@@ -262,7 +262,7 @@ export const MyPageView: React.FC<MyPageViewProps> = ({ onOpenAuth, onOpenCatalo
         id="mypage-privacy-btn"
         type="button"
         onClick={() => setIsPrivacyOpen(true)}
-        className="w-full py-2 text-[11px] font-bold text-[#A8ABAF] hover:text-[#636E72] underline underline-offset-2 transition-colors"
+        className="w-full py-2 text-[11px] font-bold text-[#636E72] hover:text-[#2D3436] underline underline-offset-2 transition-colors"
       >
         개인정보·이용 통계 안내
       </button>
@@ -279,7 +279,7 @@ export const MyPageView: React.FC<MyPageViewProps> = ({ onOpenAuth, onOpenCatalo
           }}
           className="w-full py-3 bg-white border border-[#E9ECEF] hover:bg-[#F8F9FA] text-[#636E72] rounded-2xl text-xs font-bold flex items-center justify-center gap-2 transition-colors shadow-sm"
         >
-          <LogOut className="w-4 h-4 text-[#A8ABAF]" />
+          <LogOut className="w-4 h-4 text-[#636E72]" />
           <span>로그아웃 (게스트 모드로 전환)</span>
         </button>
       </div>

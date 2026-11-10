@@ -56,10 +56,10 @@ export const PlayDetailModal: React.FC<PlayDetailModalProps> = ({ play, isOpen, 
                   </span>
                 </div>
                 <p className="text-xs text-[#636E72] flex items-center gap-1 mt-0.5 font-medium">
-                  <Calendar className="w-3 h-3 text-[#A8ABAF]" />
+                  <Calendar className="w-3 h-3 text-[#636E72]" />
                   <span>{play.date}</span>
                   <span>•</span>
-                  <Clock className="w-3 h-3 text-[#A8ABAF]" />
+                  <Clock className="w-3 h-3 text-[#636E72]" />
                   <span>{formatDuration(play.durationMinutes)}</span>
                 </p>
               </div>
@@ -100,26 +100,26 @@ export const PlayDetailModal: React.FC<PlayDetailModalProps> = ({ play, isOpen, 
             {/* Meta bar */}
             <div className="grid grid-cols-3 gap-2 p-3.5 bg-[#F8F9FA] rounded-2xl border border-[#E9ECEF] text-center text-xs">
               <div>
-                <span className="text-[10px] text-[#A8ABAF] block mb-0.5 font-bold">장소</span>
+                <span className="text-[10px] text-[#636E72] block mb-0.5 font-bold">장소</span>
                 <span className="font-bold text-[#1E272E] flex items-center justify-center gap-1">
                   <MapPin className="w-3 h-3 text-[#4834D4]" />
                   {play.location || '미입력'}
                 </span>
               </div>
               <div className="border-x border-[#E9ECEF]">
-                <span className="text-[10px] text-[#A8ABAF] block mb-0.5 font-bold">플레이 시간대</span>
+                <span className="text-[10px] text-[#636E72] block mb-0.5 font-bold">플레이 시간대</span>
                 <span className="font-bold text-[#1E272E]">
                   {play.startTime} ~ {play.endTime}
                 </span>
               </div>
               <div>
-                <span className="text-[10px] text-[#A8ABAF] block mb-0.5 font-bold">만족도</span>
+                <span className="text-[10px] text-[#636E72] block mb-0.5 font-bold">만족도</span>
                 <div className="flex items-center justify-center gap-0.5">
                   {[...Array(5)].map((_, i) => (
                     <Star
                       // biome-ignore lint/suspicious/noArrayIndexKey: static, never reordered list; no stable id exists
                       key={i}
-                      className={`w-3 h-3 ${i < play.rating ? 'text-[#F5CD79] fill-[#F5CD79]' : 'text-[#E9ECEF]'}`}
+                      className={`w-3 h-3 ${i < play.rating ? 'text-[#B8860B] fill-[#B8860B]' : 'text-[#636E72]'}`}
                     />
                   ))}
                 </div>
@@ -129,7 +129,7 @@ export const PlayDetailModal: React.FC<PlayDetailModalProps> = ({ play, isOpen, 
             {/* Participants Leaderboard */}
             <div>
               <h3 className="text-xs font-bold text-[#1E272E] mb-2 flex items-center gap-1.5">
-                <Users className="w-4 h-4 text-[#A8ABAF]" />
+                <Users className="w-4 h-4 text-[#636E72]" />
                 <span>참여자 순위 & 점수표</span>
               </h3>
 
@@ -147,7 +147,7 @@ export const PlayDetailModal: React.FC<PlayDetailModalProps> = ({ play, isOpen, 
                           p.rank === 1 || p.isWinner
                             ? 'bg-[#4834D4] text-white shadow-xs'
                             : p.rank === 2
-                              ? 'bg-[#A8ABAF] text-white'
+                              ? 'bg-[#636E72] text-white'
                               : 'bg-[#E9ECEF] text-[#636E72]'
                         }`}
                       >
@@ -181,7 +181,7 @@ export const PlayDetailModal: React.FC<PlayDetailModalProps> = ({ play, isOpen, 
             {play.photos && play.photos.length > 0 && (
               <div>
                 <h3 className="text-xs font-bold text-[#1E272E] mb-2 flex items-center gap-1.5">
-                  <ImageIcon className="w-4 h-4 text-[#A8ABAF]" />
+                  <ImageIcon className="w-4 h-4 text-[#636E72]" />
                   <span>현장 사진 ({play.photos.length}장)</span>
                 </h3>
 
@@ -214,7 +214,7 @@ export const PlayDetailModal: React.FC<PlayDetailModalProps> = ({ play, isOpen, 
             {/* Review Note */}
             {play.review && (
               <div className="p-4 bg-[#F8F9FA] rounded-2xl border border-[#E9ECEF] text-xs text-[#1E272E] space-y-1">
-                <span className="text-[10px] font-bold text-[#A8ABAF] block">플레이 소감 & 전략 메모</span>
+                <span className="text-[10px] font-bold text-[#636E72] block">플레이 소감 & 전략 메모</span>
                 <p className="leading-relaxed whitespace-pre-line text-[#636E72]">{play.review}</p>
               </div>
             )}
@@ -222,7 +222,7 @@ export const PlayDetailModal: React.FC<PlayDetailModalProps> = ({ play, isOpen, 
 
           {/* Modal Footer */}
           <div className="p-4 border-t border-[#E9ECEF] bg-white flex items-center justify-between">
-            <span className="text-[11px] text-[#A8ABAF] font-medium">작성일: {play.createdAt || play.date}</span>
+            <span className="text-[11px] text-[#636E72] font-medium">작성일: {play.createdAt || play.date}</span>
             <button
               type="button"
               onClick={onClose}

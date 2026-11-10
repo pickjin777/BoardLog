@@ -584,8 +584,9 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
             <button
               id="play-form-close-btn"
               type="button"
+              aria-label="닫기"
               onClick={onClose}
-              className="p-2 text-[#A8ABAF] hover:text-[#1E272E] rounded-full hover:bg-[#F1F3F5] transition-colors"
+              className="p-2 text-[#636E72] hover:text-[#1E272E] rounded-full hover:bg-[#F1F3F5] transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -640,12 +641,12 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                             내 소장 게임
                           </span>
                         ) : (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#27AE60]/10 text-[#27AE60] border border-[#27AE60]/20">
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#1B7A43]/10 text-[#1B7A43] border border-[#1B7A43]/20">
                             카페 / 미소장 게임
                           </span>
                         )}
                       </div>
-                      {gameTitleEn && <p className="text-[11px] text-[#A8ABAF] truncate font-medium">{gameTitleEn}</p>}
+                      {gameTitleEn && <p className="text-[11px] text-[#636E72] truncate font-medium">{gameTitleEn}</p>}
                     </div>
                   </div>
 
@@ -678,7 +679,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                       onClick={() => setSearchCategory('db')}
                       className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all shrink-0 ${
                         searchCategory === 'db'
-                          ? 'bg-[#27AE60] text-white shadow-xs'
+                          ? 'bg-[#1B7A43] text-white shadow-xs'
                           : 'bg-white text-[#636E72] border border-[#E9ECEF] hover:bg-[#F1F3F5]'
                       }`}
                     >
@@ -701,7 +702,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
 
                   {/* Search Input Bar */}
                   <div className="relative">
-                    <Search className="w-4 h-4 text-[#A8ABAF] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <Search className="w-4 h-4 text-[#636E72] absolute left-3.5 top-1/2 -translate-y-1/2" />
                     <input
                       id="play-game-search-input"
                       type="text"
@@ -726,8 +727,9 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                     {gameSearchQuery && (
                       <button
                         type="button"
+                        aria-label="검색 지우기"
                         onClick={() => setGameSearchQuery('')}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#A8ABAF] hover:text-[#1E272E]"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#636E72] hover:text-[#1E272E]"
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>
@@ -742,7 +744,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                       className="w-full p-2.5 rounded-xl bg-white hover:bg-[#4834D4]/5 border border-dashed border-[#4834D4]/40 text-left text-xs font-bold text-[#4834D4] flex items-center justify-between transition-colors shadow-2xs"
                     >
                       <div className="flex items-center gap-2 truncate">
-                        <Sparkles className="w-4 h-4 shrink-0 text-[#F5CD79]" />
+                        <Sparkles className="w-4 h-4 shrink-0 text-[#B8860B]" />
                         <span className="truncate">
                           <strong>"{gameSearchQuery}"</strong> 이름으로 직접 기록하기
                         </span>
@@ -785,7 +787,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                                     소장
                                   </span>
                                 ) : (
-                                  <span className="text-[9px] px-1.5 py-0.2 rounded-md bg-[#27AE60]/10 text-[#27AE60] font-bold shrink-0">
+                                  <span className="text-[9px] px-1.5 py-0.2 rounded-md bg-[#1B7A43]/10 text-[#1B7A43] font-bold shrink-0">
                                     DB
                                   </span>
                                 )}
@@ -802,13 +804,13 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                             </div>
                           </div>
 
-                          <ChevronRight className="w-3.5 h-3.5 text-[#A8ABAF] shrink-0" />
+                          <ChevronRight className="w-3.5 h-3.5 text-[#636E72] shrink-0" />
                         </div>
                       ))
                     ) : (
                       <div className="p-4 text-center text-xs text-[#636E72] bg-white rounded-xl border border-[#E9ECEF]">
                         <p>일치하는 보드게임을 찾을 수 없습니다.</p>
-                        <p className="text-[11px] text-[#A8ABAF] mt-0.5">
+                        <p className="text-[11px] text-[#636E72] mt-0.5">
                           상단의 <strong>"{gameSearchQuery}" 직접 기록하기</strong>를 누르면 바로 기록할 수 있습니다.
                         </p>
                       </div>
@@ -867,7 +869,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
 
               {/* Quick Location Chips */}
               <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-                <span className="text-[10px] text-[#A8ABAF] font-bold shrink-0">추천 장소:</span>
+                <span className="text-[10px] text-[#636E72] font-bold shrink-0">추천 장소:</span>
                 {LOCATION_PRESETS.map((loc) => {
                   const pureName = loc.replace(/^[^\s]+\s/, '');
                   const isSelected = location.includes(pureName);
@@ -909,7 +911,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                 {/* Time Pickers (Ample room for native pickers) */}
                 <div className="grid grid-cols-2 gap-2">
                   <div className="bg-white px-3 py-2 rounded-xl border border-[#E9ECEF] flex flex-col justify-center">
-                    <span className="text-[9px] text-[#A8ABAF] font-bold block mb-0.5">시작</span>
+                    <span className="text-[9px] text-[#636E72] font-bold block mb-0.5">시작</span>
                     <input
                       type="time"
                       value={startTime}
@@ -919,7 +921,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                   </div>
 
                   <div className="bg-white px-3 py-2 rounded-xl border border-[#E9ECEF] flex flex-col justify-center">
-                    <span className="text-[9px] text-[#A8ABAF] font-bold block mb-0.5">종료</span>
+                    <span className="text-[9px] text-[#636E72] font-bold block mb-0.5">종료</span>
                     <input
                       type="time"
                       value={endTime}
@@ -931,7 +933,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
 
                 {/* Quick duration presets */}
                 <div className="flex items-center gap-1 overflow-x-auto py-0.5 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                  <span className="text-[10px] text-[#A8ABAF] font-bold shrink-0">빠른 설정:</span>
+                  <span className="text-[10px] text-[#636E72] font-bold shrink-0">빠른 설정:</span>
                   {[30, 45, 60, 90, 120].map((mins) => (
                     <button
                       key={mins}
@@ -965,7 +967,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                 <Trophy className="w-3.5 h-3.5 text-[#4834D4]" />
                 <span>나의 결과</span>
                 {!myResult && (
-                  <span className="font-medium text-[#A8ABAF]">· 아래에서 승자를 탭하면 자동으로 정해져요</span>
+                  <span className="font-medium text-[#636E72]">· 아래에서 승자를 탭하면 자동으로 정해져요</span>
                 )}
               </label>
               <div className="grid grid-cols-4 gap-2">
@@ -997,7 +999,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
               <div className="flex items-center justify-between">
                 {/* biome-ignore lint/a11y/noLabelWithoutControl: TBD-018: label is not yet associated with its input (htmlFor/id) */}
                 <label className="text-xs font-bold text-[#1E272E] flex items-center gap-1.5">
-                  <Users className="w-3.5 h-3.5 text-[#A8ABAF]" />
+                  <Users className="w-3.5 h-3.5 text-[#636E72]" />
                   <span>참여자 & 점수/순위</span>
                 </label>
                 <button
@@ -1012,7 +1014,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
 
               {companionSuggestions.length > 0 && (
                 <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="text-[10px] font-bold text-[#A8ABAF]">최근 함께한 사람</span>
+                  <span className="text-[10px] font-bold text-[#636E72]">최근 함께한 사람</span>
                   {companionSuggestions.map((name) => (
                     <button
                       key={name}
@@ -1044,7 +1046,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                         className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 border transition-all ${
                           p.isWinner
                             ? 'bg-[#4834D4] text-white border-[#4834D4] shadow-xs'
-                            : 'bg-white text-[#A8ABAF] border-[#E9ECEF]'
+                            : 'bg-white text-[#636E72] border-[#E9ECEF]'
                         }`}
                       >
                         <Trophy className="w-3.5 h-3.5" />
@@ -1094,7 +1096,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                     <button
                       type="button"
                       onClick={() => removeParticipant(idx)}
-                      className="p-1.5 text-[#A8ABAF] hover:text-[#EB4D4B] rounded-full ml-auto hover:bg-[#F1F3F5] transition-colors"
+                      className="p-1.5 text-[#636E72] hover:text-[#EB4D4B] rounded-full ml-auto hover:bg-[#F1F3F5] transition-colors"
                       title="참여자 삭제"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -1109,7 +1111,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
               <div className="flex items-center justify-between">
                 {/* biome-ignore lint/a11y/noLabelWithoutControl: TBD-018: label is not yet associated with its input (htmlFor/id) */}
                 <label className="text-xs font-bold text-[#1E272E] flex items-center gap-1.5">
-                  <Camera className="w-3.5 h-3.5 text-[#A8ABAF]" />
+                  <Camera className="w-3.5 h-3.5 text-[#636E72]" />
                   <span>플레이 현장 사진 (최대 6장)</span>
                 </label>
                 <span className="text-[11px] font-bold text-[#636E72]">{photos.length} / 6장</span>
@@ -1142,7 +1144,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                       <button
                         type="button"
                         onClick={() => handleRotatePhoto(pIdx)}
-                        className="p-1 text-white hover:text-[#F5CD79] transition-colors"
+                        className="p-1 text-white hover:text-[#B8860B] transition-colors"
                         title="90도 회전"
                       >
                         <RotateCw className="w-3 h-3" />
@@ -1177,7 +1179,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                     disabled={isUploadingPhoto}
                     className="flex flex-col items-center justify-center p-3 rounded-2xl border border-dashed border-[#CED6E0] hover:border-[#4834D4] bg-[#F8F9FA] hover:bg-[#4834D4]/5 aspect-square transition-all text-[#636E72] hover:text-[#4834D4]"
                   >
-                    <Camera className="w-5 h-5 mb-1 text-[#A8ABAF]" />
+                    <Camera className="w-5 h-5 mb-1 text-[#636E72]" />
                     <span className="text-[10px] font-bold">{isUploadingPhoto ? '압축 중...' : '사진 추가'}</span>
                   </button>
                 )}
@@ -1195,10 +1197,10 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                       key={starVal}
                       type="button"
                       onClick={() => setRating(starVal)}
-                      className="p-1 text-[#E9ECEF] hover:text-[#F5CD79] transition-colors"
+                      className="p-1 text-[#636E72] hover:text-[#B8860B] transition-colors"
                     >
                       <Star
-                        className={`w-6 h-6 ${starVal <= rating ? 'text-[#F5CD79] fill-[#F5CD79]' : 'text-[#E9ECEF]'}`}
+                        className={`w-6 h-6 ${starVal <= rating ? 'text-[#B8860B] fill-[#B8860B]' : 'text-[#636E72]'}`}
                       />
                     </button>
                   ))}

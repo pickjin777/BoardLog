@@ -92,7 +92,7 @@ export const PrivacyNoticeModal: React.FC<PrivacyNoticeModalProps> = ({ isOpen, 
             type="button"
             aria-label="닫기"
             onClick={onClose}
-            className="p-1.5 text-[#A8ABAF] hover:text-[#1E272E] rounded-full hover:bg-[#F1F3F5] transition-colors"
+            className="p-1.5 text-[#636E72] hover:text-[#1E272E] rounded-full hover:bg-[#F1F3F5] transition-colors"
           >
             <X className="w-4 h-4" />
           </button>

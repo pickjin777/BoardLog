@@ -310,8 +310,9 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
             </div>
             <button
               type="button"
+              aria-label="닫기"
               onClick={onClose}
-              className="p-2 rounded-full hover:bg-[#F1F3F5] text-[#A8ABAF] hover:text-[#1E272E] transition-colors"
+              className="p-2 rounded-full hover:bg-[#F1F3F5] text-[#636E72] hover:text-[#1E272E] transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -369,7 +370,7 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
                       <span className="text-xs font-bold">📦 전체 소장 게임 공유</span>
                       {shareMode === 'all' && <Check className="w-4 h-4 text-[#4834D4]" />}
                     </div>
-                    <p className="text-[11px] text-[#A8ABAF]">보유한 {games.length}개 전체를 목록으로 공유합니다</p>
+                    <p className="text-[11px] text-[#636E72]">보유한 {games.length}개 전체를 목록으로 공유합니다</p>
                   </button>
 
                   <button
@@ -385,7 +386,7 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
                       <span className="text-xs font-bold">🎯 일부 선택 공유 (추천)</span>
                       {shareMode === 'selective' && <Check className="w-4 h-4 text-[#4834D4]" />}
                     </div>
-                    <p className="text-[11px] text-[#A8ABAF]">인원수(4인이하), 장르 등 조건에 맞는 게임만 선택</p>
+                    <p className="text-[11px] text-[#636E72]">인원수(4인이하), 장르 등 조건에 맞는 게임만 선택</p>
                   </button>
                 </div>
 
@@ -394,10 +395,10 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
                   <div className="p-3.5 bg-[#F8F9FA] rounded-2xl border border-[#E9ECEF] space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5 text-xs font-bold text-[#1E272E]">
-                        <Sparkles className="w-4 h-4 text-[#F5CD79]" />
+                        <Sparkles className="w-4 h-4 text-[#B8860B]" />
                         <span>인기 빠른 필터 프리셋</span>
                       </div>
-                      <span className="text-[10px] text-[#A8ABAF]">원클릭으로 자동 선택</span>
+                      <span className="text-[10px] text-[#636E72]">원클릭으로 자동 선택</span>
                     </div>
 
                     {/* Presets Chips */}
@@ -446,7 +447,7 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
                         onClick={() => applyPresetFilter('all', '전략')}
                         className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1 ${
                           selectedGenre === '전략'
-                            ? 'bg-[#27AE60] text-white shadow-xs'
+                            ? 'bg-[#1B7A43] text-white shadow-xs'
                             : 'bg-white text-[#2D3436] border border-[#E9ECEF] hover:bg-[#F1F3F5]'
                         }`}
                       >
@@ -512,7 +513,7 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
                         {/* biome-ignore lint/a11y/noLabelWithoutControl: TBD-018: label is not yet associated with its input (htmlFor/id) */}
                         <label className="block text-[10px] font-bold text-[#636E72] mb-1">게임 직접 검색</label>
                         <div className="relative">
-                          <Search className="w-3.5 h-3.5 text-[#A8ABAF] absolute left-2.5 top-1/2 -translate-y-1/2" />
+                          <Search className="w-3.5 h-3.5 text-[#636E72] absolute left-2.5 top-1/2 -translate-y-1/2" />
                           <input
                             type="text"
                             placeholder="게임명 검색..."
@@ -575,7 +576,7 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
                               className={`p-2.5 rounded-xl flex items-center justify-between gap-3 cursor-pointer transition-all ${
                                 isSelected
                                   ? 'bg-white border border-[#4834D4]/30 shadow-2xs'
-                                  : 'bg-white/60 hover:bg-white border border-transparent text-[#A8ABAF]'
+                                  : 'bg-white/60 hover:bg-white border border-transparent text-[#636E72]'
                               }`}
                             >
                               <div className="flex items-center gap-2.5 min-w-0">
@@ -621,7 +622,7 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
                                 </div>
                               </div>
 
-                              <span className="text-[11px] font-bold shrink-0 text-[#A8ABAF]">
+                              <span className="text-[11px] font-bold shrink-0 text-[#636E72]">
                                 {isSelected ? '포함됨' : '제외됨'}
                               </span>
                             </div>
@@ -829,8 +830,8 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
               >
                 {isCopied ? (
                   <>
-                    <Check className="w-4 h-4 text-[#27AE60]" />
-                    <span className="text-[#27AE60]">복사 완료!</span>
+                    <Check className="w-4 h-4 text-[#1B7A43]" />
+                    <span className="text-[#1B7A43]">복사 완료!</span>
                   </>
                 ) : (
                   <>

@@ -50,12 +50,12 @@ export const GameListItem: React.FC<GameListItemProps> = ({ game, onClick, onDel
 
         <div className="flex items-center gap-2 text-[10px] text-[#636E72]">
           <span className="flex items-center gap-0.5">
-            <Users className="w-3 h-3 text-[#A8ABAF]" />
+            <Users className="w-3 h-3 text-[#636E72]" />
             {game.minPlayers === game.maxPlayers ? `${game.minPlayers}인` : `${game.minPlayers}~${game.maxPlayers}인`}
           </span>
           <span>•</span>
           <span className="flex items-center gap-0.5">
-            <Clock className="w-3 h-3 text-[#A8ABAF]" />
+            <Clock className="w-3 h-3 text-[#636E72]" />
             {game.playTime}분
           </span>
           {game.weight > 0 && (

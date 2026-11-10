@@ -6,7 +6,7 @@ import { applyImageFallback } from '../utils/imageFallback';
 export const getOwnershipBadgeColor = (status: GameOwnershipStatus): string => {
   switch (status) {
     case '보유중':
-      return 'bg-[#EBFAEF] text-[#27AE60] border-[#27AE60]/30';
+      return 'bg-[#EBFAEF] text-[#1B7A43] border-[#1B7A43]/30';
     case '빌려줌':
       return 'bg-amber-50 text-amber-800 border-amber-300';
     case '빌림':
@@ -14,7 +14,7 @@ export const getOwnershipBadgeColor = (status: GameOwnershipStatus): string => {
     case '판매예정':
       return 'bg-[#4834D4]/10 text-[#4834D4] border-[#4834D4]/30';
     case '판매완료':
-      return 'bg-[#F1F3F5] text-[#A8ABAF] border-[#E9ECEF] line-through';
+      return 'bg-[#F1F3F5] text-[#636E72] border-[#E9ECEF] line-through';
     case '분실':
     case '처분':
       return 'bg-[#FEEBEC] text-[#EB4D4B] border-[#EB4D4B]/30';
@@ -99,7 +99,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onClick, onDelete }) =
             <h3 className="text-sm font-black text-[#1E272E] line-clamp-1 group-hover:text-[#4834D4] transition-colors">
               {game.title}
             </h3>
-            {game.titleEn && <span className="text-[10px] text-[#A8ABAF] line-clamp-1 truncate">{game.titleEn}</span>}
+            {game.titleEn && <span className="text-[10px] text-[#636E72] line-clamp-1 truncate">{game.titleEn}</span>}
           </div>
 
           {/* Genre tags */}
@@ -111,7 +111,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onClick, onDelete }) =
                 </span>
               ))}
               {game.genre.length > 2 && (
-                <span className="text-[9px] text-[#A8ABAF] self-center">+{game.genre.length - 2}</span>
+                <span className="text-[9px] text-[#636E72] self-center">+{game.genre.length - 2}</span>
               )}
             </div>
           )}
@@ -120,14 +120,14 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onClick, onDelete }) =
         {/* Meta badges */}
         <div className="pt-2 border-t border-[#E9ECEF] flex items-center justify-between text-[11px] text-[#636E72]">
           <div className="flex items-center gap-1">
-            <Users className="w-3.5 h-3.5 text-[#A8ABAF]" />
+            <Users className="w-3.5 h-3.5 text-[#636E72]" />
             <span>
               {game.minPlayers === game.maxPlayers ? `${game.minPlayers}인` : `${game.minPlayers}~${game.maxPlayers}인`}
             </span>
           </div>
 
           <div className="flex items-center gap-1">
-            <Clock className="w-3.5 h-3.5 text-[#A8ABAF]" />
+            <Clock className="w-3.5 h-3.5 text-[#636E72]" />
             <span>{game.playTime}분</span>
           </div>
 
@@ -140,7 +140,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onClick, onDelete }) =
         </div>
 
         {game.storageLocation && (
-          <div className="mt-2 text-[10px] text-[#A8ABAF] flex items-center gap-1 truncate">
+          <div className="mt-2 text-[10px] text-[#636E72] flex items-center gap-1 truncate">
             <MapPin className="w-2.5 h-2.5 shrink-0" />
             <span className="truncate">{game.storageLocation}</span>
           </div>

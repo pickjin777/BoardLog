@@ -287,8 +287,9 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
             <button
               id="game-form-close-btn"
               type="button"
+              aria-label="닫기"
               onClick={onClose}
-              className="p-1.5 text-[#A8ABAF] hover:text-[#1E272E] rounded-full hover:bg-[#F1F3F5] transition-colors"
+              className="p-1.5 text-[#636E72] hover:text-[#1E272E] rounded-full hover:bg-[#F1F3F5] transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -338,7 +339,7 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                   <span>인기 보드게임 시드 목록에서 빠른 검색</span>
                 </label>
                 <div className="relative">
-                  <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#A8ABAF]" />
+                  <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#636E72]" />
                   <input
                     id="seed-game-search-input"
                     type="text"
@@ -371,7 +372,7 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1.5">
                               <span className="text-xs font-black text-[#1E272E] truncate">{seed.title}</span>
-                              <span className="text-[10px] text-[#A8ABAF] truncate">{seed.titleEn}</span>
+                              <span className="text-[10px] text-[#636E72] truncate">{seed.titleEn}</span>
                             </div>
                             <p className="text-[10px] text-[#636E72] truncate">
                               {seed.genre.join(', ')} • {seed.minPlayers}~{seed.maxPlayers}인 • {seed.playTime}분
@@ -411,8 +412,7 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
             <div className="space-y-4">
               {/* Game Title */}
               <div>
-                {/* biome-ignore lint/a11y/noLabelWithoutControl: TBD-018: label is not yet associated with its input (htmlFor/id) */}
-                <label className="block text-xs font-bold text-[#1E272E] mb-1">
+                <label htmlFor="game-input-title" className="block text-xs font-bold text-[#1E272E] mb-1">
                   게임명 (한글) <span className="text-[#EB4D4B]">*</span>
                 </label>
                 <input
@@ -459,11 +459,11 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                 {/* biome-ignore lint/a11y/noLabelWithoutControl: TBD-018: label is not yet associated with its input (htmlFor/id) */}
                 <label className="block text-xs font-bold text-[#1E272E] mb-1 flex items-center justify-between">
                   <span>박스 아트 이미지 URL</span>
-                  <span className="text-[10px] text-[#A8ABAF] font-normal">웹 링크 또는 기본 이미지</span>
+                  <span className="text-[10px] text-[#636E72] font-normal">웹 링크 또는 기본 이미지</span>
                 </label>
                 <div className="flex gap-2">
                   <div className="relative flex-1">
-                    <ImageIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#A8ABAF]" />
+                    <ImageIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#636E72]" />
                     <input
                       id="game-input-image-url"
                       type="url"
@@ -595,7 +595,7 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                     onChange={(e) => setStorageLocation(e.target.value)}
                     className="w-full px-3 py-2 bg-white border border-[#E9ECEF] rounded-2xl text-xs text-[#1E272E] focus:outline-hidden focus:border-[#4834D4] transition-colors"
                   />
-                  <p className="text-[10px] text-[#A8ABAF] mt-1.5">어디에 보관되어 있는지 메모해두세요</p>
+                  <p className="text-[10px] text-[#636E72] mt-1.5">어디에 보관되어 있는지 메모해두세요</p>
                 </div>
               </div>
 
@@ -603,7 +603,7 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
               <div>
                 {/* biome-ignore lint/a11y/noLabelWithoutControl: TBD-018: label is not yet associated with its input (htmlFor/id) */}
                 <label className="block text-xs font-bold text-[#1E272E] mb-1 flex items-center gap-1">
-                  <Tag className="w-3 h-3 text-[#A8ABAF]" />
+                  <Tag className="w-3 h-3 text-[#636E72]" />
                   <span>장르 선택 (다중 선택 가능)</span>
                 </label>
                 <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto p-1.5 bg-[#F1F3F5] rounded-2xl border border-[#E9ECEF]">
