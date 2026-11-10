@@ -288,3 +288,31 @@ test('kakao and catalog filters are named', async ({ page }) => {
   await visible('도록 검색', page.getByRole('textbox', { name: '도록 내 검색' }));
   await visible('도록 상태', page.getByRole('combobox', { name: '소장 상태' }));
 });
+
+test('game and play cards open from the keyboard without pressing delete', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/', { waitUntil: 'networkidle' });
+  const uid = await requireUid(page);
+  await putRows(page, [
+    { store: 'games', row: gameRow({ id: 'key_game', userId: uid, title: '키보드게임', playCount: 1 }) },
+    { store: 'plays', row: playRow('key_play', uid, 'key_game', '키보드게임', true) }
+  ]);
+  await page.reload({ waitUntil: 'networkidle' });
+  await page.locator('#nav-tab-games').click();
+
+  const openGame = page.getByRole('button', { name: '키보드게임 열기' });
+  await openGame.focus();
+  await page.keyboard.press('Enter');
+  await visible('키보드로 연 게임 상세', page.locator('#game-detail-modal-overlay'));
+  await page.locator('#game-detail-modal-overlay').getByRole('button', { name: '닫기' }).click();
+
+  await page.locator('#game-card-key_game').getByRole('button', { name: '게임 삭제' }).click();
+  await visible('삭제는 상세를 열지 않음', page.getByRole('heading', { name: '보드게임 삭제' }));
+  await hidden('삭제 중에는 상세가 없음', page.locator('#game-detail-modal-overlay'));
+  await page.getByRole('button', { name: '취소' }).click();
+
+  await page.locator('#nav-tab-plays').click();
+  await page.locator('#play-card-key_play').focus();
+  await page.keyboard.press('Space');
+  await visible('키보드로 연 기록 상세', page.locator('#play-detail-modal-overlay'));
+});

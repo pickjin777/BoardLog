@@ -11,12 +11,11 @@ interface PlayCardProps {
 
 export const PlayCard: React.FC<PlayCardProps> = ({ play, onClick }) => {
   return (
-    // biome-ignore lint/a11y/useKeyWithClickEvents: TBD-018: clickable element has no keyboard handler yet
-    // biome-ignore lint/a11y/noStaticElementInteractions: TBD-018: clickable non-semantic element has no role yet
-    <div
+    <button
       id={`play-card-${play.id}`}
+      type="button"
       onClick={onClick}
-      className="group bg-white rounded-[28px] border border-[#E9ECEF] p-4.5 shadow-sm hover:shadow-md hover:border-[#4834D4]/30 transition-all cursor-pointer space-y-3.5"
+      className="group w-full text-left bg-white rounded-[28px] border border-[#E9ECEF] p-4.5 shadow-sm hover:shadow-md hover:border-[#4834D4]/30 transition-all space-y-3.5"
     >
       {/* Header: Date, Location & My Result Pill */}
       <div className="flex items-center justify-between text-xs">
@@ -127,6 +126,6 @@ export const PlayCard: React.FC<PlayCardProps> = ({ play, onClick }) => {
           "{play.review}"
         </p>
       )}
-    </div>
+    </button>
   );
 };
