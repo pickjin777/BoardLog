@@ -21,7 +21,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ currentTab, onTabChange, o
           type="button"
           onClick={() => onTabChange('home')}
           className={`flex-1 flex flex-col items-center justify-center py-1 transition-colors ${
-            currentTab === 'home' ? 'text-[#4834D4] font-bold' : 'text-[#A8ABAF] hover:text-[#2D3436]'
+            currentTab === 'home' ? 'text-[#4834D4] font-bold' : 'text-[#636E72] hover:text-[#2D3436]'
           }`}
         >
           <Home className="w-5 h-5 mb-0.5" />
@@ -34,7 +34,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ currentTab, onTabChange, o
           type="button"
           onClick={() => onTabChange('games')}
           className={`flex-1 flex flex-col items-center justify-center py-1 transition-colors ${
-            currentTab === 'games' ? 'text-[#4834D4] font-bold' : 'text-[#A8ABAF] hover:text-[#2D3436]'
+            currentTab === 'games' ? 'text-[#4834D4] font-bold' : 'text-[#636E72] hover:text-[#2D3436]'
           }`}
         >
           <Layers className="w-5 h-5 mb-0.5" />
@@ -61,7 +61,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ currentTab, onTabChange, o
           type="button"
           onClick={() => onTabChange('plays')}
           className={`flex-1 flex flex-col items-center justify-center py-1 transition-colors ${
-            currentTab === 'plays' ? 'text-[#4834D4] font-bold' : 'text-[#A8ABAF] hover:text-[#2D3436]'
+            currentTab === 'plays' ? 'text-[#4834D4] font-bold' : 'text-[#636E72] hover:text-[#2D3436]'
           }`}
         >
           <Trophy className="w-5 h-5 mb-0.5" />
@@ -74,7 +74,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ currentTab, onTabChange, o
           type="button"
           onClick={() => onTabChange('mypage')}
           className={`flex-1 flex flex-col items-center justify-center py-1 transition-colors ${
-            currentTab === 'mypage' ? 'text-[#4834D4] font-bold' : 'text-[#A8ABAF] hover:text-[#2D3436]'
+            currentTab === 'mypage' ? 'text-[#4834D4] font-bold' : 'text-[#636E72] hover:text-[#2D3436]'
           }`}
         >
           <User className="w-5 h-5 mb-0.5" />

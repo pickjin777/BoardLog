@@ -13,6 +13,64 @@ test('records-stay-on-device notice leads to JSON backup', async ({ page }) => {
   await visible('JSON 백업 버튼으로 이동', page.locator('#export-json-btn'));
 });
 
+test('320px empty lists clear the center button, and controls have names', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 700 });
+  await page.goto('/', { waitUntil: 'networkidle' });
+  await page.locator('#nav-tab-games').click();
+  await page.locator('#empty-state-view').waitFor();
+
+  const overlapsFab = async (selector: string) =>
+    page.evaluate((sel) => {
+      const item = document.querySelector(sel)?.getBoundingClientRect();
+      const fab = document.querySelector('#nav-fab-add-play')?.getBoundingClientRect();
+      if (!item || !fab) return true;
+      const x = Math.min(item.right, fab.right) - Math.max(item.left, fab.left);
+      const y = Math.min(item.bottom, fab.bottom) - Math.max(item.top, fab.top);
+      return x > 1 && y > 1;
+    }, selector);
+
+  check('320 게임 빈 목록 설명이 기록 추가와 안 겹침', !(await overlapsFab('#empty-state-description')));
+  check('320 게임 빈 목록 버튼이 기록 추가와 안 겹침', !(await overlapsFab('#empty-state-action-btn')));
+  const actionBox = await page.locator('#empty-state-action-btn').boundingBox();
+  check(
+    '320 게임 빈 목록 버튼이 화면 안에 있음',
+    !!actionBox && actionBox.y >= 0 && actionBox.y + actionBox.height <= 700,
+    JSON.stringify(actionBox)
+  );
+  await visible('게임 검색 이름', page.getByRole('textbox', { name: '게임 검색' }));
+  await visible('격자 보기 이름', page.getByRole('button', { name: '격자 보기' }));
+
+  await page.waitForFunction(() => {
+    const tab = document.querySelector('#nav-tab-home');
+    return tab !== null && getComputedStyle(tab).color === 'rgb(99, 110, 114)';
+  });
+  const navColor = await page.locator('#nav-tab-home').evaluate((el) => getComputedStyle(el).color);
+  check('선택 안 된 탭 글자색이 #636E72', navColor === 'rgb(99, 110, 114)', navColor);
+
+  await page.locator('#nav-tab-plays').evaluate((el) => {
+    if (!(el instanceof HTMLElement)) return;
+    el.focus({ focusVisible: true } as FocusOptions);
+  });
+  await page.waitForFunction(() => {
+    const tab = document.querySelector('#nav-tab-plays');
+    return tab !== null && getComputedStyle(tab).outlineColor === 'rgb(72, 52, 212)';
+  });
+  const outline = await page.locator('#nav-tab-plays').evaluate((el) => getComputedStyle(el).outlineColor);
+  check('탭 포커스 테두리가 보임', outline === 'rgb(72, 52, 212)', outline);
+
+  await page.locator('#nav-tab-plays').click();
+  await page.locator('#empty-state-description').waitFor();
+  check('320 플레이 빈 목록 설명이 기록 추가와 안 겹침', !(await overlapsFab('#empty-state-description')));
+  check('320 플레이 빈 목록 버튼이 기록 추가와 안 겹침', !(await overlapsFab('#empty-state-action-btn')));
+  await visible('플레이 검색 이름', page.getByRole('textbox', { name: '플레이 기록 검색' }));
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.locator('#nav-tab-games').click();
+  await page.locator('#empty-state-description').waitFor();
+  check('390 게임 빈 목록 설명이 기록 추가와 안 겹침', !(await overlapsFab('#empty-state-description')));
+  check('390 게임 빈 목록 버튼이 기록 추가와 안 겹침', !(await overlapsFab('#empty-state-action-btn')));
+});
+
 test('320px games title stays wide and the 390px empty hint clears the tab', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 700 });
   await page.goto('/', { waitUntil: 'networkidle' });
@@ -131,4 +189,25 @@ test('kakao quick select keeps weight, and game detail lists only that game', as
   await hasText('기록 수', detail, '이 게임 기록 1회');
   const detailText = (await detail.textContent()) ?? '';
   check('다른 게임 장소는 상세에 없음', !detailText.includes('다른 장소'));
+
+  await page.locator('#game-detail-modal-overlay').getByRole('button', { name: '닫기' }).click();
+  await hidden('상세 닫힘', page.locator('#game-detail-modal-overlay'));
+  await putRows(page, [
+    {
+      store: 'plays',
+      row: {
+        ...playRow('play_same_name', uid, '', '헤비합성', false),
+        gameId: null,
+        location: '이름만 같은 장소'
+      }
+    }
+  ]);
+  await page.reload({ waitUntil: 'networkidle' });
+  await page.locator('#nav-tab-games').click();
+  await page.locator('#game-card-game_heavy').click();
+  const again = page.locator('#game-detail-modal-overlay');
+  await hasText('이름만 같은 기록의 장소', again, '이름만 같은 장소');
+  await hasText('연결 기록과 이름 기록을 함께 셈', again, '이 게임 기록 2회');
+  const againText = (await again.textContent()) ?? '';
+  check('다른 게임 장소는 여전히 없음', !againText.includes('다른 장소'));
 });

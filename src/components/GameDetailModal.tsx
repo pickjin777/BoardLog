@@ -16,6 +16,7 @@ import {
   MessageCircle
 } from 'lucide-react';
 import type { PlayRecord, UserGame } from '../types';
+import { playsForGame } from '../utils/gamePlays';
 import { formatWon } from '../utils/formatters';
 import { getOwnershipBadgeColor } from './GameCard';
 import { useToast } from '../context/ToastContext';
@@ -24,6 +25,7 @@ import { applyImageFallback } from '../utils/imageFallback';
 interface GameDetailModalProps {
   game: UserGame | null;
   plays?: PlayRecord[];
+  games?: Pick<UserGame, 'id' | 'title'>[];
   isOpen: boolean;
   onClose: () => void;
   onEdit: (game: UserGame) => void;
@@ -35,6 +37,7 @@ interface GameDetailModalProps {
 export const GameDetailModal: React.FC<GameDetailModalProps> = ({
   game,
   plays = [],
+  games = [],
   isOpen,
   onClose,
   onEdit,
@@ -45,9 +48,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
   const { showToast } = useToast();
   if (!isOpen || !game) return null;
 
-  const gamePlays = plays
-    .filter((play) => play.gameId === game.id)
-    .sort((a, b) => `${b.date} ${b.startTime}`.localeCompare(`${a.date} ${a.startTime}`));
+  const gamePlays = playsForGame(game, plays, games);
 
   const handleShareSingleGame = async () => {
     const text = `🎲 [보드게임 추천] ${game.title}\n👥 인원: ${game.minPlayers}~${game.maxPlayers}인${game.bestPlayers ? ` (추천: ${game.bestPlayers})` : ''}\n⏱ 시간: ${game.playTime}분\n⭐ 난이도: ${game.weight?.toFixed(1) || '2.0'}/5.0\n🏷 장르: ${game.genre.join(', ')}\n${game.notes ? `💬 메모: ${game.notes}\n` : ''}\n👉 같이 플레이해요!`;
@@ -100,6 +101,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
                 type="button"
                 onClick={handleShareSingleGame}
                 className="w-8 h-8 rounded-full bg-[#FEE500] text-[#191919] hover:bg-[#F5DC00] flex items-center justify-center backdrop-blur-xs transition-colors shadow-xs"
+                aria-label="카카오톡으로 공유하기"
                 title="카카오톡으로 공유하기"
               >
                 <MessageCircle className="w-4 h-4 fill-[#191919]" />
@@ -108,6 +110,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
                 type="button"
                 onClick={() => onEdit(game)}
                 className="w-8 h-8 rounded-full bg-black/40 text-white hover:bg-[#4834D4] flex items-center justify-center backdrop-blur-xs transition-colors"
+                aria-label="수정하기"
                 title="수정하기"
               >
                 <Edit className="w-3.5 h-3.5" />
@@ -116,6 +119,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
                 type="button"
                 onClick={() => onDelete(game)}
                 className="w-8 h-8 rounded-full bg-black/40 text-white hover:bg-[#EB4D4B] flex items-center justify-center backdrop-blur-xs transition-colors"
+                aria-label="삭제하기"
                 title="삭제하기"
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -124,6 +128,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
                 type="button"
                 onClick={onClose}
                 className="w-8 h-8 rounded-full bg-black/40 text-white hover:bg-black/60 flex items-center justify-center backdrop-blur-xs transition-colors"
+                aria-label="닫기"
                 title="닫기"
               >
                 <X className="w-4 h-4" />
@@ -199,7 +204,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
                 </div>
                 <div>
                   <p className="text-xs font-black text-[#1E272E]">이 게임 기록 {gamePlays.length}회</p>
-                  <p className="text-[10px] text-[#636E72]">이 게임에 연결된 기록만 보여 줍니다</p>
+                  <p className="text-[10px] text-[#636E72]">연결된 기록과, 이름만 같고 아직 연결되지 않은 기록</p>
                 </div>
               </div>
 

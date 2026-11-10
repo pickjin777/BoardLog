@@ -69,7 +69,8 @@ export const PlayDetailModal: React.FC<PlayDetailModalProps> = ({ play, isOpen, 
               <button
                 type="button"
                 onClick={() => onEdit(play)}
-                className="p-2 text-[#A8ABAF] hover:text-[#4834D4] rounded-full hover:bg-[#F1F3F5] transition-colors"
+                className="p-2 text-[#636E72] hover:text-[#4834D4] rounded-full hover:bg-[#F1F3F5] transition-colors"
+                aria-label="기록 수정"
                 title="기록 수정"
               >
                 <Edit className="w-4 h-4" />
@@ -77,7 +78,8 @@ export const PlayDetailModal: React.FC<PlayDetailModalProps> = ({ play, isOpen, 
               <button
                 type="button"
                 onClick={() => onDelete(play)}
-                className="p-2 text-[#A8ABAF] hover:text-[#EB4D4B] rounded-full hover:bg-[#F1F3F5] transition-colors"
+                className="p-2 text-[#636E72] hover:text-[#EB4D4B] rounded-full hover:bg-[#F1F3F5] transition-colors"
+                aria-label="기록 삭제"
                 title="기록 삭제"
               >
                 <Trash2 className="w-4 h-4" />
@@ -85,7 +87,8 @@ export const PlayDetailModal: React.FC<PlayDetailModalProps> = ({ play, isOpen, 
               <button
                 type="button"
                 onClick={onClose}
-                className="p-2 text-[#A8ABAF] hover:text-[#1E272E] rounded-full hover:bg-[#F1F3F5] transition-colors"
+                className="p-2 text-[#636E72] hover:text-[#1E272E] rounded-full hover:bg-[#F1F3F5] transition-colors"
+                aria-label="닫기"
               >
                 <X className="w-5 h-5" />
               </button>

@@ -74,6 +74,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onClick, onDelete }) =
           {onDelete && (
             <button
               type="button"
+              aria-label="게임 삭제"
               title="게임 삭제"
               onClick={onDelete}
               className="w-6 h-6 rounded-full bg-black/60 hover:bg-[#EB4D4B] text-white flex items-center justify-center backdrop-blur-xs transition-colors shadow-xs"

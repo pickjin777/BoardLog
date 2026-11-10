@@ -69,7 +69,7 @@ export const GameListItem: React.FC<GameListItemProps> = ({ game, onClick, onDel
           )}
         </div>
 
-        {game.storageLocation && <p className="text-[9px] text-[#A8ABAF] truncate mt-0.5">📍 {game.storageLocation}</p>}
+        {game.storageLocation && <p className="text-[9px] text-[#636E72] truncate mt-0.5">📍 {game.storageLocation}</p>}
       </div>
 
       {/* Right stats & Actions */}
@@ -82,9 +82,10 @@ export const GameListItem: React.FC<GameListItemProps> = ({ game, onClick, onDel
         {onDelete && (
           <button
             type="button"
+            aria-label="게임 삭제"
             title="게임 삭제"
             onClick={onDelete}
-            className="w-7 h-7 rounded-full text-[#A8ABAF] hover:text-[#EB4D4B] hover:bg-[#FEEBEC] flex items-center justify-center transition-colors"
+            className="w-7 h-7 rounded-full text-[#636E72] hover:text-[#EB4D4B] hover:bg-[#FEEBEC] flex items-center justify-center transition-colors"
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>

@@ -8,6 +8,15 @@
   }
 }
 
+/*
+ * Tailwind marks focused fields outline-style:none, and Chrome's own ring is easy to miss on
+ * this gray page. !important keeps a 2px brand ring on keyboard focus.
+ */
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid #4834d4 !important;
+  outline-offset: 2px !important;
+}
+
 /* Dedicated Print Styles for Book Catalogue & PDF Export */
 @media print {
   @page {
