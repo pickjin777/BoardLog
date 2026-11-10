@@ -199,6 +199,10 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
       setFormError('게임명을 입력해 주세요.');
       return;
     }
+    if ((Number(minPlayers) || 1) > (Number(maxPlayers) || 1)) {
+      setFormError('최소 인원이 최대 인원보다 큽니다.');
+      return;
+    }
 
     setIsSubmitting(true);
     setFormError(null);
@@ -269,10 +273,10 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
           initial={{ opacity: 0, scale: 0.96, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.96, y: 15 }}
-          className="w-full max-w-lg bg-white rounded-[32px] shadow-2xl border border-[#E9ECEF] overflow-hidden my-auto max-h-[92vh] flex flex-col"
+          className="w-full max-w-lg bg-white rounded-[32px] shadow-2xl border border-[#898B8D] overflow-hidden my-auto max-h-[92vh] flex flex-col"
         >
           {/* Header */}
-          <div className="p-4 sm:p-5 border-b border-[#E9ECEF] flex items-center justify-between bg-white">
+          <div className="p-4 sm:p-5 border-b border-[#898B8D] flex items-center justify-between bg-white">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-full bg-[#4834D4] text-white flex items-center justify-center font-bold shadow-[0_4px_12px_rgba(72,52,212,0.3)]">
                 <Plus className="w-4.5 h-4.5" />
@@ -320,7 +324,7 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
             {!initialGame && scanAvailability === 'off' && (
               <div
                 id="game-form-scan-unavailable"
-                className="w-full p-3.5 bg-[#F8F9FA] border border-[#E9ECEF] rounded-2xl text-left"
+                className="w-full p-3.5 bg-[#F8F9FA] border border-[#898B8D] rounded-2xl text-left"
               >
                 <p className="text-xs font-bold text-[#1E272E]">사진으로 여러 개 등록은 아직 준비 중이에요.</p>
                 <p className="text-[11px] text-[#636E72] mt-1 leading-relaxed">
@@ -333,26 +337,31 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
             {/* Step 1: Seed Search Quick Fill (Only for new game) */}
             {!initialGame && (
               <div className="bg-[#4834D4]/5 border border-[#4834D4]/20 rounded-2xl p-4">
-                {/* biome-ignore lint/a11y/noLabelWithoutControl: TBD-018: label is not yet associated with its input (htmlFor/id) */}
-                <label className="block text-xs font-bold text-[#1E272E] mb-1.5 flex items-center gap-1.5">
+                <label
+                  htmlFor="seed-game-search-input"
+                  className="block text-xs font-bold text-[#1E272E] mb-1.5 flex items-center gap-1.5"
+                >
                   <Sparkles className="w-3.5 h-3.5 text-[#4834D4]" />
                   <span>인기 보드게임 시드 목록에서 빠른 검색</span>
                 </label>
                 <div className="relative">
-                  <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#636E72]" />
+                  <Search
+                    className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#636E72]"
+                    aria-hidden="true"
+                  />
                   <input
                     id="seed-game-search-input"
                     type="text"
                     placeholder="예: 스플렌더, 카탄, 루미큐브, 윙스팬, 테라포밍 마스..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 bg-white border border-[#E9ECEF] rounded-2xl text-xs text-[#1E272E] focus:outline-hidden focus:border-[#4834D4] transition-colors"
+                    className="w-full pl-9 pr-3 py-2 bg-white border border-[#898B8D] rounded-2xl text-xs text-[#1E272E] focus:outline-hidden focus:border-[#4834D4] transition-colors"
                   />
                 </div>
 
                 {/* Seed Search Autocomplete Results */}
                 {searchQuery.trim() && (
-                  <div className="mt-2 max-h-48 overflow-y-auto bg-white rounded-2xl border border-[#E9ECEF] divide-y divide-[#E9ECEF] shadow-sm">
+                  <div className="mt-2 max-h-48 overflow-y-auto bg-white rounded-2xl border border-[#898B8D] divide-y divide-[#898B8D] shadow-sm">
                     {filteredSeeds.length > 0 ? (
                       filteredSeeds.map((seed) => (
                         <button
@@ -422,42 +431,46 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                   placeholder="예: 스플렌더"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-[#F1F3F5] border border-[#E9ECEF] rounded-2xl text-xs font-medium text-[#1E272E] focus:bg-white focus:outline-hidden focus:border-[#4834D4] transition-colors"
+                  className="w-full px-3.5 py-2.5 bg-[#F1F3F5] border border-[#898B8D] rounded-2xl text-xs font-medium text-[#1E272E] focus:bg-white focus:outline-hidden focus:border-[#4834D4] transition-colors"
                 />
               </div>
 
               {/* English Title & Publisher */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  {/* biome-ignore lint/a11y/noLabelWithoutControl: TBD-018: label is not yet associated with its input (htmlFor/id) */}
-                  <label className="block text-xs font-bold text-[#1E272E] mb-1">영문명</label>
+                  <label htmlFor="game-input-title-en" className="block text-xs font-bold text-[#1E272E] mb-1">
+                    영문명
+                  </label>
                   <input
                     id="game-input-title-en"
                     type="text"
                     placeholder="예: Splendor"
                     value={titleEn}
                     onChange={(e) => setTitleEn(e.target.value)}
-                    className="w-full px-3 py-2 bg-[#F1F3F5] border border-[#E9ECEF] rounded-2xl text-xs text-[#1E272E] focus:bg-white focus:outline-hidden focus:border-[#4834D4] transition-colors"
+                    className="w-full px-3 py-2 bg-[#F1F3F5] border border-[#898B8D] rounded-2xl text-xs text-[#1E272E] focus:bg-white focus:outline-hidden focus:border-[#4834D4] transition-colors"
                   />
                 </div>
                 <div>
-                  {/* biome-ignore lint/a11y/noLabelWithoutControl: TBD-018: label is not yet associated with its input (htmlFor/id) */}
-                  <label className="block text-xs font-bold text-[#1E272E] mb-1">제작사 / 유통사</label>
+                  <label htmlFor="game-input-publisher" className="block text-xs font-bold text-[#1E272E] mb-1">
+                    제작사 / 유통사
+                  </label>
                   <input
                     id="game-input-publisher"
                     type="text"
                     placeholder="예: 코리아보드게임즈"
                     value={publisher}
                     onChange={(e) => setPublisher(e.target.value)}
-                    className="w-full px-3 py-2 bg-[#F1F3F5] border border-[#E9ECEF] rounded-2xl text-xs text-[#1E272E] focus:bg-white focus:outline-hidden focus:border-[#4834D4] transition-colors"
+                    className="w-full px-3 py-2 bg-[#F1F3F5] border border-[#898B8D] rounded-2xl text-xs text-[#1E272E] focus:bg-white focus:outline-hidden focus:border-[#4834D4] transition-colors"
                   />
                 </div>
               </div>
 
               {/* Box Art Image URL */}
               <div>
-                {/* biome-ignore lint/a11y/noLabelWithoutControl: TBD-018: label is not yet associated with its input (htmlFor/id) */}
-                <label className="block text-xs font-bold text-[#1E272E] mb-1 flex items-center justify-between">
+                <label
+                  htmlFor="game-input-image-url"
+                  className="block text-xs font-bold text-[#1E272E] mb-1 flex items-center justify-between"
+                >
                   <span>박스 아트 이미지 URL</span>
                   <span className="text-[10px] text-[#636E72] font-normal">웹 링크 또는 기본 이미지</span>
                 </label>
@@ -470,7 +483,7 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                       placeholder="https://..."
                       value={imageUrl}
                       onChange={(e) => setImageUrl(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2 bg-[#F1F3F5] border border-[#E9ECEF] rounded-2xl text-xs text-[#1E272E] focus:bg-white focus:outline-hidden focus:border-[#4834D4] transition-colors"
+                      className="w-full pl-9 pr-3 py-2 bg-[#F1F3F5] border border-[#898B8D] rounded-2xl text-xs text-[#1E272E] focus:bg-white focus:outline-hidden focus:border-[#4834D4] transition-colors"
                     />
                   </div>
                   {imageUrl && (
@@ -478,7 +491,7 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                       src={imageUrl}
                       alt="미리보기"
                       referrerPolicy="no-referrer"
-                      className="w-9 h-9 rounded-xl object-cover border border-[#E9ECEF] shrink-0"
+                      className="w-9 h-9 rounded-xl object-cover border border-[#898B8D] shrink-0"
                       onError={applyImageFallback}
                     />
                   )}
@@ -488,15 +501,14 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
               {/* Ownership Status & Condition */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  {/* biome-ignore lint/a11y/noLabelWithoutControl: TBD-018: label is not yet associated with its input (htmlFor/id) */}
-                  <label className="block text-xs font-bold text-[#1E272E] mb-1">
+                  <label htmlFor="game-select-ownership" className="block text-xs font-bold text-[#1E272E] mb-1">
                     보유 상태 <span className="text-[#EB4D4B]">*</span>
                   </label>
                   <select
                     id="game-select-ownership"
                     value={ownershipStatus}
                     onChange={(e) => setOwnershipStatus(e.target.value as GameOwnershipStatus)}
-                    className="w-full px-3 py-2 bg-[#F1F3F5] border border-[#E9ECEF] rounded-2xl text-xs font-bold text-[#1E272E] focus:bg-white focus:outline-hidden focus:border-[#4834D4] transition-colors"
+                    className="w-full px-3 py-2 bg-[#F1F3F5] border border-[#898B8D] rounded-2xl text-xs font-bold text-[#1E272E] focus:bg-white focus:outline-hidden focus:border-[#4834D4] transition-colors"
                   >
                     {OWNERSHIP_OPTIONS.map((opt) => (
                       <option key={opt} value={opt}>
@@ -506,13 +518,14 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                   </select>
                 </div>
                 <div>
-                  {/* biome-ignore lint/a11y/noLabelWithoutControl: TBD-018: label is not yet associated with its input (htmlFor/id) */}
-                  <label className="block text-xs font-bold text-[#1E272E] mb-1">구성품 상태</label>
+                  <label htmlFor="game-select-condition" className="block text-xs font-bold text-[#1E272E] mb-1">
+                    구성품 상태
+                  </label>
                   <select
                     id="game-select-condition"
                     value={condition}
                     onChange={(e) => setCondition(e.target.value as GameCondition)}
-                    className="w-full px-3 py-2 bg-[#F1F3F5] border border-[#E9ECEF] rounded-2xl text-xs font-medium text-[#1E272E] focus:bg-white focus:outline-hidden focus:border-[#4834D4] transition-colors"
+                    className="w-full px-3 py-2 bg-[#F1F3F5] border border-[#898B8D] rounded-2xl text-xs font-medium text-[#1E272E] focus:bg-white focus:outline-hidden focus:border-[#4834D4] transition-colors"
                   >
                     {CONDITION_OPTIONS.map((opt) => (
                       <option key={opt} value={opt}>
@@ -524,11 +537,13 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
               </div>
 
               {/* Purchase Date & Storage Location */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 bg-[#F8F9FA] rounded-2xl border border-[#E9ECEF]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 bg-[#F8F9FA] rounded-2xl border border-[#898B8D]">
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    {/* biome-ignore lint/a11y/noLabelWithoutControl: TBD-018: label is not yet associated with its input (htmlFor/id) */}
-                    <label className="text-xs font-bold text-[#1E272E] flex items-center gap-1">
+                    <label
+                      htmlFor="game-input-purchase-date"
+                      className="text-xs font-bold text-[#1E272E] flex items-center gap-1"
+                    >
                       <Calendar className="w-3.5 h-3.5 text-[#4834D4]" />
                       <span>구매 일시 (구매일자)</span>
                     </label>
@@ -546,14 +561,14 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                     placeholder="YYYY.MM.DD"
                     value={purchaseDate}
                     onChange={(e) => setPurchaseDate(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-[#E9ECEF] rounded-2xl text-xs font-bold text-[#1E272E] focus:outline-hidden focus:border-[#4834D4] transition-colors"
+                    className="w-full px-3 py-2 bg-white border border-[#898B8D] rounded-2xl text-xs font-bold text-[#1E272E] focus:outline-hidden focus:border-[#4834D4] transition-colors"
                   />
                   {/* Quick date presets */}
                   <div className="flex items-center gap-1 mt-1.5 overflow-x-auto pb-0.5">
                     <button
                       type="button"
                       onClick={() => setPurchaseDate(formatDate())}
-                      className="px-2 py-0.5 rounded-md text-[10px] bg-white border border-[#E9ECEF] hover:bg-[#F1F3F5] text-[#636E72] font-bold shrink-0"
+                      className="px-2 py-0.5 rounded-md text-[10px] bg-white border border-[#898B8D] hover:bg-[#F1F3F5] text-[#636E72] font-bold shrink-0"
                     >
                       오늘 ({formatDate()})
                     </button>
@@ -565,7 +580,7 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                         const ym = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
                         setPurchaseDate(ym);
                       }}
-                      className="px-2 py-0.5 rounded-md text-[10px] bg-white border border-[#E9ECEF] hover:bg-[#F1F3F5] text-[#636E72] font-medium shrink-0"
+                      className="px-2 py-0.5 rounded-md text-[10px] bg-white border border-[#898B8D] hover:bg-[#F1F3F5] text-[#636E72] font-medium shrink-0"
                     >
                       1달 전
                     </button>
@@ -577,7 +592,7 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                         const ym = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
                         setPurchaseDate(ym);
                       }}
-                      className="px-2 py-0.5 rounded-md text-[10px] bg-white border border-[#E9ECEF] hover:bg-[#F1F3F5] text-[#636E72] font-medium shrink-0"
+                      className="px-2 py-0.5 rounded-md text-[10px] bg-white border border-[#898B8D] hover:bg-[#F1F3F5] text-[#636E72] font-medium shrink-0"
                     >
                       1년 전
                     </button>
@@ -585,39 +600,40 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                 </div>
 
                 <div>
-                  {/* biome-ignore lint/a11y/noLabelWithoutControl: TBD-018: label is not yet associated with its input (htmlFor/id) */}
-                  <label className="block text-xs font-bold text-[#1E272E] mb-1">보관 장소 (선택)</label>
+                  <label htmlFor="game-input-storage-location" className="block text-xs font-bold text-[#1E272E] mb-1">
+                    보관 장소 (선택)
+                  </label>
                   <input
                     id="game-input-storage-location"
                     type="text"
                     placeholder="예: 거실 수납장 1열, 서재 책장"
                     value={storageLocation}
                     onChange={(e) => setStorageLocation(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-[#E9ECEF] rounded-2xl text-xs text-[#1E272E] focus:outline-hidden focus:border-[#4834D4] transition-colors"
+                    className="w-full px-3 py-2 bg-white border border-[#898B8D] rounded-2xl text-xs text-[#1E272E] focus:outline-hidden focus:border-[#4834D4] transition-colors"
                   />
                   <p className="text-[10px] text-[#636E72] mt-1.5">어디에 보관되어 있는지 메모해두세요</p>
                 </div>
               </div>
 
               {/* Genre tag chips */}
-              <div>
-                {/* biome-ignore lint/a11y/noLabelWithoutControl: TBD-018: label is not yet associated with its input (htmlFor/id) */}
-                <label className="block text-xs font-bold text-[#1E272E] mb-1 flex items-center gap-1">
+              <fieldset className="border-0 p-0 m-0 min-w-0">
+                <legend className="block text-xs font-bold text-[#1E272E] mb-1 flex items-center gap-1">
                   <Tag className="w-3 h-3 text-[#636E72]" />
                   <span>장르 선택 (다중 선택 가능)</span>
-                </label>
-                <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto p-1.5 bg-[#F1F3F5] rounded-2xl border border-[#E9ECEF]">
+                </legend>
+                <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto p-1.5 bg-[#F1F3F5] rounded-2xl border border-[#898B8D]">
                   {GENRE_PRESETS.map((g) => {
                     const isSelected = genres.includes(g);
                     return (
                       <button
                         key={g}
                         type="button"
+                        aria-pressed={isSelected}
                         onClick={() => toggleGenre(g)}
                         className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all ${
                           isSelected
                             ? 'bg-[#4834D4] text-white shadow-xs'
-                            : 'bg-white text-[#636E72] hover:bg-[#E9ECEF] border border-[#E9ECEF]'
+                            : 'bg-white text-[#636E72] hover:bg-[#E9ECEF] border border-[#898B8D]'
                         }`}
                       >
                         {g}
@@ -625,13 +641,14 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                     );
                   })}
                 </div>
-              </div>
+              </fieldset>
 
               {/* Players, Time, Weight */}
               <div className="grid grid-cols-3 gap-2.5">
                 <div>
-                  {/* biome-ignore lint/a11y/noLabelWithoutControl: TBD-018: label is not yet associated with its input (htmlFor/id) */}
-                  <label className="block text-[11px] font-bold text-[#1E272E] mb-1">최소 인원</label>
+                  <label htmlFor="game-input-min-players" className="block text-[11px] font-bold text-[#1E272E] mb-1">
+                    최소 인원
+                  </label>
                   <input
                     id="game-input-min-players"
                     type="number"
@@ -639,12 +656,13 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                     max="30"
                     value={minPlayers}
                     onChange={(e) => setMinPlayers(Number(e.target.value))}
-                    className="w-full px-2.5 py-2 bg-[#F1F3F5] border border-[#E9ECEF] rounded-2xl text-xs font-bold text-center focus:bg-white focus:outline-hidden focus:border-[#4834D4]"
+                    className="w-full px-2.5 py-2 bg-[#F1F3F5] border border-[#898B8D] rounded-2xl text-xs font-bold text-center focus:bg-white focus:outline-hidden focus:border-[#4834D4]"
                   />
                 </div>
                 <div>
-                  {/* biome-ignore lint/a11y/noLabelWithoutControl: TBD-018: label is not yet associated with its input (htmlFor/id) */}
-                  <label className="block text-[11px] font-bold text-[#1E272E] mb-1">최대 인원</label>
+                  <label htmlFor="game-input-max-players" className="block text-[11px] font-bold text-[#1E272E] mb-1">
+                    최대 인원
+                  </label>
                   <input
                     id="game-input-max-players"
                     type="number"
@@ -652,12 +670,13 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                     max="30"
                     value={maxPlayers}
                     onChange={(e) => setMaxPlayers(Number(e.target.value))}
-                    className="w-full px-2.5 py-2 bg-[#F1F3F5] border border-[#E9ECEF] rounded-2xl text-xs font-bold text-center focus:bg-white focus:outline-hidden focus:border-[#4834D4]"
+                    className="w-full px-2.5 py-2 bg-[#F1F3F5] border border-[#898B8D] rounded-2xl text-xs font-bold text-center focus:bg-white focus:outline-hidden focus:border-[#4834D4]"
                   />
                 </div>
                 <div>
-                  {/* biome-ignore lint/a11y/noLabelWithoutControl: TBD-018: label is not yet associated with its input (htmlFor/id) */}
-                  <label className="block text-[11px] font-bold text-[#1E272E] mb-1">플레이타임(분)</label>
+                  <label htmlFor="game-input-playtime" className="block text-[11px] font-bold text-[#1E272E] mb-1">
+                    플레이타임(분)
+                  </label>
                   <input
                     id="game-input-playtime"
                     type="number"
@@ -665,16 +684,17 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                     min="5"
                     value={playTime}
                     onChange={(e) => setPlayTime(Number(e.target.value))}
-                    className="w-full px-2.5 py-2 bg-[#F1F3F5] border border-[#E9ECEF] rounded-2xl text-xs font-bold text-center focus:bg-white focus:outline-hidden focus:border-[#4834D4]"
+                    className="w-full px-2.5 py-2 bg-[#F1F3F5] border border-[#898B8D] rounded-2xl text-xs font-bold text-center focus:bg-white focus:outline-hidden focus:border-[#4834D4]"
                   />
                 </div>
               </div>
             </div>
 
             {/* Advanced & Price Details Accordion */}
-            <div className="border-t border-[#E9ECEF] pt-3">
+            <div className="border-t border-[#898B8D] pt-3">
               <button
                 type="button"
+                aria-expanded={showAdvanced}
                 onClick={() => setShowAdvanced(!showAdvanced)}
                 className="w-full flex items-center justify-between py-2 text-xs font-bold text-[#1E272E] hover:text-[#4834D4] transition-colors"
               >
@@ -683,12 +703,13 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
               </button>
 
               {showAdvanced && (
-                <div className="space-y-4 pt-3 mt-1 bg-[#F8F9FA] p-4 rounded-2xl border border-[#E9ECEF] text-xs">
+                <div className="space-y-4 pt-3 mt-1 bg-[#F8F9FA] p-4 rounded-2xl border border-[#898B8D] text-xs">
                   {/* Difficulty / Weight & Best Players */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      {/* biome-ignore lint/a11y/noLabelWithoutControl: TBD-018: label is not yet associated with its input (htmlFor/id) */}
-                      <label className="block text-[11px] font-bold text-[#1E272E] mb-1">난이도 (1.0 ~ 5.0)</label>
+                      <label htmlFor="game-input-weight" className="block text-[11px] font-bold text-[#1E272E] mb-1">
+                        난이도 (1.0 ~ 5.0)
+                      </label>
                       <input
                         id="game-input-weight"
                         type="number"
@@ -697,25 +718,29 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                         max="5.0"
                         value={weight}
                         onChange={(e) => setWeight(Number(e.target.value))}
-                        className="w-full px-3 py-2 bg-white border border-[#E9ECEF] rounded-2xl text-xs text-[#1E272E]"
+                        className="w-full px-3 py-2 bg-white border border-[#898B8D] rounded-2xl text-xs text-[#1E272E]"
                       />
                     </div>
                     <div>
-                      {/* biome-ignore lint/a11y/noLabelWithoutControl: TBD-018: label is not yet associated with its input (htmlFor/id) */}
-                      <label className="block text-[11px] font-bold text-[#1E272E] mb-1">권장 인원</label>
+                      <label
+                        htmlFor="game-input-best-players"
+                        className="block text-[11px] font-bold text-[#1E272E] mb-1"
+                      >
+                        권장 인원
+                      </label>
                       <input
                         id="game-input-best-players"
                         type="text"
                         placeholder="예: 3인, 4인"
                         value={bestPlayers}
                         onChange={(e) => setBestPlayers(e.target.value)}
-                        className="w-full px-3 py-2 bg-white border border-[#E9ECEF] rounded-2xl text-xs text-[#1E272E]"
+                        className="w-full px-3 py-2 bg-white border border-[#898B8D] rounded-2xl text-xs text-[#1E272E]"
                       />
                     </div>
                   </div>
 
                   {/* Price info (manual entry disclaimer) */}
-                  <div className="p-3.5 bg-white rounded-2xl border border-[#E9ECEF] space-y-2.5 shadow-sm">
+                  <div className="p-3.5 bg-white rounded-2xl border border-[#898B8D] space-y-2.5 shadow-sm">
                     <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#1E272E]">
                       <HelpCircle className="w-3.5 h-3.5 text-[#4834D4]" />
                       <span>가격 데이터 정직성 안내</span>
@@ -727,68 +752,85 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
 
                     <div className="grid grid-cols-3 gap-2 pt-1">
                       <div>
-                        {/* biome-ignore lint/a11y/noLabelWithoutControl: TBD-018: label is not yet associated with its input (htmlFor/id) */}
-                        <label className="block text-[10px] font-bold text-[#1E272E] mb-1">구매가 (₩)</label>
+                        <label
+                          htmlFor="game-input-purchase-price"
+                          className="block text-[10px] font-bold text-[#1E272E] mb-1"
+                        >
+                          구매가 (₩)
+                        </label>
                         <input
                           id="game-input-purchase-price"
                           type="number"
                           placeholder="0"
                           value={purchasePrice}
                           onChange={(e) => setPurchasePrice(e.target.value === '' ? '' : Number(e.target.value))}
-                          className="w-full px-2.5 py-1.5 bg-[#F1F3F5] border border-[#E9ECEF] rounded-xl text-xs font-bold"
+                          className="w-full px-2.5 py-1.5 bg-[#F1F3F5] border border-[#898B8D] rounded-xl text-xs font-bold"
                         />
                       </div>
                       <div>
-                        {/* biome-ignore lint/a11y/noLabelWithoutControl: TBD-018: label is not yet associated with its input (htmlFor/id) */}
-                        <label className="block text-[10px] font-bold text-[#1E272E] mb-1">정가 (₩)</label>
+                        <label
+                          htmlFor="game-input-original-price"
+                          className="block text-[10px] font-bold text-[#1E272E] mb-1"
+                        >
+                          정가 (₩)
+                        </label>
                         <input
                           id="game-input-original-price"
                           type="number"
                           placeholder="0"
                           value={originalPrice}
                           onChange={(e) => setOriginalPrice(e.target.value === '' ? '' : Number(e.target.value))}
-                          className="w-full px-2.5 py-1.5 bg-[#F1F3F5] border border-[#E9ECEF] rounded-xl text-xs font-bold"
+                          className="w-full px-2.5 py-1.5 bg-[#F1F3F5] border border-[#898B8D] rounded-xl text-xs font-bold"
                         />
                       </div>
                       <div>
-                        {/* biome-ignore lint/a11y/noLabelWithoutControl: TBD-018: label is not yet associated with its input (htmlFor/id) */}
-                        <label className="block text-[10px] font-bold text-[#1E272E] mb-1">중고 시세 (₩)</label>
+                        <label
+                          htmlFor="game-input-market-price"
+                          className="block text-[10px] font-bold text-[#1E272E] mb-1"
+                        >
+                          중고 시세 (₩)
+                        </label>
                         <input
                           id="game-input-market-price"
                           type="number"
                           placeholder="0"
                           value={marketPrice}
                           onChange={(e) => setMarketPrice(e.target.value === '' ? '' : Number(e.target.value))}
-                          className="w-full px-2.5 py-1.5 bg-[#F1F3F5] border border-[#E9ECEF] rounded-xl text-xs font-bold"
+                          className="w-full px-2.5 py-1.5 bg-[#F1F3F5] border border-[#898B8D] rounded-xl text-xs font-bold"
                         />
                       </div>
                     </div>
 
                     <div>
-                      {/* biome-ignore lint/a11y/noLabelWithoutControl: TBD-018: label is not yet associated with its input (htmlFor/id) */}
-                      <label className="block text-[10px] font-bold text-[#1E272E] mb-1">가격 출처 / 확인일</label>
+                      <label
+                        htmlFor="game-input-price-source"
+                        className="block text-[10px] font-bold text-[#1E272E] mb-1"
+                      >
+                        가격 출처 / 확인일
+                      </label>
                       <input
                         id="game-input-price-source"
                         type="text"
                         placeholder="예: 2026 보드게임 콘 현장 구매, 당근마켓"
                         value={priceSource}
                         onChange={(e) => setPriceSource(e.target.value)}
-                        className="w-full px-3 py-1.5 bg-[#F1F3F5] border border-[#E9ECEF] rounded-xl text-[11px]"
+                        className="w-full px-3 py-1.5 bg-[#F1F3F5] border border-[#898B8D] rounded-xl text-[11px]"
                       />
                     </div>
                   </div>
 
                   {/* Notes */}
                   <div>
-                    {/* biome-ignore lint/a11y/noLabelWithoutControl: TBD-018: label is not yet associated with its input (htmlFor/id) */}
-                    <label className="block text-[11px] font-bold text-[#1E272E] mb-1">메모 / 특이사항</label>
+                    <label htmlFor="game-input-notes" className="block text-[11px] font-bold text-[#1E272E] mb-1">
+                      메모 / 특이사항
+                    </label>
                     <textarea
                       id="game-input-notes"
                       rows={2}
                       placeholder="프로텍터 슬리브 사이즈, 슬리브 여부, 확장팩 포함 여부 등"
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
-                      className="w-full p-2.5 bg-white border border-[#E9ECEF] rounded-2xl text-xs text-[#1E272E]"
+                      className="w-full p-2.5 bg-white border border-[#898B8D] rounded-2xl text-xs text-[#1E272E]"
                     />
                   </div>
                 </div>
@@ -797,7 +839,7 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
           </div>
 
           {/* Footer CTA */}
-          <div className="p-4 border-t border-[#E9ECEF] bg-white flex items-center justify-end gap-2.5">
+          <div className="p-4 border-t border-[#898B8D] bg-white flex items-center justify-end gap-2.5">
             <button
               id="game-form-cancel-btn"
               type="button"

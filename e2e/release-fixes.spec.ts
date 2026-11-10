@@ -235,3 +235,25 @@ test('home secondary text and win rate meet AA, and the game form close button i
   check('게임 등록 닫기 이름이 닫기', closeName === '닫기', closeName ?? '');
   await visible('게임명 입력에 라벨이 연결됨', page.getByRole('textbox', { name: /게임명/ }));
 });
+
+test('game form labels reach their fields, and a reversed player count is refused', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 700 });
+  await page.goto('/', { waitUntil: 'networkidle' });
+  await page.locator('#nav-tab-games').click();
+  await page.locator('#games-add-game-btn').click();
+  await page.locator('#game-input-title').waitFor();
+
+  await visible('영문명 라벨', page.getByRole('textbox', { name: '영문명' }));
+  await visible('보유 상태 라벨', page.getByRole('combobox', { name: /보유 상태/ }));
+  await visible('최소 인원 라벨', page.getByRole('spinbutton', { name: '최소 인원' }));
+  await visible('장르 묶음', page.getByRole('group', { name: /장르 선택/ }));
+  const border = await page.locator('#game-input-title').evaluate((el) => getComputedStyle(el).borderTopColor);
+  check('입력 테두리가 #898B8D', border === 'rgb(137, 139, 141)', border);
+
+  await page.locator('#game-input-title').fill('테스트게임');
+  await page.locator('#game-input-min-players').fill('8');
+  await page.locator('#game-input-max-players').fill('2');
+  await page.locator('#game-form-save-btn').click();
+  await visible('인원 순서 오류', page.getByText('최소 인원이 최대 인원보다 큽니다.'));
+  await visible('폼이 닫히지 않음', page.locator('#game-form-modal-overlay'));
+});
