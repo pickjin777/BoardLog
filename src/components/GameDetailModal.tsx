@@ -15,7 +15,7 @@ import {
   Calendar,
   MessageCircle
 } from 'lucide-react';
-import type { UserGame } from '../types';
+import type { PlayRecord, UserGame } from '../types';
 import { formatWon } from '../utils/formatters';
 import { getOwnershipBadgeColor } from './GameCard';
 import { useToast } from '../context/ToastContext';
@@ -23,23 +23,31 @@ import { applyImageFallback } from '../utils/imageFallback';
 
 interface GameDetailModalProps {
   game: UserGame | null;
+  plays?: PlayRecord[];
   isOpen: boolean;
   onClose: () => void;
   onEdit: (game: UserGame) => void;
   onDelete: (game: UserGame) => void;
   onStartPlay: (game: UserGame) => void;
+  onOpenPlay?: (play: PlayRecord) => void;
 }
 
 export const GameDetailModal: React.FC<GameDetailModalProps> = ({
   game,
+  plays = [],
   isOpen,
   onClose,
   onEdit,
   onDelete,
-  onStartPlay
+  onStartPlay,
+  onOpenPlay
 }) => {
   const { showToast } = useToast();
   if (!isOpen || !game) return null;
+
+  const gamePlays = plays
+    .filter((play) => play.gameId === game.id)
+    .sort((a, b) => `${b.date} ${b.startTime}`.localeCompare(`${a.date} ${a.startTime}`));
 
   const handleShareSingleGame = async () => {
     const text = `🎲 [보드게임 추천] ${game.title}\n👥 인원: ${game.minPlayers}~${game.maxPlayers}인${game.bestPlayers ? ` (추천: ${game.bestPlayers})` : ''}\n⏱ 시간: ${game.playTime}분\n⭐ 난이도: ${game.weight?.toFixed(1) || '2.0'}/5.0\n🏷 장르: ${game.genre.join(', ')}\n${game.notes ? `💬 메모: ${game.notes}\n` : ''}\n👉 같이 플레이해요!`;
@@ -190,8 +198,8 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
                   <CheckSquare className="w-4.5 h-4.5" />
                 </div>
                 <div>
-                  <p className="text-xs font-black text-[#1E272E]">총 {game.playCount || 0}회 플레이</p>
-                  <p className="text-[10px] text-[#636E72]">누적된 기록을 확인하세요</p>
+                  <p className="text-xs font-black text-[#1E272E]">이 게임 기록 {gamePlays.length}회</p>
+                  <p className="text-[10px] text-[#636E72]">이 게임에 연결된 기록만 보여 줍니다</p>
                 </div>
               </div>
 
@@ -204,6 +212,38 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
                 <PlusCircle className="w-3.5 h-3.5" />
                 <span>기록 추가</span>
               </button>
+            </div>
+
+            <div id="game-detail-play-list" className="space-y-1.5">
+              <h4 className="text-[11px] font-bold text-[#A8ABAF]">이 게임의 플레이 기록</h4>
+              {gamePlays.length === 0 ? (
+                <p id="game-detail-plays-empty" className="text-xs text-[#636E72]">
+                  아직 이 게임의 기록이 없어요.
+                </p>
+              ) : (
+                <ul className="space-y-1.5">
+                  {gamePlays.map((play) => (
+                    <li key={play.id}>
+                      <button
+                        type="button"
+                        onClick={() => onOpenPlay?.(play)}
+                        className="w-full text-left px-3 py-2 rounded-xl bg-[#F8F9FA] border border-[#E9ECEF] flex items-center justify-between gap-2"
+                      >
+                        <span className="min-w-0">
+                          <span className="block text-xs font-bold text-[#1E272E]">{play.date}</span>
+                          <span className="block text-[10px] text-[#636E72] truncate">
+                            {play.location || '장소 없음'}
+                            {play.participants.length > 0
+                              ? ` · ${play.participants.map((person) => person.name).join(', ')}`
+                              : ''}
+                          </span>
+                        </span>
+                        <span className="shrink-0 text-[10px] font-bold text-[#4834D4]">{play.myResult}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
 
             {/* Genres */}

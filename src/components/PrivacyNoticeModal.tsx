@@ -1,6 +1,8 @@
 import { ShieldCheck, X } from 'lucide-react';
 import type React from 'react';
+import { useEffect, useState } from 'react';
 import { isGoogleAnalyticsEnabled } from '../services/analytics';
+import { fetchScanAvailable } from '../services/gameScanner';
 
 interface PrivacyNoticeModalProps {
   isOpen: boolean;
@@ -16,7 +18,7 @@ interface NoticeSection {
  * Plain statements of what the app does today (FR-PRIV-01). Update this whenever data starts to
  * leave the browser in a new way (cloud backup, new analytics). Its legal sufficiency is unchecked (TBD-005).
  */
-const buildSections = (googleAnalytics: boolean): NoticeSection[] => [
+export const buildPrivacySections = (googleAnalytics: boolean, scanAvailable: boolean): NoticeSection[] => [
   {
     heading: '내 기록은 어디에 저장되나요?',
     lines: [
@@ -27,7 +29,9 @@ const buildSections = (googleAnalytics: boolean): NoticeSection[] => [
   {
     heading: '사진으로 게임 등록',
     lines: [
-      "'사진으로 게임 등록'을 쓰면 고른 사진이 서버를 거쳐 Google의 AI(Gemini)로 전달되어 게임 이름을 읽는 데 쓰입니다. 보드로그는 이 사진을 저장하지 않습니다."
+      scanAvailable
+        ? "'사진으로 게임 등록'을 쓰면 고른 사진이 서버를 거쳐 Google의 AI(Gemini)로 전달되어 게임 이름을 읽는 데 쓰입니다. 보드로그는 이 사진을 저장하지 않습니다."
+        : '이 버전에서는 사진 인식을 사용하지 않습니다. 설정이 켜지면 고른 사진만 서버를 거쳐 Google의 AI(Gemini)로 전달되고, 보드로그는 그 사진을 저장하지 않습니다.'
     ]
   },
   {
@@ -49,8 +53,21 @@ const buildSections = (googleAnalytics: boolean): NoticeSection[] => [
 ];
 
 export const PrivacyNoticeModal: React.FC<PrivacyNoticeModalProps> = ({ isOpen, onClose }) => {
+  const [scanAvailable, setScanAvailable] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    let cancelled = false;
+    fetchScanAvailable().then((available) => {
+      if (!cancelled) setScanAvailable(available);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
-  const sections = buildSections(isGoogleAnalyticsEnabled());
+  const sections = buildPrivacySections(isGoogleAnalyticsEnabled(), scanAvailable);
 
   return (
     <div
