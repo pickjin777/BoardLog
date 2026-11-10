@@ -184,14 +184,26 @@ function readImages(body: unknown): IncomingImage[] | string {
   return images;
 }
 
+/** Non-empty server key. The value is never returned to the browser. */
+export function isScanConfigured(apiKey: string | undefined): apiKey is string {
+  return typeof apiKey === 'string' && apiKey.trim().length > 0;
+}
+
 export default async function handler(req: HandlerRequest, res: HandlerResponse): Promise<void> {
+  // A probe the client can call without sending a photo or reaching Gemini.
+  // When a key is added, the next check turns the button back on by itself.
+  if (req.method === 'GET') {
+    res.status(200).json({ available: isScanConfigured(process.env.GEMINI_API_KEY) });
+    return;
+  }
+
   if (req.method !== 'POST') {
     res.status(405).json({ error: '허용되지 않은 요청입니다.' });
     return;
   }
 
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
+  if (!isScanConfigured(apiKey)) {
     // Surfaced as a setup problem, not a user error: the deployment is missing its key.
     res.status(503).json({ error: '사진 인식 기능이 아직 설정되지 않았습니다.', code: 'NOT_CONFIGURED' });
     return;

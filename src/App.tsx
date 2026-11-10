@@ -26,6 +26,7 @@ import { SharedPlayModal } from './components/SharedPlayModal';
 import { type SharedPlay, decodeSharedPlay, sharedHashPresent, toRecipientRecord } from './utils/sharedPlay';
 import { normalizePlay } from './utils/backupImport';
 import { ConfirmModal } from './components/ConfirmModal';
+import { LocalStorageNotice } from './components/LocalStorageNotice';
 import { LoadingState, EmptyState, ErrorState } from './components/StateViews';
 
 const OWNERSHIP_TABS: (GameOwnershipStatus | '전체')[] = [
@@ -322,7 +323,15 @@ const MainApp: React.FC = () => {
       <Navbar onOpenAuth={() => setIsAuthOpen(true)} />
 
       {/* Main Container */}
-      <main className="flex-1 w-full max-w-xl mx-auto px-4 pt-18 pb-24">
+      <main className="flex-1 w-full max-w-xl mx-auto px-4 pt-18 pb-32">
+        <LocalStorageNotice
+          onBackup={() => {
+            setActiveTab('mypage');
+            window.setTimeout(() => {
+              document.getElementById('export-json-btn')?.scrollIntoView({ block: 'center' });
+            }, 50);
+          }}
+        />
         {isLoading ? (
           <LoadingState message="보드로그 데이터를 불러오는 중입니다..." />
         ) : loadError ? (
@@ -354,15 +363,17 @@ const MainApp: React.FC = () => {
 
             {/* 2. GAMES TAB (내 보드게임) */}
             {activeTab === 'games' && (
-              <div className="space-y-4 pb-20">
-                {/* Header & View toggle */}
-                <div className="flex items-center justify-between gap-2">
+              <div className="space-y-4 pb-6">
+                {/* Title stays full width. At 320px a side-by-side row crushed it into "내 보드게 / 임". */}
+                <div className="space-y-3">
                   <div>
-                    <h2 className="text-xl font-black italic text-[#1E272E]">내 보드게임 컬렉션</h2>
+                    <h2 id="games-tab-title" className="text-xl font-black italic text-[#1E272E]">
+                      내 보드게임 컬렉션
+                    </h2>
                     <p className="text-xs text-[#636E72]">총 {games.length}개의 게임</p>
                   </div>
 
-                  <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                  <div className="flex items-center gap-1.5 flex-wrap">
                     {/* Add Game Button */}
                     <button
                       id="games-add-game-btn"
@@ -675,6 +686,11 @@ const MainApp: React.FC = () => {
       <GameDetailModal
         isOpen={!!viewingGame}
         game={viewingGame}
+        plays={plays}
+        onOpenPlay={(play) => {
+          setViewingGame(null);
+          setViewingPlay(play);
+        }}
         onClose={() => setViewingGame(null)}
         onEdit={(game) => {
           setViewingGame(null);

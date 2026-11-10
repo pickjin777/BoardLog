@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import type { UserGame, SeedGame, GameOwnershipStatus, GameCondition } from '../types';
 import { SEED_GAMES } from '../data/seedGames';
+import { fetchScanAvailable } from '../services/gameScanner';
 import { formatDate } from '../utils/formatters';
 import { applyImageFallback } from '../utils/imageFallback';
 
@@ -97,6 +98,7 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [scanAvailability, setScanAvailability] = useState<'unknown' | 'on' | 'off'>('unknown');
 
   // Initialize or reset form
   // biome-ignore lint/correctness/useExhaustiveDependencies: `isOpen` is a trigger so reopening the modal re-initializes the form; the body does not read it
@@ -243,6 +245,18 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
     }
   };
 
+  useEffect(() => {
+    if (!isOpen || initialGame) return;
+    let cancelled = false;
+    setScanAvailability('unknown');
+    fetchScanAvailable().then((available) => {
+      if (!cancelled) setScanAvailability(available ? 'on' : 'off');
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, initialGame]);
+
   if (!isOpen) return null;
 
   return (
@@ -282,8 +296,9 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
 
           {/* Body content with scroll */}
           <div className="p-4 sm:p-6 overflow-y-auto flex-1 space-y-5">
-            {/* Bulk path: one photo of a shelf instead of filling this form per game */}
-            {!initialGame && onOpenScan && (
+            {/* Bulk path: one photo of a shelf instead of filling this form per game.
+                Hidden until the server says a key exists, so a 503 does not dead-end the form. */}
+            {!initialGame && scanAvailability === 'on' && onOpenScan && (
               <button
                 id="game-form-open-scan-btn"
                 type="button"
@@ -300,6 +315,18 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                   </span>
                 </div>
               </button>
+            )}
+            {!initialGame && scanAvailability === 'off' && (
+              <div
+                id="game-form-scan-unavailable"
+                className="w-full p-3.5 bg-[#F8F9FA] border border-[#E9ECEF] rounded-2xl text-left"
+              >
+                <p className="text-xs font-bold text-[#1E272E]">사진으로 여러 개 등록은 아직 준비 중이에요.</p>
+                <p className="text-[11px] text-[#636E72] mt-1 leading-relaxed">
+                  아래 시드 검색이나 직접 입력으로 지금 등록할 수 있어요. 인식 설정이 켜지면 이 자리가 다시 버튼으로
+                  바뀝니다.
+                </p>
+              </div>
             )}
 
             {/* Step 1: Seed Search Quick Fill (Only for new game) */}
