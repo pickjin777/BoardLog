@@ -40,6 +40,7 @@
     "react-dom": "^19.0.1"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@biomejs/biome": "2.6.4",
     "@capacitor/assets": "^4.0.0",
     "@capacitor/cli": "^8.6.0",

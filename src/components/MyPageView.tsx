@@ -295,7 +295,7 @@ export const MyPageView: React.FC<MyPageViewProps> = ({ onOpenAuth, onOpenCatalo
       <a
         id="mypage-account-deletion-link"
         href="/account-deletion/"
-        className="block text-center text-[11px] font-bold text-[#636E72] underline underline-offset-2"
+        className="flex min-h-12 items-center justify-center text-center text-[11px] font-bold text-[#636E72] underline underline-offset-2"
       >
         계정 삭제 안내 페이지
       </a>
