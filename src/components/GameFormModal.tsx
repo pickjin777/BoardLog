@@ -308,14 +308,14 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                 id="game-form-open-scan-btn"
                 type="button"
                 onClick={onOpenScan}
-                className="w-full p-3.5 bg-[#1E272E] hover:bg-[#2D3436] text-white rounded-2xl flex items-center gap-3 text-left transition-colors active:scale-[0.99]"
+                className="flex w-full items-center gap-3 rounded-2xl bg-[#E2B657] p-3.5 text-left text-[#1A1408] transition-colors hover:bg-[#C9A24A] active:scale-[0.99]"
               >
-                <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#1A1408]/10">
                   <Camera className="w-4.5 h-4.5" />
                 </div>
                 <div className="min-w-0">
                   <span className="block text-xs font-bold">사진으로 여러 개 한 번에 등록</span>
-                  <span className="block text-[11px] text-white/70">
+                  <span className="block text-[11px] text-[#1A1408]/80">
                     책장을 찍으면 박스 제목을 읽어 목록으로 만들어 줍니다
                   </span>
                 </div>

@@ -10,7 +10,7 @@ const config: CapacitorConfig = {
   appId: APP_ID,
   appName: APP_NAME,
   webDir: 'dist',
-  backgroundColor: '#F1F3F5',
+  backgroundColor: '#100E0B',
   server: {
     androidScheme: 'https',
     hostname: 'localhost'
@@ -29,7 +29,7 @@ const config: CapacitorConfig = {
     SystemBars: {
       insetsHandling: 'css',
       initialViewportFitValueHint: 'cover',
-      style: 'LIGHT'
+      style: 'DARK'
     }
   }
 };

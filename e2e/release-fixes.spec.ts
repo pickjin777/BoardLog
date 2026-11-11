@@ -42,10 +42,10 @@ test('320px empty lists clear the center button, and controls have names', async
 
   await page.waitForFunction(() => {
     const tab = document.querySelector('#nav-tab-home');
-    return tab !== null && getComputedStyle(tab).color === 'rgb(99, 110, 114)';
+    return tab !== null && getComputedStyle(tab).color === 'rgb(228, 211, 180)';
   });
   const navColor = await page.locator('#nav-tab-home').evaluate((el) => getComputedStyle(el).color);
-  check('선택 안 된 탭 글자색이 #636E72', navColor === 'rgb(99, 110, 114)', navColor);
+  check('선택 안 된 탭 글자색이 #E4D3B4', navColor === 'rgb(228, 211, 180)', navColor);
 
   await page.locator('#nav-tab-plays').evaluate((el) => {
     if (!(el instanceof HTMLElement)) return;
@@ -53,10 +53,10 @@ test('320px empty lists clear the center button, and controls have names', async
   });
   await page.waitForFunction(() => {
     const tab = document.querySelector('#nav-tab-plays');
-    return tab !== null && getComputedStyle(tab).outlineColor === 'rgb(72, 52, 212)';
+    return tab !== null && getComputedStyle(tab).outlineColor === 'rgb(228, 220, 255)';
   });
   const outline = await page.locator('#nav-tab-plays').evaluate((el) => getComputedStyle(el).outlineColor);
-  check('탭 포커스 테두리가 보임', outline === 'rgb(72, 52, 212)', outline);
+  check('탭 포커스 테두리가 보임', outline === 'rgb(228, 220, 255)', outline);
 
   await page.locator('#nav-tab-plays').click();
   await page.locator('#empty-state-description').waitFor();
@@ -220,15 +220,15 @@ test('home secondary text and win rate meet AA, and the game form close button i
     .locator('#home-kpi-games span')
     .first()
     .evaluate((el) => getComputedStyle(el).color);
-  check('보유 게임 라벨이 #636E72', label === 'rgb(99, 110, 114)', label);
+  check('보유 게임 라벨이 #E4D3B4', label === 'rgb(228, 211, 180)', label);
   const win = await page.locator('#home-kpi-winrate').evaluate((el) => getComputedStyle(el).color);
-  check('승률 숫자가 #1B7A43', win === 'rgb(27, 122, 67)', win);
+  check('승률 숫자가 #9BE7B8', win === 'rgb(155, 231, 184)', win);
 
   await page.locator('#nav-tab-games').click();
   const placeholder = await page
     .locator('#games-search-input')
     .evaluate((el) => getComputedStyle(el, '::placeholder').color);
-  check('검색 플레이스홀더가 #636E72', placeholder === 'rgb(99, 110, 114)', placeholder);
+  check('검색 플레이스홀더가 #E4D3B4', placeholder === 'rgb(228, 211, 180)', placeholder);
 
   await page.locator('#games-add-game-btn').click();
   const closeName = await page.locator('#game-form-close-btn').evaluate((el) => el.getAttribute('aria-label'));
@@ -248,7 +248,7 @@ test('game form labels reach their fields, and a reversed player count is refuse
   await visible('최소 인원 라벨', page.getByRole('spinbutton', { name: '최소 인원' }));
   await visible('장르 묶음', page.getByRole('group', { name: /장르 선택/ }));
   const border = await page.locator('#game-input-title').evaluate((el) => getComputedStyle(el).borderTopColor);
-  check('입력 테두리가 #898B8D', border === 'rgb(137, 139, 141)', border);
+  check('입력 테두리가 #C6A36A', border === 'rgb(198, 163, 106)', border);
 
   await page.locator('#game-input-title').fill('테스트게임');
   await page.locator('#game-input-min-players').fill('8');
@@ -269,7 +269,7 @@ test('play form fields are named and their borders clear the background', async 
   await visible('시작 시간 라벨', page.getByRole('textbox', { name: '시작' }));
   await visible('나의 결과 묶음', page.getByRole('group', { name: /나의 결과/ }));
   const border = await page.locator('#play-input-location').evaluate((el) => getComputedStyle(el).borderTopColor);
-  check('장소 칸 테두리가 #898B8D', border === 'rgb(137, 139, 141)', border);
+  check('장소 칸 테두리가 #C6A36A', border === 'rgb(198, 163, 106)', border);
 });
 
 test('kakao and catalog filters are named', async ({ page }) => {
@@ -364,7 +364,7 @@ test('play photos open from the keyboard and the header clears the actions', asy
     if (el instanceof HTMLElement) el.focus({ focusVisible: true } as FocusOptions);
   });
   const outline = await openPhoto.evaluate((el) => getComputedStyle(el).outlineColor);
-  check('사진 포커스 테두리', outline === 'rgb(72, 52, 212)', outline);
+  check('사진 포커스 테두리', outline === 'rgb(228, 220, 255)', outline);
 
   await page.keyboard.press('Enter');
   await visible('엔터로 연 확대', page.locator('#photo-lightbox-modal'));

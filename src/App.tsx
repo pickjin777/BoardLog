@@ -28,6 +28,7 @@ import { normalizePlay } from './utils/backupImport';
 import { ConfirmModal } from './components/ConfirmModal';
 import { LocalStorageNotice } from './components/LocalStorageNotice';
 import { LoadingState, EmptyState, ErrorState } from './components/StateViews';
+import { TreasureReveal, type TreasureMoment } from './components/TreasureReveal';
 
 const OWNERSHIP_TABS: (GameOwnershipStatus | '전체')[] = [
   '전체',
@@ -83,6 +84,7 @@ const MainApp: React.FC = () => {
   // Confirm delete modals
   const [deletingGame, setDeletingGame] = useState<UserGame | null>(null);
   const [deletingPlay, setDeletingPlay] = useState<PlayRecord | null>(null);
+  const [treasure, setTreasure] = useState<TreasureMoment | null>('enter');
 
   // Fetch all user data
   const loadData = useCallback(async () => {
@@ -129,6 +131,7 @@ const MainApp: React.FC = () => {
       const newGame = await storage.addUserGame(user.uid, gameData);
       track('game_added', { method: source.fromSeed ? 'seed' : 'manual' });
       setGames((prev) => [newGame, ...prev]);
+      setTreasure('acquire');
       showToast(`'${newGame.title}'이(가) 내 게임에 추가되었습니다!`, 'success');
     }
     setEditingGame(null);
@@ -147,6 +150,7 @@ const MainApp: React.FC = () => {
       // Whatever was written before a failure is already saved, so reflect it either way.
       if (created.length > 0) {
         setGames((prev) => [...[...created].reverse(), ...prev]);
+        setTreasure('acquire');
       }
     }
     showToast(`${created.length}개 게임이 등록되었습니다.`, 'success');
@@ -318,7 +322,8 @@ const MainApp: React.FC = () => {
   });
 
   return (
-    <div className="min-h-screen bg-[#F1F3F5] text-[#2D3436] flex flex-col font-sans selection:bg-[#4834D4]/20 selection:text-[#4834D4] lg:pl-60">
+    <div className="treasure-shell min-h-screen bg-[#F1F3F5] text-[#2D3436] flex flex-col font-sans selection:bg-[#4834D4]/20 selection:text-[#4834D4] lg:pl-60">
+      {treasure && <TreasureReveal kind={treasure} onDone={() => setTreasure(null)} />}
       {/* Top Fixed Header */}
       <Navbar onOpenAuth={() => setIsAuthOpen(true)} />
 
