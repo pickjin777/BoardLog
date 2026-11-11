@@ -4,7 +4,7 @@
 
 콘솔 질문의 현재 문장은 이 자리에서 열지 못했다. 아래 항목 이름은 [데이터 보안 도움말](https://support.google.com/googleplay/android-developer/answer/10787469)의 구분을 따른 것이다. 화면 문구와 다르면 그 칸은 사용자 확인 필요가 된다. 선언이 앱과 다르면 조치될 수 있으므로, 넣는 값은 소유자가 콘솔에서 고친다.
 
-이 초안이 보는 앱은 Capacitor로 `dist`를 담은 안드로이드 앱이다. 패키지 이름은 `com.pickjin.boardlog`. 웹뷰 출처는 `https://localhost`이고, `/api`만 `https://board-log.vercel.app`로 간다. 광고와 결제 초기화는 기본으로 꺼져 있다.
+이 초안이 보는 앱은 Capacitor로 `dist`를 담은 안드로이드 앱이다. 패키지 이름은 `com.pickjin.boardlog`. 웹뷰 출처는 `https://localhost`이고, `/api`만 `https://board-log.vercel.app`로 간다. 광고와 결제 초기화는 기본으로 꺼져 있고, 그 빌드의 웹 번들에는 두 플러그인 JS가 없다. 안드로이드 라이브러리는 클래스패스에 남는다.
 
 도움말은 기기 밖으로 전송되는 데이터를 수집으로 본다. 기기 안에만 있는 데이터는 그 정의에서는 수집이 아니다. 이 문장이 콘솔의 현재 질문과 같은지는 사용자 확인 필요가 있다.
 

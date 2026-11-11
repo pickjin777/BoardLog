@@ -377,7 +377,8 @@
 ### D-046 플레이용 안드로이드 껍데기
 - **결정:** 포장은 Capacitor 8.6.0(2026-11-11 npm 안정판). 앱 이름 `보드로그`, 애플리케이션 ID `com.pickjin.boardlog`. 웹 빌드 `dist`를 앱에 넣고, WebView가 원격 주소를 열게 두지 않음
 - **한 곳:** ID·앱 이름·네이티브 `/api`가 갈 운영 출처(`https://board-log.vercel.app`)는 `src/config/appIdentity.ts`. `check:secrets`가 안드로이드 프로젝트와 어긋나면 실패. 이 공개 식별자는 비밀값이 아니라서 `VITE_`에 나누지 않음
-- **수익화:** `@capacitor-community/admob`과 `@capgo/native-purchases`(Play Billing)만 설치. `VITE_ADMOB_ENABLED`와 `VITE_PLAY_BILLING_ENABLED`가 문자열 `true`일 때만 초기화하고, 기본은 꺼짐. 광고 ID는 구글이 공개한 샘플만. 결제 상품 ID는 없음
+- **수익화:** `@capacitor-community/admob`과 `@capgo/native-purchases`(Play Billing)만 설치. `VITE_ADMOB_ENABLED`와 `VITE_PLAY_BILLING_ENABLED`가 문자열 `true`일 때만 초기화하고, 기본은 꺼짐. 그 기본 빌드는 두 플러그인의 JS를 넣지 않는다. 안드로이드 라이브러리는 클래스패스에 남는다. 광고 ID는 구글이 공개한 샘플만. 구독 상품 ID는 `null`(구글 공개 구독 테스트 ID는 없음). `showBanner`·`purchaseProduct` 호출은 검사에서 실패
+- **껍데기:** 스플래시·런처 배경 모서리와 `splashBackground`는 `#4834D4`. `viewport-fit=cover`와 SystemBars `css` 인셋을 같이 쓴다. 네이티브에서는 서비스 워커를 등록하지 않는다
 - **하지 않음:** 릴리스 서명키, 개발자 계정, 스토어 제출, 운영 키 연결
 - **Impacted:** 03-tech-stack.md, 04-architecture.md, AGENTS.md, docs/play/2026-11-play-readiness.md
 

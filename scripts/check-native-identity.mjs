@@ -3,12 +3,110 @@
 // is pointed at a remote server, or when an AdMob id other than Google's sample is committed.
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import { inflateSync } from 'node:zlib';
 
 function listAdIds(text) {
   return [...text.matchAll(/ca-app-pub-\d+[~/]\d+/g)].map((match) => match[0]);
 }
 
 const GOOGLE_SAMPLE_PUBLISHER = 'ca-app-pub-3940256099942544';
+const BRAND = [0x48, 0x34, 0xd4];
+const FORBIDDEN_CALLS = [
+  '.purchaseProduct(',
+  '.showBanner(',
+  '.restorePurchases(',
+  '.getProducts(',
+  '.manageSubscriptions('
+];
+
+function paeth(left, up, upLeft) {
+  const estimate = left + up - upLeft;
+  const leftDelta = Math.abs(estimate - left);
+  const upDelta = Math.abs(estimate - up);
+  const upLeftDelta = Math.abs(estimate - upLeft);
+  if (leftDelta <= upDelta && leftDelta <= upLeftDelta) return left;
+  if (upDelta <= upLeftDelta) return up;
+  return upLeft;
+}
+
+/** Four corner pixels of an 8-bit RGB or RGBA PNG. Splash and launcher art must be opaque brand purple. */
+function pngCorners(path) {
+  const data = readFileSync(path);
+  if (data.subarray(0, 8).toString('hex') !== '89504e470d0a1a0a') {
+    throw new Error(`${path} is not a png`);
+  }
+  let offset = 8;
+  let width = 0;
+  let height = 0;
+  let color = 0;
+  const idat = [];
+  while (offset + 8 <= data.length) {
+    const length = data.readUInt32BE(offset);
+    const type = data.subarray(offset + 4, offset + 8).toString('ascii');
+    const chunk = data.subarray(offset + 8, offset + 8 + length);
+    if (type === 'IHDR') {
+      width = chunk.readUInt32BE(0);
+      height = chunk.readUInt32BE(4);
+      const bit = chunk[8];
+      color = chunk[9];
+      const interlace = chunk[12];
+      if (bit !== 8 || interlace !== 0 || (color !== 2 && color !== 6)) {
+        throw new Error(`${path} is not a non-interlaced 8-bit rgb png`);
+      }
+    } else if (type === 'IDAT') {
+      idat.push(chunk);
+    } else if (type === 'IEND') {
+      break;
+    }
+    offset += 12 + length;
+  }
+  const raw = inflateSync(Buffer.concat(idat));
+  const channels = color === 6 ? 4 : 3;
+  const stride = width * channels + 1;
+  let prev = Buffer.alloc(width * channels);
+  const rows = [];
+  for (let y = 0; y < height; y += 1) {
+    const filter = raw[y * stride];
+    const row = Buffer.from(raw.subarray(y * stride + 1, (y + 1) * stride));
+    if (filter !== 0 && filter !== 1 && filter !== 2 && filter !== 3 && filter !== 4) {
+      throw new Error(`${path} has an unknown png filter`);
+    }
+    for (let x = 0; x < row.length; x += 1) {
+      const left = x >= channels ? row[x - channels] : 0;
+      const up = prev[x];
+      const upLeft = x >= channels ? prev[x - channels] : 0;
+      if (filter === 1) row[x] = (row[x] + left) & 255;
+      else if (filter === 2) row[x] = (row[x] + up) & 255;
+      else if (filter === 3) row[x] = (row[x] + Math.floor((left + up) / 2)) & 255;
+      else if (filter === 4) row[x] = (row[x] + paeth(left, up, upLeft)) & 255;
+    }
+    prev = row;
+    rows.push(row);
+  }
+  const pixel = (x, y) => {
+    const start = x * channels;
+    return [rows[y][start], rows[y][start + 1], rows[y][start + 2], channels === 4 ? rows[y][start + 3] : 255];
+  };
+  return [pixel(0, 0), pixel(width - 1, 0), pixel(0, height - 1), pixel(width - 1, height - 1)];
+}
+
+function isBrandPurple(pixel) {
+  return pixel[0] === BRAND[0] && pixel[1] === BRAND[1] && pixel[2] === BRAND[2] && pixel[3] === 255;
+}
+
+function collectShellPngs(dir, found) {
+  if (!existsSync(dir)) return;
+  for (const entry of readdirSync(dir)) {
+    const path = join(dir, entry);
+    if (statSync(path).isDirectory()) {
+      collectShellPngs(path, found);
+      continue;
+    }
+    if (entry === 'splash.png' || entry === 'ic_launcher.png' || entry === 'ic_launcher_background.png') {
+      found.push(path);
+    }
+  }
+}
 
 function read(path) {
   return readFileSync(path, 'utf8');
@@ -46,6 +144,9 @@ if (appId !== 'com.pickjin.boardlog') problems.push(`APP_ID is ${appId}`);
 if (!origin.startsWith('https://') || origin.endsWith('/')) problems.push(`PRODUCTION_ORIGIN is ${origin}`);
 if (!admobAppId.startsWith(`${GOOGLE_SAMPLE_PUBLISHER}~`)) problems.push('AdMob app id is not a Google sample');
 if (!admobBannerId.startsWith(`${GOOGLE_SAMPLE_PUBLISHER}/`)) problems.push('AdMob banner id is not a Google sample');
+if (!/export const PLAY_SUBSCRIPTION_PRODUCT_ID = null;/.test(monetization)) {
+  problems.push('PLAY_SUBSCRIPTION_PRODUCT_ID must stay null');
+}
 
 const config = read('capacitor.config.ts');
 if (!/import\s*\{[^}]*\bAPP_ID\b[^}]*\bAPP_NAME\b[^}]*\}\s*from\s*'\.\/src\/config\/appIdentity'/.test(config)) {
@@ -56,6 +157,11 @@ if (!/appId:\s*APP_ID/.test(config) || !/appName:\s*APP_NAME/.test(config)) {
 }
 if (!/webDir:\s*'dist'/.test(config)) problems.push("webDir must be 'dist'");
 if (/^\s*url\s*:/m.test(config)) problems.push('server url must not be set; the app bundles dist');
+if (!/backgroundColor:\s*'#4834D4'/.test(config)) problems.push('splash backgroundColor must be #4834D4');
+if (!/insetsHandling:\s*'css'/.test(config)) problems.push("SystemBars insetsHandling must be 'css'");
+if (!/initialViewportFitValueHint:\s*'cover'/.test(config)) {
+  problems.push("SystemBars initialViewportFitValueHint must be 'cover'");
+}
 
 const gradlePath = 'android/app/build.gradle';
 const stringsPath = 'android/app/src/main/res/values/strings.xml';
@@ -110,10 +216,68 @@ function walk(dir, found) {
   }
 }
 
+const shellPngs = [
+  'public/favicon-32.png',
+  'public/apple-touch-icon.png',
+  'public/icon-192.png',
+  'public/icon-512.png',
+  'public/icon-maskable-512.png'
+];
+collectShellPngs('android/app/src/main/res', shellPngs);
+for (const path of shellPngs) {
+  if (!existsSync(path)) {
+    problems.push(`missing ${path}`);
+    continue;
+  }
+  try {
+    const corners = pngCorners(path);
+    if (corners.some((pixel) => !isBrandPurple(pixel))) problems.push(`${path} corners are not #4834D4`);
+  } catch (err) {
+    problems.push(`${path}: ${err instanceof Error ? err.message : 'png read failed'}`);
+  }
+}
+
+const colorsXml = existsSync('android/app/src/main/res/values/colors.xml')
+  ? read('android/app/src/main/res/values/colors.xml')
+  : '';
+if (!/name="splashBackground">#4834D4</i.test(colorsXml)) problems.push('splashBackground must be #4834D4');
+
+const indexHtml = read('index.html');
+if (!indexHtml.includes('viewport-fit=cover')) problems.push('index.html must set viewport-fit=cover');
+if (!/name="theme-color" content="#4834D4"/i.test(indexHtml)) problems.push('theme-color must be #4834D4');
+if (!/"theme_color": "#4834D4"/.test(read('public/manifest.webmanifest'))) {
+  problems.push('manifest theme_color must be #4834D4');
+}
+const shellCss = read('src/index.css');
+if (!shellCss.includes('--safe-area-inset-top') || !shellCss.includes('env(safe-area-inset-top')) {
+  problems.push('the shell must pad with the safe-area inset');
+}
+
 const foreignAds = [];
 for (const dir of ['src', 'android', 'scripts', 'api']) walk(dir, foreignAds);
 walkFile('capacitor.config.ts', foreignAds);
 problems.push(...foreignAds);
+
+function walkCalls(dir, found) {
+  if (!existsSync(dir)) return;
+  for (const entry of readdirSync(dir)) {
+    if (SKIP_DIRS.has(entry)) continue;
+    const path = join(dir, entry);
+    if (statSync(path).isDirectory()) {
+      walkCalls(path, found);
+      continue;
+    }
+    if (!/\.(ts|tsx)$/.test(path)) continue;
+    const text = read(path);
+    for (const call of FORBIDDEN_CALLS) {
+      if (text.includes(call)) found.push(`${path}: ${call}`);
+    }
+  }
+}
+
+const purchaseCalls = [];
+walkCalls('src', purchaseCalls);
+problems.push(...purchaseCalls);
 
 function walkFile(path, found) {
   if (!existsSync(path)) return;

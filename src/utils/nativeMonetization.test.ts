@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   assertGoogleSampleAdId,
+  assertNoPlayProduct,
   GOOGLE_TEST_ADMOB_APP_ID,
   GOOGLE_TEST_ADMOB_BANNER_ID,
+  PLAY_SUBSCRIPTION_PRODUCT_ID,
   shouldPrepareNativeFeature
 } from './nativeMonetization';
 
@@ -19,5 +21,11 @@ describe('native monetization flags', () => {
     expect(() => assertGoogleSampleAdId(GOOGLE_TEST_ADMOB_APP_ID)).not.toThrow();
     expect(() => assertGoogleSampleAdId(GOOGLE_TEST_ADMOB_BANNER_ID)).not.toThrow();
     expect(() => assertGoogleSampleAdId('not-a-google-sample')).toThrow(/Google sample/);
+  });
+
+  it('keeps the Play subscription id empty', () => {
+    expect(PLAY_SUBSCRIPTION_PRODUCT_ID).toBeNull();
+    expect(() => assertNoPlayProduct(PLAY_SUBSCRIPTION_PRODUCT_ID)).not.toThrow();
+    expect(() => assertNoPlayProduct('boardlog_monthly')).toThrow(/not configured/);
   });
 });

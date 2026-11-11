@@ -17,7 +17,10 @@ function startShell(): void {
   }
   if (!native) return;
   unregisterOfflineShell();
-  void import('./services/nativeMonetization.ts').then((mod) => mod.prepareNativeMonetization());
+  // Inline compares let the default build drop the plugin chunks. A later true rebuild puts them back.
+  if (import.meta.env.VITE_ADMOB_ENABLED === 'true' || import.meta.env.VITE_PLAY_BILLING_ENABLED === 'true') {
+    void import('./services/nativeMonetization.ts').then((mod) => mod.prepareNativeMonetization());
+  }
 }
 
 function unregisterOfflineShell(): void {

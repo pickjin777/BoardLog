@@ -12,10 +12,16 @@ const PATTERNS = [
   // "service_role" inside a base64url-encoded JWT payload
   { name: 'service_role JWT payload', re: /c2VydmljZV9yb2xl/ },
   { name: 'Google API key', re: /AIza[0-9A-Za-z_-]{35}/ },
+  { name: 'Private key block', re: /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/ },
   { name: 'Server env var name', re: /SUPABASE_SERVICE_ROLE_KEY|GEMINI_API_KEY/ }
 ];
 
-const TEXT_FILE = /\.(js|mjs|css|html|json|map|webmanifest|txt|xml|gradle|properties|java|kt|kts|pro)$/;
+// A default bundle must not contain an ad request or a purchase call. Rebuild with the
+// matching flag set to the string true before those plugin modules are allowed in dist.
+const ADMOB_ON = process.env.VITE_ADMOB_ENABLED === 'true';
+const BILLING_ON = process.env.VITE_PLAY_BILLING_ENABLED === 'true';
+
+const TEXT_FILE = /\.(js|mjs|css|html|json|map|webmanifest|txt|xml|gradle|properties|java|kt|kts|pro|pem)$/;
 const SKIP_DIRS = new Set(['node_modules', 'build', '.gradle', '.git']);
 
 function listFiles(dir) {
@@ -37,20 +43,29 @@ for (const root of SCAN_ROOTS) {
     console.error(`check-build-secrets: "${root}" not found. Run the build first.`);
     process.exit(1);
   }
-  if (root === 'android' && existsSync(join(root, 'app', 'google-services.json'))) {
-    hits.push(`${join(root, 'app', 'google-services.json')}: google-services.json is not allowed in the repo`);
-  }
   const files = listFiles(root);
   for (const file of files) {
     scanned += 1;
-    if (file.endsWith('.jks') || file.endsWith('.keystore')) {
-      hits.push(`${file}: signing key file`);
+    const base = file.split(/[/\\]/).pop() ?? '';
+    if (base === '.env' || base.startsWith('.env.') || base === 'google-services.json') {
+      hits.push(`${file}: ${base} is not allowed in the client build`);
+      continue;
+    }
+    if (file.endsWith('.jks') || file.endsWith('.keystore') || file.endsWith('.p8') || file.endsWith('.pem')) {
+      hits.push(`${file}: signing or private key file`);
       continue;
     }
     if (!TEXT_FILE.test(file)) continue;
     const text = readFileSync(file, 'utf8');
     for (const { name, re } of PATTERNS) {
       if (re.test(text)) hits.push(`${file}: ${name}`);
+    }
+    const distJs = file.endsWith('.js') && (file.startsWith('dist/') || file.startsWith('dist\\'));
+    if (!distJs) continue;
+    if (!ADMOB_ON && /showBanner\s*\(/.test(text)) hits.push(`${file}: AdMob banner request in the default bundle`);
+    if (!ADMOB_ON && /ca-app-pub-/.test(text)) hits.push(`${file}: AdMob id in the default bundle`);
+    if (!BILLING_ON && /purchaseProduct\s*\(|restorePurchases\s*\(|manageSubscriptions\s*\(/.test(text)) {
+      hits.push(`${file}: Play purchase call in the default bundle`);
     }
   }
 }
