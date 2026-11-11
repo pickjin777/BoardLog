@@ -316,3 +316,98 @@ test('game and play cards open from the keyboard without pressing delete', async
   await page.keyboard.press('Space');
   await visible('키보드로 연 기록 상세', page.locator('#play-detail-modal-overlay'));
 });
+
+test('play photos open from the keyboard and the header clears the actions', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 700 });
+  await page.goto('/', { waitUntil: 'networkidle' });
+  const uid = await requireUid(page);
+  const photo =
+    'data:image/svg+xml,' +
+    encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" fill="#4834D4"/></svg>'
+    );
+  await putRows(page, [
+    {
+      store: 'plays',
+      row: {
+        ...playRow('photo_play', uid, 'missing_game', '사진게임', true),
+        durationMinutes: 130,
+        location: '홍대',
+        photos: [
+          { id: 'ph1', url: photo, caption: '테이블 세팅', rotation: 0 },
+          { id: 'ph2', url: 'https://invalid.example/missing-photo.png', caption: '', rotation: 0 }
+        ]
+      }
+    }
+  ]);
+  await page.reload({ waitUntil: 'networkidle' });
+  await page.locator('#nav-tab-plays').click();
+  await page.locator('#play-card-photo_play').click();
+  await visible('기록 상세', page.locator('#play-detail-modal-overlay'));
+  await visible('만족도', page.getByRole('img', { name: '만족도 5점' }));
+
+  const headerOverlaps = await page.evaluate(() => {
+    const modal = document.querySelector('#play-detail-modal-overlay');
+    const edit = modal?.querySelector('button[aria-label="기록 수정"]');
+    const dateLine = modal?.querySelector('#play-detail-when');
+    if (!edit || !dateLine) return true;
+    const a = dateLine.getBoundingClientRect();
+    const b = edit.getBoundingClientRect();
+    const x = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+    const y = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+    return x > 1 && y > 1;
+  });
+  check('320 날짜가 수정 버튼과 안 겹침', !headerOverlaps);
+
+  const openPhoto = page.getByRole('button', { name: '현장 사진 1, 테이블 세팅 확대' });
+  await openPhoto.evaluate((el) => {
+    if (el instanceof HTMLElement) el.focus({ focusVisible: true } as FocusOptions);
+  });
+  const outline = await openPhoto.evaluate((el) => getComputedStyle(el).outlineColor);
+  check('사진 포커스 테두리', outline === 'rgb(72, 52, 212)', outline);
+
+  await page.keyboard.press('Enter');
+  await visible('엔터로 연 확대', page.locator('#photo-lightbox-modal'));
+  await visible('확대 닫기 이름', page.getByRole('button', { name: '확대 사진 닫기', exact: true }));
+  const focusedOnOpen = await page.evaluate(() => document.activeElement?.id);
+  check('열리면 닫기 버튼에 포커스', focusedOnOpen === 'photo-lightbox-close-btn');
+
+  await page.keyboard.press('Escape');
+  await hidden('이스케이프로 닫힘', page.locator('#photo-lightbox-modal'));
+  const returned = await page.evaluate(() => document.activeElement?.getAttribute('aria-label'));
+  check('포커스가 사진으로 돌아옴', returned === '현장 사진 1, 테이블 세팅 확대');
+
+  await page.keyboard.press('Space');
+  await visible('스페이스로 다시 열림', page.locator('#photo-lightbox-modal'));
+  await page.locator('#photo-lightbox-modal').click({ position: { x: 8, y: 8 } });
+  await hidden('바깥을 누르면 닫힘', page.locator('#photo-lightbox-modal'));
+
+  await openPhoto.click();
+  await visible('클릭으로도 열림', page.locator('#photo-lightbox-modal'));
+  await page.locator('#photo-lightbox-close-btn').click();
+  await hidden('닫기 버튼으로 닫힘', page.locator('#photo-lightbox-modal'));
+
+  await page.waitForFunction(() => {
+    const img = document.querySelector('button[aria-label="현장 사진 2 확대"] img');
+    return img instanceof HTMLImageElement && img.src.startsWith('data:image/svg+xml');
+  });
+  const fallback = await page
+    .getByRole('button', { name: '현장 사진 2 확대' })
+    .locator('img')
+    .evaluate((img) => img.getAttribute('src')?.startsWith('data:image/svg+xml') ?? false);
+  check('깨진 사진은 대체 그림', fallback);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  const overlap390 = await page.evaluate(() => {
+    const modal = document.querySelector('#play-detail-modal-overlay');
+    const edit = modal?.querySelector('button[aria-label="기록 수정"]');
+    const dateLine = modal?.querySelector('#play-detail-when');
+    if (!edit || !dateLine) return true;
+    const a = dateLine.getBoundingClientRect();
+    const b = edit.getBoundingClientRect();
+    const x = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+    const y = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+    return x > 1 && y > 1;
+  });
+  check('390 날짜가 수정 버튼과 안 겹침', !overlap390);
+});
