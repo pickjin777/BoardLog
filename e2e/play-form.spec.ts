@@ -26,8 +26,7 @@ test('play form: result follows the winner, recent games first, companion chips'
 
   const resultBtn = (label: string) =>
     overlay.locator('button', { hasText: label }).filter({ hasText: new RegExp(`^\\s*(👑 )?${label}\\s*$`) });
-  const isSelected = async (label: string) =>
-    (await resultBtn(label).first().getAttribute('aria-pressed')) === 'true';
+  const isSelected = async (label: string) => (await resultBtn(label).first().getAttribute('aria-pressed')) === 'true';
 
   // ── 1. New form starts with no result, saving is blocked ──
   await openForm();

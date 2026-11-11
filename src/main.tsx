@@ -17,8 +17,11 @@ function startShell(): void {
   }
   if (!native) return;
   unregisterOfflineShell();
-  // Inline compares let the default build drop the plugin chunks. A later true rebuild puts them back.
-  if (import.meta.env.VITE_ADMOB_ENABLED === 'true' || import.meta.env.VITE_PLAY_BILLING_ENABLED === 'true') {
+  // Both compares are build-time constants. A default package drops the plugin chunks (D-048).
+  if (
+    __BOARDLOG_MONETIZATION_PACKAGE__ &&
+    (import.meta.env.VITE_ADMOB_ENABLED === 'true' || import.meta.env.VITE_PLAY_BILLING_ENABLED === 'true')
+  ) {
     void import('./services/nativeMonetization.ts').then((mod) => mod.prepareNativeMonetization());
   }
 }

@@ -15,7 +15,7 @@ same PR.
 | `npm run typecheck` | now | `tsc --noEmit` with `strict` |
 | `npm run lint` | now | `npm run typecheck` + `biome check --error-on-warnings` (code files only; Markdown and CSS are not formatted) |
 | `npm run build:ga` | now | Build into `dist-ga/` with a fake GA4 id, used by the analytics E2E spec |
-| `npm run check:secrets` | now | Scan `dist/` and `android/` for server secrets, and check the Play id, sample ad ids, and `#4834D4` splash (D-037, D-046) |
+| `npm run check:secrets` | now | Scan `dist/` and `android/` for server secrets, and check the Play id, sample ad ids, `#4834D4` splash, and that the shipping package strips `AD_ID` and `BILLING` (D-037, D-046, D-048) |
 | `npm run android:debug` | local | Bundles `dist` and builds a debug APK. No release key |
 | `npm run format` | now | `biome format --write` |
 | `npm test` | now | Vitest unit tests with coverage; 100% branch coverage required for `sharedPlay.ts`, `backupImport.ts`, `analyticsEvents.ts` (D-030). `storage.ts` runs on `fake-indexeddb` |
@@ -31,7 +31,8 @@ deployed on Vercel from `main`. All user data lives in the browser (IndexedDB, l
 fallback). A Supabase cloud backup is designed but **not built**: see
 [04-architecture](docs/design/04-architecture.md) and [ADR-002](docs/design/adr/ADR-002-cross-device-merge.md).
 `api/scan-games.ts` (Gemini vision proxy) is the only server code today. A Capacitor Android
-shell packages `dist` for Play (D-046). It is not what Vercel serves.
+shell packages `dist` for Play (D-046). The shipping package omits AdMob and Play Billing
+until `boardlog.monetization=true` (D-048). It is not what Vercel serves.
 
 ## Invariants (breaking these caused real bugs before)
 
