@@ -71,6 +71,7 @@ const MainApp: React.FC = () => {
   const [isKakaoShareOpen, setIsKakaoShareOpen] = useState(false);
   const [isGameFormOpen, setIsGameFormOpen] = useState(false);
   const [isScanOpen, setIsScanOpen] = useState(false);
+  const [scanAllowsRecognition, setScanAllowsRecognition] = useState(true);
   const [editingGame, setEditingGame] = useState<UserGame | null>(null);
   const [viewingGame, setViewingGame] = useState<UserGame | null>(null);
 
@@ -690,6 +691,13 @@ const MainApp: React.FC = () => {
         }}
         onSave={handleSaveGame}
         onOpenScan={() => {
+          setScanAllowsRecognition(true);
+          setIsGameFormOpen(false);
+          setEditingGame(null);
+          setIsScanOpen(true);
+        }}
+        onPickPhoto={() => {
+          setScanAllowsRecognition(false);
           setIsGameFormOpen(false);
           setEditingGame(null);
           setIsScanOpen(true);
@@ -699,7 +707,13 @@ const MainApp: React.FC = () => {
       {/* Bulk Registration from Photos */}
       <GameScanModal
         isOpen={isScanOpen}
+        allowRecognition={scanAllowsRecognition}
         onClose={() => setIsScanOpen(false)}
+        onManualEntry={() => {
+          setIsScanOpen(false);
+          setEditingGame(null);
+          setIsGameFormOpen(true);
+        }}
         existingGames={games}
         onRegister={handleRegisterScannedGames}
       />

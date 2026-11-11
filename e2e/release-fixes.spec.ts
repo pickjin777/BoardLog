@@ -1,4 +1,4 @@
-import { test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import { check, gameRow, hasText, hidden, playRow, putRows, requireUid, visible } from './helpers';
 
 test('records-stay-on-device notice leads to JSON backup', async ({ page }) => {
@@ -110,7 +110,7 @@ test('photo scan stays off until the server says a key exists', async ({ page })
   await page.locator('#games-add-game-btn').click();
   await visible('키 없으면 준비 중 안내', page.locator('#game-form-scan-unavailable'));
   await hidden('키 없으면 스캔 버튼 없음', page.locator('#game-form-open-scan-btn'));
-  await hasText('시드 검색은 그대로', page.locator('#game-form-modal-overlay'), '시드 검색');
+  await hasText('시드 검색은 그대로', page.locator('#game-form-modal-overlay'), '빠른 검색');
   await page.locator('#game-form-close-btn').click();
 
   await page.route('**/api/scan-games', (route) => {
@@ -128,6 +128,46 @@ test('photo scan stays off until the server says a key exists', async ({ page })
   await page.locator('#games-add-game-btn').click();
   await visible('키가 생기면 스캔 버튼', page.locator('#game-form-open-scan-btn'));
   await hidden('준비 중 안내가 사라짐', page.locator('#game-form-scan-unavailable'));
+});
+
+test('without a scan key, a chosen photo falls back to manual entry and saves', async ({ page }) => {
+  const pageErrors: string[] = [];
+  page.on('pageerror', (err) => pageErrors.push(err.message));
+  let scanPosts = 0;
+  await page.route('**/api/scan-games', (route) => {
+    if (route.request().method() === 'POST') scanPosts += 1;
+    return route.continue();
+  });
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/', { waitUntil: 'networkidle' });
+  await page.locator('#treasure-skip-btn').click();
+  await page.locator('#nav-tab-games').click();
+  await page.locator('#games-add-game-btn').click();
+  await visible('키 없으면 준비 중 안내', page.locator('#game-form-scan-unavailable'));
+  await page.locator('#game-form-pick-photo-btn').click();
+  await visible('사진 선택 시트', page.locator('#scan-modal-sheet'));
+
+  await page.locator('#scan-file-input').setInputFiles({
+    name: 'shelf.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+      'base64'
+    )
+  });
+  await visible('직접 입력 안내', page.locator('#scan-manual-fallback'));
+  await hasText('사진을 보내지 않음', page.locator('#scan-manual-fallback'), '서버로 보내지 않았습니다');
+  check('인식 요청 없음', scanPosts === 0, String(scanPosts));
+
+  await page.locator('#scan-manual-entry-btn').click();
+  await visible('직접 입력 폼', page.locator('#game-input-title'));
+  await hidden('사진 시트 닫힘', page.locator('#scan-modal-sheet'));
+  await page.locator('#game-input-title').fill('키없이등록');
+  await page.locator('#game-form-save-btn').click();
+  await page.locator('#treasure-skip-btn').click();
+  await visible('저장된 게임', page.getByRole('heading', { name: '키없이등록' }));
+  expect(pageErrors, pageErrors.join('\n')).toEqual([]);
 });
 
 test('kakao quick select keeps weight, and game detail lists only that game', async ({ page }) => {
