@@ -411,3 +411,54 @@ test('play photos open from the keyboard and the header clears the actions', asy
   });
   check('390 날짜가 수정 버튼과 안 겹침', !overlap390);
 });
+
+test('broken catalog, seed, and play-form photos use the same fallback', async ({ page }) => {
+  await page.route('**://images.unsplash.com/**', (route) => route.abort());
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/', { waitUntil: 'networkidle' });
+  const uid = await requireUid(page);
+  const broken = 'https://invalid.example/missing-cover.png';
+  await putRows(page, [
+    {
+      store: 'games',
+      row: gameRow({ id: 'cover_game', userId: uid, title: '깨진표지', imageUrl: broken, playCount: 1 })
+    },
+    {
+      store: 'plays',
+      row: {
+        ...playRow('photo_play', uid, 'cover_game', '깨진표지', true),
+        photos: [{ id: 'ph_bad', url: broken, caption: '현장', rotation: 0 }]
+      }
+    }
+  ]);
+  await page.reload({ waitUntil: 'networkidle' });
+
+  const usesFallback = async (name: string, selector: string) => {
+    await page.waitForFunction((sel) => {
+      const img = document.querySelector(sel);
+      return img instanceof HTMLImageElement && img.src.startsWith('data:image/svg+xml');
+    }, selector);
+    const ok = await page
+      .locator(selector)
+      .first()
+      .evaluate((img) => img.getAttribute('src')?.startsWith('data:image/svg+xml') ?? false);
+    check(name, ok);
+  };
+
+  await page.locator('#nav-tab-games').click();
+  await page.locator('#games-print-catalog-btn').click();
+  await usesFallback('도록 표 표지', '#printable-catalog-document img');
+  await page.getByRole('button', { name: '수록 카드형' }).click();
+  await usesFallback('도록 카드 표지', '#printable-catalog-document img');
+  await page.locator('#game-catalog-modal-overlay button[aria-label="닫기"]').click();
+
+  await page.locator('#games-add-game-btn').click();
+  await page.locator('#seed-game-search-input').fill('카탄');
+  await usesFallback('시드 검색 표지', '#game-form-modal-overlay img[alt="카탄"]');
+  await page.locator('#game-form-close-btn').click();
+
+  await page.locator('#nav-tab-plays').click();
+  await page.locator('#play-card-photo_play').click();
+  await page.locator('#play-detail-modal-overlay').getByRole('button', { name: '기록 수정' }).click();
+  await usesFallback('기록 폼 사진', '#play-record-modal-overlay img[alt="플레이 사진"]');
+});

@@ -1168,6 +1168,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                       src={photo.url}
                       alt="플레이 사진"
                       referrerPolicy="no-referrer"
+                      onError={applyImageFallback}
                       className="w-full h-full object-cover"
                     />
 

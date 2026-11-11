@@ -376,6 +376,7 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                             src={seed.imageUrl}
                             alt={seed.title}
                             referrerPolicy="no-referrer"
+                            onError={applyImageFallback}
                             className="w-10 h-10 rounded-xl object-cover bg-stone-100 shrink-0"
                           />
                           <div className="flex-1 min-w-0">

@@ -19,6 +19,7 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import type { UserGame, GameOwnershipStatus } from '../types';
 import { formatDate } from '../utils/formatters';
+import { applyImageFallback } from '../utils/imageFallback';
 import { getGameIndexKey, KOREAN_INDEX_KEYS } from '../utils/koreanIndex';
 import { useToast } from '../context/ToastContext';
 import { track } from '../services/analytics';
@@ -542,6 +543,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                                 }
                                 alt=""
                                 referrerPolicy="no-referrer"
+                                onError={applyImageFallback}
                                 className="w-9 h-9 rounded-lg object-cover bg-stone-100 mx-auto border border-[#E9ECEF]"
                               />
                             </td>
@@ -641,6 +643,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                         }
                         alt=""
                         referrerPolicy="no-referrer"
+                        onError={applyImageFallback}
                         className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl object-cover bg-stone-100 shrink-0 border border-[#E9ECEF] shadow-xs"
                       />
                     )}
