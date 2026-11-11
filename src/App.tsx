@@ -1,10 +1,11 @@
 import type React from 'react';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Search, Plus, LayoutGrid, List, Download, MessageCircle } from 'lucide-react';
 import type { UserGame, PlayRecord, GameOwnershipStatus, MyGameResult, TabType } from './types';
 import { ToastProvider, useToast } from './context/ToastContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { track } from './services/analytics';
+import { topOverlay, type OverlayName } from './utils/overlayHistory';
 import { storage } from './services/storage';
 import { Navbar } from './components/Navbar';
 import { BottomNav } from './components/BottomNav';
@@ -86,6 +87,66 @@ const MainApp: React.FC = () => {
   const [deletingGame, setDeletingGame] = useState<UserGame | null>(null);
   const [deletingPlay, setDeletingPlay] = useState<PlayRecord | null>(null);
   const [treasure, setTreasure] = useState<TreasureMoment | null>('enter');
+
+  const overlay = topOverlay({
+    treasure: treasure !== null,
+    auth: isAuthOpen,
+    catalog: isCatalogModalOpen,
+    kakao: isKakaoShareOpen,
+    incoming: incomingShare !== null,
+    share: sharingPlay !== null,
+    game: viewingGame !== null,
+    play: viewingPlay !== null,
+    playForm: isPlayFormOpen,
+    gameForm: isGameFormOpen,
+    scan: isScanOpen,
+    deleteGame: deletingGame !== null,
+    deletePlay: deletingPlay !== null
+  });
+  const overlayRef = useRef(overlay);
+  overlayRef.current = overlay;
+  const pushedOverlay = useRef(false);
+
+  const closeOverlay = useCallback((name: OverlayName) => {
+    if (name === 'treasure') setTreasure(null);
+    else if (name === 'auth') setIsAuthOpen(false);
+    else if (name === 'catalog') setIsCatalogModalOpen(false);
+    else if (name === 'kakao') setIsKakaoShareOpen(false);
+    else if (name === 'incoming') setIncomingShare(null);
+    else if (name === 'share') setSharingPlay(null);
+    else if (name === 'game') setViewingGame(null);
+    else if (name === 'play') setViewingPlay(null);
+    else if (name === 'playForm') {
+      setIsPlayFormOpen(false);
+      setEditingPlay(null);
+    } else if (name === 'gameForm') {
+      setIsGameFormOpen(false);
+      setEditingGame(null);
+    } else if (name === 'scan') setIsScanOpen(false);
+    else if (name === 'deleteGame') setDeletingGame(null);
+    else setDeletingPlay(null);
+  }, []);
+
+  useEffect(() => {
+    if (!overlay) {
+      if (pushedOverlay.current) {
+        pushedOverlay.current = false;
+        history.back();
+      }
+      return;
+    }
+    if (!pushedOverlay.current) {
+      history.pushState({ boardlogOverlay: overlay }, '');
+      pushedOverlay.current = true;
+    }
+    const onPop = () => {
+      pushedOverlay.current = false;
+      const current = overlayRef.current;
+      if (current) closeOverlay(current);
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, [overlay, closeOverlay]);
 
   // Fetch all user data
   const loadData = useCallback(async () => {
