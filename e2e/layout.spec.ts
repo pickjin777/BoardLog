@@ -70,6 +70,11 @@ test('narrow phones, a landscape tablet, and 200% text do not scroll sideways', 
 
     await page.locator('#nav-tab-plays').click();
     await expectNoHorizontalScroll(page, `plays ${viewport.name}`);
+    if (viewport.name === '320') {
+      await page.locator('#plays-tab-add-btn').click();
+      await expectNoHorizontalScroll(page, 'play form 320');
+      await page.locator('#play-record-modal-overlay button[aria-label="닫기"]').click();
+    }
     await page.locator('#nav-tab-mypage').click();
     await expectNoHorizontalScroll(page, `my page ${viewport.name}`);
   }
@@ -83,4 +88,7 @@ test('narrow phones, a landscape tablet, and 200% text do not scroll sideways', 
   await expectNoHorizontalScroll(page, 'games 200%');
   await page.locator('#games-add-game-btn').click();
   await expectNoHorizontalScroll(page, 'game form 200%');
+  await page.locator('#game-form-close-btn').click();
+  await page.locator('#nav-fab-add-play').click();
+  await expectNoHorizontalScroll(page, 'play form 200%');
 });

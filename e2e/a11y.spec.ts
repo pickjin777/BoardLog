@@ -32,7 +32,11 @@ async function expectTouchTargets(page: Page, name: string) {
     elements.flatMap((element) => {
       const style = getComputedStyle(element);
       if (style.display === 'none' || style.visibility === 'hidden') return [];
-      const box = element.getBoundingClientRect();
+      const hit =
+        element instanceof HTMLInputElement && (element.type === 'checkbox' || element.type === 'radio')
+          ? (element.closest('label') ?? element)
+          : element;
+      const box = hit.getBoundingClientRect();
       if (box.width < 1 || box.height < 1) return [];
       if (box.width >= 48 && box.height >= 48) return [];
       const label =
@@ -96,4 +100,46 @@ test('main screens meet axe and 48px targets', async ({ page }) => {
   await expectAxe(page, 'my page');
   await expectContrast(page, 'my page contrast');
   await expectTouchTargets(page, 'my page targets');
+});
+
+test('kakao, catalog, play form, and login meet axe and contrast', async ({ page }) => {
+  await page.route(/kakao|kakaocdn|kakaolink/i, (route) => route.abort());
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/', { waitUntil: 'networkidle' });
+  await skipChest(page);
+
+  await page.locator('#nav-tab-games').click();
+  await page.locator('#games-add-game-btn').click();
+  await page.locator('#game-input-title').fill('대비확인');
+  await page.locator('#game-form-save-btn').click();
+  await skipChest(page);
+  await page.locator('#games-kakao-share-btn').click();
+  await visible('카카오 시트', page.locator('#kakao-share-modal-overlay'));
+  await expectAxe(page, 'kakao');
+  await expectContrast(page, 'kakao contrast');
+  await expectTouchTargets(page, 'kakao targets');
+  await page.getByRole('button', { name: '2. 카카오톡 미리보기' }).click();
+  await expectAxe(page, 'kakao preview');
+  await expectContrast(page, 'kakao preview contrast');
+  await page.locator('#kakao-share-modal-overlay button[aria-label="닫기"]').click();
+
+  await page.locator('#games-print-catalog-btn').click();
+  await visible('도록', page.locator('#game-catalog-modal-overlay'));
+  await expectAxe(page, 'catalog');
+  await expectContrast(page, 'catalog contrast');
+  await expectTouchTargets(page, 'catalog targets');
+  await page.locator('#game-catalog-modal-overlay button[aria-label="닫기"]').click();
+
+  await page.locator('#nav-fab-add-play').click();
+  await visible('기록 폼', page.locator('#play-record-modal-overlay'));
+  await expectAxe(page, 'play form');
+  await expectContrast(page, 'play form contrast');
+  await expectTouchTargets(page, 'play form targets');
+  await page.locator('#play-record-modal-overlay button[aria-label="닫기"]').click();
+
+  await page.locator('#header-user-profile-btn').click();
+  await visible('로그인', page.locator('#auth-modal-backdrop'));
+  await expectAxe(page, 'login');
+  await expectContrast(page, 'login contrast');
+  await expectTouchTargets(page, 'login targets');
 });
