@@ -123,6 +123,7 @@ RLS 정책:
 | `src/services/cloud/auth.ts` | 카카오·매직링크 로그인, 로그아웃, 계정 삭제 호출 | |
 | `src/services/analytics.ts` | GA4 불러오기와 이벤트 전송(`initAnalytics`, `track`). 허용 목록 검사는 `src/utils/analyticsEvents.ts`(순수 함수, 분기 100% 게이트). `backup_upload_result`, `app_error`는 해당 기능을 만들 때 추가(D-036) | ID 없으면 무동작 |
 | `src/utils/thumbnail.ts` | 400px 축소본 생성 | 기존 `imageCompressor` 재사용 |
+| `src/utils/apiOrigin.ts` | 네이티브 껍데기의 `/api`를 운영 출처로 바꿈(D-046). 웹은 상대 경로 유지 | 순수 함수 |
 | `api/delete-account.ts` | 계정 삭제(관리자 권한) | 서비스 역할 키 보유 유일 지점 |
 
 ## 8. 환경변수
@@ -135,6 +136,8 @@ RLS 정책:
 | `SUPABASE_URL` | Vercel 서버 | 위 함수용 |
 | `GEMINI_API_KEY`, `GEMINI_MODEL` | Vercel 서버(기존) | 사진 인식 |
 | `VITE_CLOUD_PUBLIC` | 클라이언트 | `true`일 때만 클라우드 기능을 모든 사용자에게 표시(D-032) |
+| `VITE_ADMOB_ENABLED` | 클라이언트 | 문자열 `true`일 때만 네이티브 껍데기에서 AdMob 샘플 초기화. 기본 빌드는 플러그인 JS를 넣지 않음(D-046) |
+| `VITE_PLAY_BILLING_ENABLED` | 클라이언트 | 문자열 `true`일 때만 Play Billing 지원 여부를 묻음. 구독 상품 ID는 `null`. 기본 빌드는 플러그인 JS를 넣지 않음(D-046) |
 
 ### 8.1 환경별 배치 (D-032)
 
