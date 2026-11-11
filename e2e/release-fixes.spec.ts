@@ -462,3 +462,53 @@ test('broken catalog, seed, and play-form photos use the same fallback', async (
   await page.locator('#play-detail-modal-overlay').getByRole('button', { name: '기록 수정' }).click();
   await usesFallback('기록 폼 사진', '#play-record-modal-overlay img[alt="플레이 사진"]');
 });
+
+test('tablet widens the page and desktop puts navigation on the side', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/', { waitUntil: 'networkidle' });
+  const uid = await requireUid(page);
+  await putRows(
+    page,
+    ['카탄', '스플렌더', '윙스팬', '아크노바'].map((title, index) => ({
+      store: 'games' as const,
+      row: gameRow({ id: `wide_${index}`, userId: uid, title, playCount: index + 1 })
+    }))
+  );
+  await page.reload({ waitUntil: 'networkidle' });
+
+  const phoneNav = await page.locator('#bottom-navigation-bar').boundingBox();
+  const phoneMain = await page.locator('main').boundingBox();
+  check('폰에서는 메뉴가 아래', !!phoneNav && phoneNav.y > 700, JSON.stringify(phoneNav));
+  check('폰 본문은 화면 너비', !!phoneMain && phoneMain.width <= 420, JSON.stringify(phoneMain));
+
+  await page.setViewportSize({ width: 768, height: 1024 });
+  const tabletMain = await page.locator('main').boundingBox();
+  const tabletNav = await page.locator('#bottom-navigation-bar').boundingBox();
+  check('태블릿 본문이 더 넓음', !!tabletMain && tabletMain.width >= 700, JSON.stringify(tabletMain));
+  check('태블릿 메뉴는 아래', !!tabletNav && tabletNav.y > 900, JSON.stringify(tabletNav));
+
+  await page.setViewportSize({ width: 1280, height: 800 });
+  const deskNav = await page.locator('#bottom-navigation-bar').boundingBox();
+  const deskMain = await page.locator('main').boundingBox();
+  check(
+    'PC 메뉴는 왼쪽 세로',
+    !!deskNav && deskNav.x < 8 && deskNav.width >= 200 && deskNav.width <= 280 && deskNav.height > 600,
+    JSON.stringify(deskNav)
+  );
+  check(
+    'PC 본문은 메뉴 오른쪽',
+    !!deskMain && !!deskNav && deskMain.x >= deskNav.width - 1,
+    JSON.stringify({ deskMain, deskNav })
+  );
+
+  await page.locator('#nav-tab-games').click();
+  await page.locator('#game-card-wide_3').waitFor();
+  const rows = await page.evaluate(() => {
+    const tops = ['wide_0', 'wide_1', 'wide_2', 'wide_3'].map((id) => {
+      const box = document.querySelector(`#game-card-${id}`)?.getBoundingClientRect();
+      return box ? Math.round(box.top) : -1;
+    });
+    return new Set(tops).size;
+  });
+  check('PC 게임은 한 줄에 네 장', rows === 1, String(rows));
+});

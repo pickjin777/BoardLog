@@ -67,7 +67,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
             승패와 함께한 사람을 이 기기에 남겨 두세요.
           </p>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
             <button
               id="dashboard-add-play-cta"
               type="button"
@@ -210,7 +210,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         </div>
 
         {recentPlays.length > 0 ? (
-          <div className="space-y-3.5">
+          <div className="grid grid-cols-1 gap-3.5 md:grid-cols-2">
             {recentPlays.map((p) => (
               <PlayCard key={p.id} play={p} onClick={() => onSelectPlay(p)} />
             ))}
@@ -257,7 +257,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         </div>
 
         {favoriteGames.length > 0 ? (
-          <div className="grid grid-cols-2 gap-3.5">
+          <div className="grid grid-cols-2 gap-3.5 md:grid-cols-4 lg:grid-cols-4">
             {favoriteGames.map((g) => (
               <GameCard key={g.id} game={g} onClick={() => onSelectGame(g)} />
             ))}

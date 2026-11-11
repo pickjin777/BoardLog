@@ -116,7 +116,7 @@ export const MyPageView: React.FC<MyPageViewProps> = ({ onOpenAuth, onOpenCatalo
   };
 
   return (
-    <div className="space-y-5 pb-20">
+    <div className="space-y-5 pb-20 lg:mx-auto lg:max-w-3xl">
       {/* Profile Card */}
       <div className="p-5 bg-white rounded-[28px] border border-[#E9ECEF] shadow-sm space-y-4">
         <div className="flex items-center justify-between">

@@ -79,7 +79,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
           initial={{ opacity: 0, scale: 0.96, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.96, y: 15 }}
-          className="w-full max-w-md bg-white rounded-[32px] shadow-2xl border border-[#E9ECEF] overflow-hidden my-auto max-h-[92vh] flex flex-col"
+          className="w-full max-w-lg md:max-w-2xl bg-white rounded-[32px] shadow-2xl border border-[#E9ECEF] overflow-hidden my-auto max-h-[92vh] flex flex-col"
         >
           {/* Hero Image & Floating Controls */}
           <div className="relative w-full h-56 sm:h-64 bg-[#F8F9FA] shrink-0">

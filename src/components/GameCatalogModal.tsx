@@ -230,8 +230,8 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
           className="printable-catalog-root w-full max-w-4xl bg-white rounded-[32px] shadow-2xl border border-[#E9ECEF] overflow-hidden my-auto max-h-[94vh] flex flex-col"
         >
           {/* Top Interactive Toolbar (Hidden on Print) */}
-          <div className="no-print p-4 sm:p-5 border-b border-[#E9ECEF] flex items-center justify-between bg-white shrink-0">
-            <div className="flex items-center gap-3">
+          <div className="no-print p-4 sm:p-5 border-b border-[#E9ECEF] flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-white shrink-0">
+            <div className="flex min-w-0 items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-[#4834D4]/10 text-[#4834D4] flex items-center justify-center font-bold">
                 <BookOpen className="w-5 h-5" />
               </div>
@@ -297,11 +297,11 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
             {/* Row 1: View Format & Search */}
             <div className="flex flex-wrap items-center justify-between gap-2.5">
               {/* View Format Selector */}
-              <div className="flex items-center gap-1 bg-white p-1 rounded-2xl border border-[#E9ECEF]">
+              <div className="flex max-w-full items-center gap-1 overflow-x-auto bg-white p-1 rounded-2xl border border-[#E9ECEF]">
                 <button
                   type="button"
                   onClick={() => setViewMode('table')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold transition-colors ${
+                  className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-xl font-bold transition-colors ${
                     viewMode === 'table' ? 'bg-[#4834D4] text-white shadow-xs' : 'text-[#636E72] hover:text-[#1E272E]'
                   }`}
                 >
@@ -312,7 +312,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                   type="button"
                   aria-pressed={viewMode === 'cards'}
                   onClick={() => setViewMode('cards')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold transition-colors ${
+                  className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-xl font-bold transition-colors ${
                     viewMode === 'cards' ? 'bg-[#4834D4] text-white shadow-xs' : 'text-[#636E72] hover:text-[#1E272E]'
                   }`}
                 >
@@ -323,7 +323,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                   type="button"
                   aria-pressed={viewMode === 'index'}
                   onClick={() => setViewMode('index')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold transition-colors ${
+                  className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-xl font-bold transition-colors ${
                     viewMode === 'index' ? 'bg-[#4834D4] text-white shadow-xs' : 'text-[#636E72] hover:text-[#1E272E]'
                   }`}
                 >
