@@ -443,7 +443,7 @@ const MainApp: React.FC = () => {
                     <p className="text-xs text-[#636E72]">총 {games.length}개의 게임</p>
                   </div>
 
-                  <div className="flex items-center gap-1.5 flex-wrap">
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 [&>button]:shrink-0">
                     {/* Add Game Button */}
                     <button
                       id="games-add-game-btn"
