@@ -67,7 +67,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
             승패와 함께한 사람을 이 기기에 남겨 두세요.
           </p>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
             <button
               id="dashboard-add-play-cta"
               type="button"
@@ -138,7 +138,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-[10px] font-bold text-[#A8ABAF]">수집가 레벨</span>
+            <span className="text-[10px] font-bold text-[#636E72]">수집가 레벨</span>
             <span className="text-[10px] font-medium text-[#636E72]">
               {playsToNextLevel === PLAYS_PER_LEVEL ? '기록 시작!' : `다음 레벨까지 ${playsToNextLevel}회`}
             </span>
@@ -152,7 +152,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         </div>
         <Key
           className={`w-4 h-4 shrink-0 transition-colors ${
-            levelProgressPct >= 80 ? 'text-amber-400' : 'text-[#DCDDE1]'
+            levelProgressPct >= 80 ? 'text-[#B8860B]' : 'text-[#636E72]'
           }`}
           strokeWidth={2}
         />
@@ -164,25 +164,27 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           id="home-kpi-games"
           className="p-2.5 bg-white rounded-[24px] border border-[#E9ECEF] shadow-sm text-center"
         >
-          <span className="text-[10px] text-[#A8ABAF] font-bold block mb-0.5 whitespace-nowrap">보유 게임</span>
+          <span className="text-[10px] text-[#636E72] font-bold block mb-0.5 whitespace-nowrap">보유 게임</span>
           <span className="text-xl font-black italic text-[#1E272E]">{totalGames}</span>
           <span className="text-[10px] text-[#636E72] font-medium block">개</span>
         </div>
 
         <div className="p-3.5 bg-white rounded-[24px] border border-[#E9ECEF] shadow-sm text-center">
-          <span className="text-[10px] text-[#A8ABAF] font-bold block mb-0.5 whitespace-nowrap">총 플레이</span>
+          <span className="text-[10px] text-[#636E72] font-bold block mb-0.5 whitespace-nowrap">총 플레이</span>
           <span className="text-xl font-black italic text-[#4834D4]">{totalPlays}</span>
           <span className="text-[10px] text-[#636E72] font-medium block">회</span>
         </div>
 
         <div className="p-3.5 bg-white rounded-[24px] border border-[#E9ECEF] shadow-sm text-center">
-          <span className="text-[10px] text-[#A8ABAF] font-bold block mb-0.5 whitespace-nowrap">승률</span>
-          <span className="text-xl font-black italic text-[#27AE60]">{winRate}%</span>
+          <span className="text-[10px] text-[#636E72] font-bold block mb-0.5 whitespace-nowrap">승률</span>
+          <span id="home-kpi-winrate" className="text-xl font-black italic text-[#1B7A43]">
+            {winRate}%
+          </span>
           <span className="text-[10px] text-[#636E72] font-medium block">{winCount}승</span>
         </div>
 
         <div className="p-3.5 bg-white rounded-[24px] border border-[#E9ECEF] shadow-sm text-center">
-          <span className="text-[10px] text-[#A8ABAF] font-bold block mb-0.5 whitespace-nowrap">총 시간</span>
+          <span className="text-[10px] text-[#636E72] font-bold block mb-0.5 whitespace-nowrap">총 시간</span>
           <span className="text-xs font-black italic text-[#1E272E] block mt-1.5">{formatDuration(totalMinutes)}</span>
         </div>
       </div>
@@ -208,7 +210,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         </div>
 
         {recentPlays.length > 0 ? (
-          <div className="space-y-3.5">
+          <div className="grid grid-cols-1 gap-3.5 md:grid-cols-2">
             {recentPlays.map((p) => (
               <PlayCard key={p.id} play={p} onClick={() => onSelectPlay(p)} />
             ))}
@@ -255,7 +257,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         </div>
 
         {favoriteGames.length > 0 ? (
-          <div className="grid grid-cols-2 gap-3.5">
+          <div className="grid grid-cols-2 gap-3.5 md:grid-cols-4 lg:grid-cols-4">
             {favoriteGames.map((g) => (
               <GameCard key={g.id} game={g} onClick={() => onSelectGame(g)} />
             ))}

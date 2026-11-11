@@ -103,8 +103,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             <button
               id="auth-modal-close-btn"
               type="button"
+              aria-label="닫기"
               onClick={onClose}
-              className="p-1.5 text-[#A8ABAF] hover:text-[#1E272E] rounded-full hover:bg-[#F1F3F5] transition-colors"
+              className="p-1.5 text-[#636E72] hover:text-[#1E272E] rounded-full hover:bg-[#F1F3F5] transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
@@ -123,7 +124,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                     <p className="text-xs text-[#636E72]">{user.email}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-1.5 text-[11px] text-[#27AE60] pt-2 border-t border-[#E9ECEF] font-bold">
+                <div className="flex items-center gap-1.5 text-[11px] text-[#1B7A43] pt-2 border-t border-[#E9ECEF] font-bold">
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   <span>데이터가 이 계정에 안전하게 격리되어 보관됩니다.</span>
                 </div>
@@ -136,7 +137,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 onClick={handleSignOut}
                 className="w-full flex items-center justify-center gap-2 py-3 bg-[#F1F3F5] hover:bg-[#E9ECEF] text-[#636E72] rounded-full text-xs font-bold transition-colors disabled:opacity-50"
               >
-                <LogOut className="w-4 h-4 text-[#A8ABAF]" />
+                <LogOut className="w-4 h-4 text-[#636E72]" />
                 <span>로그아웃 (게스트 계정으로 전환)</span>
               </button>
             </div>
@@ -161,7 +162,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                     setErrorMessage(null);
                   }}
                   className={`flex-1 py-1.5 rounded-full transition-all ${
-                    mode === 'login' ? 'bg-white text-[#1E272E] shadow-sm' : 'text-[#A8ABAF]'
+                    mode === 'login' ? 'bg-white text-[#1E272E] shadow-sm' : 'text-[#636E72]'
                   }`}
                 >
                   로그인
@@ -173,7 +174,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                     setErrorMessage(null);
                   }}
                   className={`flex-1 py-1.5 rounded-full transition-all ${
-                    mode === 'signup' ? 'bg-white text-[#1E272E] shadow-sm' : 'text-[#A8ABAF]'
+                    mode === 'signup' ? 'bg-white text-[#1E272E] shadow-sm' : 'text-[#636E72]'
                   }`}
                 >
                   회원가입
@@ -191,10 +192,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               <form onSubmit={handleSubmit} className="space-y-3">
                 {mode === 'signup' && (
                   <div>
-                    {/* biome-ignore lint/a11y/noLabelWithoutControl: TBD-018: label is not yet associated with its input (htmlFor/id) */}
-                    <label className="block text-[11px] font-bold text-[#1E272E] mb-1">닉네임</label>
+                    <label htmlFor="auth-input-nickname" className="block text-[11px] font-bold text-[#1E272E] mb-1">
+                      닉네임
+                    </label>
                     <div className="relative">
-                      <User className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#A8ABAF]" />
+                      <User className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#636E72]" />
                       <input
                         id="auth-input-nickname"
                         type="text"
@@ -208,10 +210,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 )}
 
                 <div>
-                  {/* biome-ignore lint/a11y/noLabelWithoutControl: TBD-018: label is not yet associated with its input (htmlFor/id) */}
-                  <label className="block text-[11px] font-bold text-[#1E272E] mb-1">이메일 주소</label>
+                  <label htmlFor="auth-input-email" className="block text-[11px] font-bold text-[#1E272E] mb-1">
+                    이메일 주소
+                  </label>
                   <div className="relative">
-                    <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#A8ABAF]" />
+                    <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#636E72]" />
                     <input
                       id="auth-input-email"
                       type="email"
@@ -225,10 +228,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 </div>
 
                 <div>
-                  {/* biome-ignore lint/a11y/noLabelWithoutControl: TBD-018: label is not yet associated with its input (htmlFor/id) */}
-                  <label className="block text-[11px] font-bold text-[#1E272E] mb-1">비밀번호</label>
+                  <label htmlFor="auth-input-password" className="block text-[11px] font-bold text-[#1E272E] mb-1">
+                    비밀번호
+                  </label>
                   <div className="relative">
-                    <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#A8ABAF]" />
+                    <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#636E72]" />
                     <input
                       id="auth-input-password"
                       type="password"
@@ -257,7 +261,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   <div className="w-full border-t border-[#E9ECEF]" />
                 </div>
                 <div className="relative flex justify-center text-[10px] uppercase">
-                  <span className="bg-white px-2 text-[#A8ABAF] font-bold">또는</span>
+                  <span className="bg-white px-2 text-[#636E72] font-bold">또는</span>
                 </div>
               </div>
 

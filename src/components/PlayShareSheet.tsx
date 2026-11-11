@@ -77,7 +77,7 @@ export const PlayShareSheet: React.FC<PlayShareSheetProps> = ({ play, onClose })
                 type="button"
                 onClick={onClose}
                 aria-label="닫기"
-                className="rounded-full p-1 text-[#A8ABAF] hover:bg-[#F1F3F5]"
+                className="rounded-full p-1 text-[#636E72] hover:bg-[#F1F3F5]"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -129,7 +129,7 @@ export const PlayShareSheet: React.FC<PlayShareSheetProps> = ({ play, onClose })
             <button
               type="button"
               onClick={onClose}
-              className="mt-2 w-full py-2 text-[11px] font-bold text-[#A8ABAF] hover:text-[#636E72]"
+              className="mt-2 w-full py-2 text-[11px] font-bold text-[#636E72] hover:text-[#2D3436]"
             >
               다음에 할게요
             </button>

@@ -172,8 +172,9 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({ isOpen, onClose, e
               <button
                 id="scan-modal-close-btn"
                 type="button"
+                aria-label="닫기"
                 onClick={handleClose}
-                className="p-1.5 text-[#A8ABAF] hover:text-[#1E272E] rounded-full hover:bg-[#F1F3F5] transition-colors"
+                className="p-1.5 text-[#636E72] hover:text-[#1E272E] rounded-full hover:bg-[#F1F3F5] transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -197,7 +198,7 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({ isOpen, onClose, e
                   onClick={() => fileInputRef.current?.click()}
                   className="w-full py-10 border-2 border-dashed border-[#E9ECEF] hover:border-[#4834D4] rounded-[24px] flex flex-col items-center gap-2 transition-colors"
                 >
-                  <Camera className="w-7 h-7 text-[#A8ABAF]" />
+                  <Camera className="w-7 h-7 text-[#636E72]" />
                   <span className="text-xs font-bold text-[#1E272E]">사진 선택 (최대 {MAX_SCAN_IMAGES}장)</span>
                   <span className="text-[11px] text-[#636E72]">가로·세로로 쓰인 제목, 세워둔 박스 모두 인식합니다</span>
                 </button>
@@ -291,7 +292,7 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({ isOpen, onClose, e
                               </div>
 
                               {candidate.detection.title !== title && (
-                                <p className="text-[10px] text-[#A8ABAF] mt-1">
+                                <p className="text-[10px] text-[#636E72] mt-1">
                                   사진에서 읽은 값: {candidate.detection.title}
                                 </p>
                               )}

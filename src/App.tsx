@@ -318,12 +318,12 @@ const MainApp: React.FC = () => {
   });
 
   return (
-    <div className="min-h-screen bg-[#F1F3F5] text-[#2D3436] flex flex-col font-sans selection:bg-[#4834D4]/20 selection:text-[#4834D4]">
+    <div className="min-h-screen bg-[#F1F3F5] text-[#2D3436] flex flex-col font-sans selection:bg-[#4834D4]/20 selection:text-[#4834D4] lg:pl-60">
       {/* Top Fixed Header */}
       <Navbar onOpenAuth={() => setIsAuthOpen(true)} />
 
-      {/* Main Container */}
-      <main className="flex-1 w-full max-w-xl mx-auto px-4 pt-18 pb-32">
+      {/* Phone stays a single column. Tablet and desktop use the extra width. */}
+      <main className="flex-1 w-full max-w-xl md:max-w-3xl lg:max-w-6xl mx-auto px-4 md:px-6 pt-4 pb-32 lg:pb-12">
         <LocalStorageNotice
           onBackup={() => {
             setActiveTab('mypage');
@@ -422,9 +422,11 @@ const MainApp: React.FC = () => {
                         className={`p-2 rounded-xl transition-colors ${
                           gameViewMode === 'grid'
                             ? 'bg-[#4834D4] text-white shadow-xs'
-                            : 'text-[#A8ABAF] hover:text-[#2D3436]'
+                            : 'text-[#636E72] hover:text-[#2D3436]'
                         }`}
-                        title="그리드 뷰"
+                        aria-label="격자 보기"
+                        aria-pressed={gameViewMode === 'grid'}
+                        title="격자 보기"
                       >
                         <LayoutGrid className="w-4 h-4" />
                       </button>
@@ -434,9 +436,11 @@ const MainApp: React.FC = () => {
                         className={`p-2 rounded-xl transition-colors ${
                           gameViewMode === 'list'
                             ? 'bg-[#4834D4] text-white shadow-xs'
-                            : 'text-[#A8ABAF] hover:text-[#2D3436]'
+                            : 'text-[#636E72] hover:text-[#2D3436]'
                         }`}
-                        title="리스트 뷰"
+                        aria-label="목록 보기"
+                        aria-pressed={gameViewMode === 'list'}
+                        title="목록 보기"
                       >
                         <List className="w-4 h-4" />
                       </button>
@@ -446,10 +450,14 @@ const MainApp: React.FC = () => {
 
                 {/* Search Bar */}
                 <div className="relative">
-                  <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-[#A8ABAF]" />
+                  <Search
+                    className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-[#636E72]"
+                    aria-hidden="true"
+                  />
                   <input
                     id="games-search-input"
                     type="text"
+                    aria-label="게임 검색"
                     placeholder="게임명, 영문명, 장르, 보관장소 검색..."
                     value={gameSearch}
                     onChange={(e) => setGameSearch(e.target.value)}
@@ -464,6 +472,7 @@ const MainApp: React.FC = () => {
                       key={tab}
                       type="button"
                       onClick={() => setSelectedOwnership(tab)}
+                      aria-pressed={selectedOwnership === tab}
                       className={`px-3.5 py-1.5 rounded-full font-bold whitespace-nowrap transition-all ${
                         selectedOwnership === tab
                           ? 'bg-[#4834D4] text-white shadow-xs'
@@ -478,7 +487,7 @@ const MainApp: React.FC = () => {
                 {/* Game List / Grid */}
                 {filteredGames.length > 0 ? (
                   gameViewMode === 'grid' ? (
-                    <div className="grid grid-cols-2 gap-3.5">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5">
                       {filteredGames.map((game) => (
                         <GameCard
                           key={game.id}
@@ -562,10 +571,14 @@ const MainApp: React.FC = () => {
 
                 {/* Search Bar */}
                 <div className="relative">
-                  <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-[#A8ABAF]" />
+                  <Search
+                    className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-[#636E72]"
+                    aria-hidden="true"
+                  />
                   <input
                     id="plays-search-input"
                     type="text"
+                    aria-label="플레이 기록 검색"
                     placeholder="게임명, 참여자 이름, 장소 검색..."
                     value={playSearch}
                     onChange={(e) => setPlaySearch(e.target.value)}
@@ -580,6 +593,7 @@ const MainApp: React.FC = () => {
                       key={tab}
                       type="button"
                       onClick={() => setSelectedPlayResult(tab)}
+                      aria-pressed={selectedPlayResult === tab}
                       className={`px-3.5 py-1.5 rounded-full font-bold whitespace-nowrap transition-all ${
                         selectedPlayResult === tab
                           ? 'bg-[#4834D4] text-white shadow-xs'
@@ -593,7 +607,7 @@ const MainApp: React.FC = () => {
 
                 {/* Plays List */}
                 {filteredPlays.length > 0 ? (
-                  <div className="space-y-3.5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                     {filteredPlays.map((play) => (
                       <PlayCard key={play.id} play={play} onClick={() => setViewingPlay(play)} />
                     ))}
@@ -687,6 +701,7 @@ const MainApp: React.FC = () => {
         isOpen={!!viewingGame}
         game={viewingGame}
         plays={plays}
+        games={games}
         onOpenPlay={(play) => {
           setViewingGame(null);
           setViewingPlay(play);

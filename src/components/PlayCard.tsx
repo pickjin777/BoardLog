@@ -11,23 +11,22 @@ interface PlayCardProps {
 
 export const PlayCard: React.FC<PlayCardProps> = ({ play, onClick }) => {
   return (
-    // biome-ignore lint/a11y/useKeyWithClickEvents: TBD-018: clickable element has no keyboard handler yet
-    // biome-ignore lint/a11y/noStaticElementInteractions: TBD-018: clickable non-semantic element has no role yet
-    <div
+    <button
       id={`play-card-${play.id}`}
+      type="button"
       onClick={onClick}
-      className="group bg-white rounded-[28px] border border-[#E9ECEF] p-4.5 shadow-sm hover:shadow-md hover:border-[#4834D4]/30 transition-all cursor-pointer space-y-3.5"
+      className="group w-full text-left bg-white rounded-[28px] border border-[#E9ECEF] p-4.5 shadow-sm hover:shadow-md hover:border-[#4834D4]/30 transition-all space-y-3.5"
     >
       {/* Header: Date, Location & My Result Pill */}
       <div className="flex items-center justify-between text-xs">
-        <div className="flex items-center gap-1.5 text-[#A8ABAF] font-medium tracking-tight">
+        <div className="flex items-center gap-1.5 text-[#636E72] font-medium tracking-tight">
           <Calendar className="w-3.5 h-3.5" />
           <span>{play.date}</span>
           {play.location && (
             <>
               <span>•</span>
               <span className="flex items-center gap-0.5 text-[#636E72] truncate max-w-[120px]">
-                <MapPin className="w-3 h-3 text-[#A8ABAF]" />
+                <MapPin className="w-3 h-3 text-[#636E72]" />
                 {play.location}
               </span>
             </>
@@ -37,7 +36,7 @@ export const PlayCard: React.FC<PlayCardProps> = ({ play, onClick }) => {
         <span
           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
             play.myResult === '승리'
-              ? 'bg-[#EBFAEF] text-[#27AE60] border-[#27AE60]/30'
+              ? 'bg-[#EBFAEF] text-[#1B7A43] border-[#1B7A43]/30'
               : play.myResult === '패배'
                 ? 'bg-[#FEEBEC] text-[#EB4D4B] border-[#EB4D4B]/30'
                 : 'bg-[#F1F3F5] text-[#636E72] border-[#E9ECEF]'
@@ -68,12 +67,12 @@ export const PlayCard: React.FC<PlayCardProps> = ({ play, onClick }) => {
           </h3>
           <div className="flex items-center gap-2 text-[11px] text-[#636E72] mt-0.5">
             <span className="flex items-center gap-0.5">
-              <Clock className="w-3 h-3 text-[#A8ABAF]" />
+              <Clock className="w-3 h-3 text-[#636E72]" />
               {formatDuration(play.durationMinutes)}
             </span>
             <span>•</span>
             <span className="flex items-center gap-0.5">
-              <Users className="w-3 h-3 text-[#A8ABAF]" />
+              <Users className="w-3 h-3 text-[#636E72]" />
               {play.participants.length}명
             </span>
           </div>
@@ -84,7 +83,7 @@ export const PlayCard: React.FC<PlayCardProps> = ({ play, onClick }) => {
               <Star
                 // biome-ignore lint/suspicious/noArrayIndexKey: static, never reordered list; no stable id exists
                 key={i}
-                className={`w-3 h-3 ${i < play.rating ? 'text-amber-400 fill-amber-400' : 'text-[#E9ECEF]'}`}
+                className={`w-3 h-3 ${i < play.rating ? 'text-[#B8860B] fill-[#B8860B]' : 'text-[#636E72]'}`}
               />
             ))}
           </div>
@@ -109,13 +108,13 @@ export const PlayCard: React.FC<PlayCardProps> = ({ play, onClick }) => {
             </span>
           ))}
           {play.participants.length > 4 && (
-            <span className="text-[10px] text-[#A8ABAF] font-medium">+{play.participants.length - 4}명</span>
+            <span className="text-[10px] text-[#636E72] font-medium">+{play.participants.length - 4}명</span>
           )}
         </div>
 
         {play.photos && play.photos.length > 0 && (
           <div className="flex items-center gap-1 text-[10px] text-[#636E72] bg-[#F1F3F5] px-2 py-0.5 rounded-full font-bold shrink-0 ml-2 border border-[#E9ECEF]">
-            <Camera className="w-3 h-3 text-[#A8ABAF]" />
+            <Camera className="w-3 h-3 text-[#636E72]" />
             <span>{play.photos.length}</span>
           </div>
         )}
@@ -127,6 +126,6 @@ export const PlayCard: React.FC<PlayCardProps> = ({ play, onClick }) => {
           "{play.review}"
         </p>
       )}
-    </div>
+    </button>
   );
 };
