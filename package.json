@@ -13,13 +13,20 @@
     "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
     "typecheck": "tsc --noEmit",
     "lint": "npm run typecheck && biome check --error-on-warnings .",
-    "check:secrets": "node scripts/check-build-secrets.mjs",
+    "check:secrets": "node scripts/check-build-secrets.mjs && node scripts/check-native-identity.mjs",
     "format": "biome format --write .",
     "test": "vitest run --coverage",
     "test:e2e": "npm run build && npm run build:ga && playwright test",
-    "build:ga": "vite build --mode analytics-test --outDir dist-ga"
+    "build:ga": "vite build --mode analytics-test --outDir dist-ga",
+    "cap:sync": "npm run build && npx cap sync android",
+    "android:debug": "npm run cap:sync && cd android && ./gradlew assembleDebug"
   },
   "dependencies": {
+    "@capacitor-community/admob": "^8.3.0",
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/core": "^8.6.0",
+    "@capacitor/splash-screen": "^8.0.2",
+    "@capgo/native-purchases": "^8.9.8",
     "@google/genai": "^2.4.0",
     "@tailwindcss/vite": "^4.1.14",
     "@vercel/analytics": "2.0.1",
@@ -34,6 +41,8 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.4",
+    "@capacitor/assets": "^4.0.0",
+    "@capacitor/cli": "^8.6.0",
     "@playwright/test": "1.64.1",
     "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^24.0.0",

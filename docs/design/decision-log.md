@@ -60,6 +60,7 @@
 | D-043 | P9-Q03 | C. 설계 종료, 작업 브랜치(문서 + 미배포 기능 3종) PR 병합 후 M0 PR1, 소유자는 TBD-006 시험 즉시 시작 | Accepted | 2026-10-30 |
 | D-044 | (M1 구현) | 측정 구현 세부 기준(질문 없이 구현, 모두 되돌릴 수 있음) | Implemented, 소유자 사후 검토 | 2026-10-30 |
 | D-045 | (결함 수정) | 저장소의 추가(add)는 항상 새 id를 발급, 호출자가 준 id는 무시 | Implemented | 2026-10-31 |
+| D-046 | (플레이 포장) | Capacitor로 `dist`를 담은 안드로이드 앱. ID `com.pickjin.boardlog`는 `src/config/appIdentity.ts` 한 곳. 광고·결제 플러그인은 꺼 둔 채 샘플 ID만 | Accepted | 2026-11-11 |
 
 ### D-001 두 축 동등
 - **Question:** P1-Q01 보드로그가 가장 먼저 해결해야 할 사람
@@ -373,6 +374,12 @@
 - **결정:** 추가는 항상 `randomId`로 새 id. 타입도 `id`를 받지 않도록 좁힘. `createdAt`은 기존처럼 넘기면 유지
 - **검증:** 회귀 테스트가 수정 전 실패 → 수정 후 통과. 소유자 확인(`idbReadOwned`)을 일부러 지우면 격리 테스트 3개가 실패함도 확인
 
+### D-046 플레이용 안드로이드 껍데기
+- **결정:** 포장은 Capacitor 8.6.0(2026-11-11 npm 안정판). 앱 이름 `보드로그`, 애플리케이션 ID `com.pickjin.boardlog`. 웹 빌드 `dist`를 앱에 넣고, WebView가 원격 주소를 열게 두지 않음
+- **한 곳:** ID·앱 이름·네이티브 `/api`가 갈 운영 출처(`https://board-log.vercel.app`)는 `src/config/appIdentity.ts`. `check:secrets`가 안드로이드 프로젝트와 어긋나면 실패. 이 공개 식별자는 비밀값이 아니라서 `VITE_`에 나누지 않음
+- **수익화:** `@capacitor-community/admob`과 `@capgo/native-purchases`(Play Billing)만 설치. `VITE_ADMOB_ENABLED`와 `VITE_PLAY_BILLING_ENABLED`가 문자열 `true`일 때만 초기화하고, 기본은 꺼짐. 광고 ID는 구글이 공개한 샘플만. 결제 상품 ID는 없음
+- **하지 않음:** 릴리스 서명키, 개발자 계정, 스토어 제출, 운영 키 연결
+- **Impacted:** 03-tech-stack.md, 04-architecture.md, AGENTS.md, docs/play/2026-11-play-readiness.md
 
 | ID | 내용 | 해결 조건 / 담당 |
 |---|---|---|

@@ -14,7 +14,10 @@ export default defineConfig({
       thresholds: {
         'src/utils/sharedPlay.ts': { branches: 100 },
         'src/utils/backupImport.ts': { branches: 100 },
-        'src/utils/analyticsEvents.ts': { branches: 100 }
+        'src/utils/analyticsEvents.ts': { branches: 100 },
+        'src/utils/apiOrigin.ts': { branches: 100 },
+        'src/utils/nativeShell.ts': { branches: 100 },
+        'src/utils/nativeMonetization.ts': { branches: 100 }
       }
     }
   }

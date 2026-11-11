@@ -323,7 +323,10 @@ const MainApp: React.FC = () => {
       <Navbar onOpenAuth={() => setIsAuthOpen(true)} />
 
       {/* Phone stays a single column. Tablet and desktop use the extra width. */}
-      <main className="flex-1 w-full max-w-xl md:max-w-3xl lg:max-w-6xl mx-auto px-4 md:px-6 pt-4 pb-32 lg:pb-12">
+      <main
+        id="app-shell-main"
+        className="flex-1 w-full max-w-xl md:max-w-3xl lg:max-w-6xl mx-auto px-4 md:px-6 pt-4 lg:pb-12"
+      >
         <LocalStorageNotice
           onBackup={() => {
             setActiveTab('mypage');

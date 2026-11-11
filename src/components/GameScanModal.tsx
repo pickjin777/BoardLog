@@ -157,6 +157,7 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({ isOpen, onClose, e
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 40, opacity: 0 }}
             transition={{ type: 'spring', damping: 28, stiffness: 320 }}
+            id="scan-modal-sheet"
             className="bg-white w-full sm:max-w-lg rounded-t-[28px] sm:rounded-[28px] max-h-[92vh] flex flex-col shadow-2xl"
           >
             <div className="flex items-start justify-between p-4 sm:p-6 border-b border-[#E9ECEF] shrink-0">

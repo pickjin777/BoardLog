@@ -1,0 +1,22 @@
+/**
+ * Google's published sample AdMob ids.
+ * https://developers.google.com/admob/android/test-ads
+ * Real BoardLog ad units are not created here.
+ */
+export const GOOGLE_TEST_ADMOB_APP_ID = 'ca-app-pub-3940256099942544~3347511713';
+export const GOOGLE_TEST_ADMOB_BANNER_ID = 'ca-app-pub-3940256099942544/6300978111';
+
+const GOOGLE_SAMPLE_PUBLISHER = 'ca-app-pub-3940256099942544';
+
+export function shouldPrepareNativeFeature(native: boolean, flag: string | undefined): boolean {
+  return native && flag === 'true';
+}
+
+/** Rejects anything except Google's sample app id or sample ad-unit id. */
+export function assertGoogleSampleAdId(id: string): void {
+  const sampleApp = id.startsWith(`${GOOGLE_SAMPLE_PUBLISHER}~`);
+  const sampleUnit = id.startsWith(`${GOOGLE_SAMPLE_PUBLISHER}/`);
+  if (!sampleApp && !sampleUnit) {
+    throw new Error('AdMob ids in this repo must be Google sample ids.');
+  }
+}

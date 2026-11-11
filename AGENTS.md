@@ -15,7 +15,8 @@ same PR.
 | `npm run typecheck` | now | `tsc --noEmit` with `strict` |
 | `npm run lint` | now | `npm run typecheck` + `biome check --error-on-warnings` (code files only; Markdown and CSS are not formatted) |
 | `npm run build:ga` | now | Build into `dist-ga/` with a fake GA4 id, used by the analytics E2E spec |
-| `npm run check:secrets` | now | Scan `dist/` for server secrets after `build` (D-037) |
+| `npm run check:secrets` | now | Scan `dist/` and `android/` for server secrets, and check the Play id matches `src/config/appIdentity.ts` (D-037, D-046) |
+| `npm run android:debug` | local | Bundles `dist` and builds a debug APK. No release key |
 | `npm run format` | now | `biome format --write` |
 | `npm test` | now | Vitest unit tests with coverage; 100% branch coverage required for `sharedPlay.ts`, `backupImport.ts`, `analyticsEvents.ts` (D-030). `storage.ts` runs on `fake-indexeddb` |
 | `npm run test:e2e` | now | Builds, then runs Playwright Test against `vite preview` (`e2e/*.spec.ts`). Needs Chromium: `npx playwright install chromium`, or set `PLAYWRIGHT_CHROMIUM_PATH` |
@@ -29,7 +30,8 @@ BoardLog is a Korean board-game play log and collection PWA (React 19, Vite, Typ
 deployed on Vercel from `main`. All user data lives in the browser (IndexedDB, localStorage
 fallback). A Supabase cloud backup is designed but **not built**: see
 [04-architecture](docs/design/04-architecture.md) and [ADR-002](docs/design/adr/ADR-002-cross-device-merge.md).
-`api/scan-games.ts` (Gemini vision proxy) is the only server code today.
+`api/scan-games.ts` (Gemini vision proxy) is the only server code today. A Capacitor Android
+shell packages `dist` for Play (D-046). It is not what Vercel serves.
 
 ## Invariants (breaking these caused real bugs before)
 
@@ -49,12 +51,14 @@ fallback). A Supabase cloud backup is designed but **not built**: see
    unavailable model vs. temporary overload vs. key/quota/region. A model id that a fresh
    `listUsableModels()` still lists is a transient provider issue, not a config error.
 7. **No secrets in client code or `VITE_*` variables.** The Supabase service-role key will live only
-   in `api/delete-account.ts` on Vercel Production (D-037).
+   in `api/delete-account.ts` on Vercel Production (D-037). `check:secrets` scans `dist/` and `android/`.
 8. **Rules that must be testable are pure functions in `src/utils/`** (hub key, merge, share-link
    parsing), independent of React and storage.
 9. **Usage statistics go only through `track()`** (`src/services/analytics.ts`), whose allowlist lives in
    `src/utils/analyticsEvents.ts`. Never add a parameter carrying a name, title, place, score or photo.
    The page address is reported without its `#fragment`, because a shared play travels there (FR-MEAS-03).
+10. **The Play package id and the native API origin live in `src/config/appIdentity.ts`.** The WebView
+    loads bundled `dist`. Do not set a remote server address. Native `/api` calls go to that origin.
 
 Coding standards (naming, async loading/error states, comments): [05-engineering-standards](docs/design/05-engineering-standards.md).
 
