@@ -242,7 +242,7 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
               {manualEntry && (
                 <div id="scan-manual-fallback" className="rounded-2xl border border-[#898B8D] bg-[#F8F9FA] p-4">
                   <p className="text-xs font-bold text-[#1E272E]">이 사진에서 이름을 읽지 않았습니다.</p>
-                  <p className="mt-1 text-[11px] leading-relaxed text-[#636E72]">
+                  <p className="mt-1 break-all text-[11px] leading-relaxed text-[#636E72]">
                     인식 설정이 없어 고른 사진은 서버로 보내지 않았습니다.
                     {pickedLabel ? ` 선택한 파일: ${pickedLabel}` : ''}
                   </p>

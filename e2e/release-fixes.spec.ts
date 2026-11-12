@@ -11,6 +11,15 @@ test('records-stay-on-device notice leads to JSON backup', async ({ page }) => {
 
   await page.locator('#local-storage-backup-btn').click();
   await visible('JSON 백업 버튼으로 이동', page.locator('#export-json-btn'));
+
+  const covered = await page.evaluate(() => {
+    const notice = document.querySelector('#local-storage-notice')?.getBoundingClientRect();
+    const nav = document.querySelector('#bottom-navigation-bar')?.getBoundingClientRect();
+    if (!notice || !nav) return true;
+    const overlap = Math.min(notice.bottom, nav.bottom) - Math.max(notice.top, nav.top);
+    return overlap > 1 || notice.bottom > nav.top + 1;
+  });
+  check('390 기기 저장 안내가 하단 탭에 가리지 않음', !covered);
 });
 
 test('320px empty lists clear the center button, and controls have names', async ({ page }) => {
@@ -86,11 +95,14 @@ test('320px games title stays wide and the 390px empty hint clears the tab', asy
 
   const title = await page.locator('#games-tab-title').boundingBox();
   const add = await page.locator('#games-add-game-btn').boundingBox();
+  const titleLines = await page.locator('#games-tab-title').evaluate((el) => el.getClientRects().length);
+  const titleText = ((await page.locator('#games-tab-title').innerText()) ?? '').replace(/\s+/g, '');
   check(
     '320px에서 제목이 버튼 위에 넓게 있음',
     !!title && !!add && title.width > 200 && add.y >= title.y + title.height - 1,
     JSON.stringify({ title, add })
   );
+  check('320px에서 제목이 한 줄이고 글자가 안 깨짐', titleLines === 1 && titleText === '내보드게임컬렉션', titleText);
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.locator('#nav-tab-home').click();
@@ -170,6 +182,46 @@ test('without a scan key, a chosen photo falls back to manual entry and saves', 
   expect(pageErrors, pageErrors.join('\n')).toEqual([]);
 });
 
+test('without a scan key, several photos stay on the device and open manual entry', async ({ page }) => {
+  let scanPosts = 0;
+  await page.route('**/api/scan-games', (route) => {
+    if (route.request().method() === 'POST') scanPosts += 1;
+    return route.continue();
+  });
+
+  await page.setViewportSize({ width: 320, height: 700 });
+  await page.goto('/', { waitUntil: 'networkidle' });
+  await page.locator('#treasure-skip-btn').click();
+  await page.locator('#nav-tab-games').click();
+  await page.locator('#games-add-game-btn').click();
+  await page.locator('#game-form-pick-photo-btn').click();
+  await visible('사진 선택 시트', page.locator('#scan-modal-sheet'));
+
+  const png = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+    'base64'
+  );
+  const longName = `${'shelf'.repeat(24)}.png`;
+  await page.locator('#scan-file-input').setInputFiles([
+    { name: 'shelf-a.png', mimeType: 'image/png', buffer: png },
+    { name: longName, mimeType: 'image/png', buffer: png }
+  ]);
+
+  await visible('직접 입력 안내', page.locator('#scan-manual-fallback'));
+  await hasText('첫 사진 이름', page.locator('#scan-manual-fallback'), 'shelf-a.png');
+  await hasText('둘째 사진 이름', page.locator('#scan-manual-fallback'), longName);
+  await hasText('사진을 보내지 않음', page.locator('#scan-manual-fallback'), '서버로 보내지 않았습니다');
+  check('여러 장도 인식 요청 없음', scanPosts === 0, String(scanPosts));
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth
+  );
+  check('긴 파일 이름이 화면 밖으로 안 나감', overflow <= 1, String(overflow));
+
+  await page.locator('#scan-manual-entry-btn').click();
+  await visible('직접 입력 폼', page.locator('#game-input-title'));
+  await hidden('사진 시트 닫힘', page.locator('#scan-modal-sheet'));
+});
+
 test('kakao quick select keeps weight, and game detail lists only that game', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/', { waitUntil: 'networkidle' });
@@ -212,12 +264,15 @@ test('kakao quick select keeps weight, and game detail lists only that game', as
   await page.locator('#nav-tab-games').click();
   await page.locator('#games-kakao-share-btn').click();
   await page.locator('#kakao-share-modal-overlay').waitFor();
-  await page
-    .locator('select')
-    .filter({ has: page.locator('option[value="heavy"]') })
-    .selectOption('heavy');
+  await page.locator('#kakao-filter-weight').selectOption('heavy');
+  await page.locator('#kakao-filter-search').fill('없는이름');
   await page.getByRole('button', { name: '2인 추천/전용' }).click();
-  await visible('헤비만 선택됨', page.getByText('1/2개 선택됨'));
+  await visible('난이도와 검색이 둘 다 맞을 때만 고름', page.getByText('0/2개 선택됨'));
+  await page.locator('#kakao-filter-search').fill('헤비');
+  await page.getByRole('button', { name: '2인 추천/전용' }).click();
+  await visible('헤비이면서 검색에 맞는 게임만', page.getByText('1/2개 선택됨'));
+  const picked = (await page.locator('#kakao-share-modal-overlay').innerText()) ?? '';
+  check('라이트 게임은 빠른 추천에 없음', !picked.includes('라이트합성'));
 
   await page.locator('#kakao-share-modal-overlay button[aria-label="닫기"]').click();
   await hidden('카카오 모달 닫힘', page.locator('#kakao-share-modal-overlay'));
