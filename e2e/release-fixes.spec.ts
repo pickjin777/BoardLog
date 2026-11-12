@@ -244,6 +244,27 @@ test('ownership filters keep the whole label at 320px', async ({ page }) => {
   check('판매완료 글자가 화면에 다 보임', inView);
 });
 
+test('my page names where records live and the nickname field', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 700 });
+  await page.goto('/', { waitUntil: 'networkidle' });
+  await page.locator('#nav-tab-mypage').click();
+  await hasText('저장 위치 안내', page.locator('#mypage-storage-status'), '이 기기에만 저장됨');
+  const overlap = await page.evaluate(() => {
+    const name = document.querySelector('h2')?.getBoundingClientRect();
+    const login = [...document.querySelectorAll('button')].find((button) =>
+      (button.textContent ?? '').includes('로그인')
+    );
+    if (!name || !login) return true;
+    const box = login.getBoundingClientRect();
+    const x = Math.min(name.right, box.right) - Math.max(name.left, box.left);
+    const y = Math.min(name.bottom, box.bottom) - Math.max(name.top, box.top);
+    return x > 1 && y > 1;
+  });
+  check('닉네임이 로그인 버튼과 안 겹침', !overlap);
+  await page.getByRole('button', { name: '수정' }).click();
+  await visible('닉네임 칸에 이름이 있음', page.getByRole('textbox', { name: '닉네임' }));
+});
+
 test('kakao quick select keeps weight, and game detail lists only that game', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/', { waitUntil: 'networkidle' });
