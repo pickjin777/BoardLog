@@ -1,7 +1,7 @@
 import type React from 'react';
 import { useState, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Copy, Check, Users, Search, X, MessageCircle, Sparkles, Tag, Dices, Image as ImageIcon } from 'lucide-react';
+import { Copy, Check, Users, Search, X, MessageCircle, Tag, Dices, Image as ImageIcon } from 'lucide-react';
 import type { UserGame } from '../types';
 import { useToast } from '../context/ToastContext';
 import { track } from '../services/analytics';
@@ -51,7 +51,7 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
   });
 
   // Custom sharing message / header
-  const [customMessage, setCustomMessage] = useState('🎲 오늘 모임에서 같이 할 보드게임 골라보세요!');
+  const [customMessage, setCustomMessage] = useState('오늘 모임에서 같이 할 게임을 골라 보세요');
   const [includePlaytime, setIncludePlaytime] = useState(true);
   const [includePlayers, setIncludePlayers] = useState(true);
   const [includeGenre, setIncludeGenre] = useState(true);
@@ -153,34 +153,29 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
 
   // Generate KakaoTalk Formatted Text
   const kakaoFormattedText = useMemo(() => {
-    const titleHeader = `🎲 [${ownerName || '보드게이머'}님의 보드게임 소장 목록] 🎲`;
-    const subDesc =
-      shareMode === 'all'
-        ? `📦 전체 소장 컬렉션 (${gamesToShare.length}종)`
-        : `✨ 추천/선택 보드게임 (${gamesToShare.length}종)`;
+    const titleHeader = `${ownerName || '보드게이머'}님의 보드게임 소장 목록`;
+    const subDesc = shareMode === 'all' ? `전체 소장 ${gamesToShare.length}종` : `고른 게임 ${gamesToShare.length}종`;
 
-    const lines = [titleHeader, subDesc, customMessage ? `💬 "${customMessage}"` : '', '──────────────────'].filter(
-      Boolean
-    );
+    const lines = [titleHeader, subDesc, customMessage ? customMessage : '', '──────────────────'].filter(Boolean);
 
     if (gamesToShare.length === 0) {
       lines.push('(선택된 게임이 없습니다)');
     } else {
       gamesToShare.forEach((g, idx) => {
-        const line = `${idx + 1}. 🎮 ${g.title}`;
+        const line = `${idx + 1}. ${g.title}`;
         const metaParts: string[] = [];
 
         if (includePlayers) {
-          metaParts.push(`👥 ${g.minPlayers}~${g.maxPlayers}인`);
+          metaParts.push(`${g.minPlayers}~${g.maxPlayers}인`);
         }
         if (includePlaytime && g.playTime) {
-          metaParts.push(`⏱ ${g.playTime}분`);
+          metaParts.push(`${g.playTime}분`);
         }
         if (includeWeight && g.weight) {
-          metaParts.push(`⭐ 난이도 ${g.weight.toFixed(1)}/5`);
+          metaParts.push(`난이도 ${g.weight.toFixed(1)}/5`);
         }
         if (includeGenre && g.genre && g.genre.length > 0) {
-          metaParts.push(`🏷 ${g.genre.slice(0, 2).join(', ')}`);
+          metaParts.push(`${g.genre.slice(0, 2).join(', ')}`);
         }
 
         lines.push(line);
@@ -191,7 +186,7 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
     }
 
     lines.push('──────────────────');
-    lines.push(`🎲 보드게임 로그 & 룸: ${window.location.origin}`);
+    lines.push(`보드로그: ${window.location.origin}`);
 
     return lines.join('\n');
   }, [ownerName, gamesToShare, shareMode, customMessage, includePlayers, includePlaytime, includeWeight, includeGenre]);
@@ -288,16 +283,17 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
     <AnimatePresence>
       <div
         id="kakao-share-modal-overlay"
-        className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-xs overflow-y-auto"
+        className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 overflow-y-auto"
       >
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 15 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 15 }}
-          className="w-full max-w-2xl bg-white rounded-[32px] shadow-2xl border border-[#E9ECEF] overflow-hidden my-auto max-h-[92vh] flex flex-col"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+          exit={{ opacity: 0, y: 8 }}
+          className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-[#E9ECEF] overflow-hidden my-auto max-h-[92vh] flex flex-col"
         >
           {/* Header */}
-          <div className="p-4.5 sm:p-5 border-b border-[#E9ECEF] flex items-center justify-between bg-white shrink-0">
+          <div className="p-4 sm:p-5 border-b border-[#E9ECEF] flex items-center justify-between bg-white shrink-0">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-[#FEE500] text-[#191919] flex items-center justify-center font-black shadow-xs">
                 <MessageCircle className="w-5 h-5 fill-[#191919]" />
@@ -325,12 +321,12 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
           </div>
 
           {/* Navigation Tabs (Settings vs Live Preview) */}
-          <div className="px-4.5 pt-3 pb-2 bg-[#F8F9FA] border-b border-[#E9ECEF] flex items-center justify-between gap-2 shrink-0">
+          <div className="px-4 pt-3 pb-2 bg-[#F8F9FA] border-b border-[#E9ECEF] flex items-center justify-between gap-2 shrink-0">
             <div className="flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={() => setActiveTab('settings')}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-colors ${
                   activeTab === 'settings'
                     ? 'bg-[#E2B657] text-[#1A1408] shadow-xs'
                     : 'bg-white text-[#636E72] hover:bg-[#E9ECEF] border border-[#E9ECEF]'
@@ -341,7 +337,7 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
               <button
                 type="button"
                 onClick={() => setActiveTab('preview')}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-colors flex items-center gap-1.5 ${
                   activeTab === 'preview'
                     ? 'bg-[#FEE500] text-[#191919] shadow-xs'
                     : 'bg-white text-[#636E72] hover:bg-[#E9ECEF] border border-[#E9ECEF]'
@@ -367,14 +363,14 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
                     type="button"
                     aria-pressed={shareMode === 'all'}
                     onClick={() => setShareMode('all')}
-                    className={`p-3 rounded-2xl border text-left transition-all ${
+                    className={`p-3 rounded-2xl border text-left transition-colors ${
                       shareMode === 'all'
                         ? 'border-[#4834D4] bg-[#4834D4]/5 text-[#4834D4] ring-2 ring-[#4834D4]/20'
                         : 'border-[#E9ECEF] bg-[#F8F9FA] text-[#636E72] hover:bg-[#F1F3F5]'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-bold">📦 전체 소장 게임 공유</span>
+                      <span className="text-xs font-bold">전체 소장 게임</span>
                       {shareMode === 'all' && <Check className="w-4 h-4 text-[#4834D4]" />}
                     </div>
                     <p className="text-[11px] text-[#636E72]">보유한 {games.length}개 전체를 목록으로 공유합니다</p>
@@ -384,14 +380,14 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
                     type="button"
                     aria-pressed={shareMode === 'selective'}
                     onClick={() => setShareMode('selective')}
-                    className={`p-3 rounded-2xl border text-left transition-all ${
+                    className={`p-3 rounded-2xl border text-left transition-colors ${
                       shareMode === 'selective'
                         ? 'border-[#4834D4] bg-[#4834D4]/5 text-[#4834D4] ring-2 ring-[#4834D4]/20'
                         : 'border-[#E9ECEF] bg-[#F8F9FA] text-[#636E72] hover:bg-[#F1F3F5]'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-bold">🎯 일부 선택 공유 (추천)</span>
+                      <span className="text-xs font-bold">고른 게임만</span>
                       {shareMode === 'selective' && <Check className="w-4 h-4 text-[#4834D4]" />}
                     </div>
                     <p className="text-[11px] text-[#636E72]">인원수(4인이하), 장르 등 조건에 맞는 게임만 선택</p>
@@ -400,80 +396,74 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
 
                 {/* 2. Quick Presets Section (Active when in Selective mode) */}
                 {shareMode === 'selective' && (
-                  <div className="p-3.5 bg-[#F8F9FA] rounded-2xl border border-[#E9ECEF] space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-[#1E272E]">
-                        <Sparkles className="w-4 h-4 text-[#B8860B]" />
-                        <span>인기 빠른 필터 프리셋</span>
-                      </div>
-                      <span className="text-[10px] text-[#636E72]">원클릭으로 자동 선택</span>
-                    </div>
+                  <div className="p-4 bg-[#F8F9FA] rounded-2xl border border-[#E9ECEF] space-y-3">
+                    <p className="text-xs font-medium text-[#F6EBD4]">필터</p>
 
                     {/* Presets Chips */}
                     <div className="flex flex-wrap gap-1.5">
                       <button
                         type="button"
                         onClick={() => applyPresetFilter('under4')}
-                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1 ${
+                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors flex items-center gap-1 ${
                           playerPreset === 'under4'
                             ? 'bg-[#4834D4] text-white shadow-xs'
                             : 'bg-white text-[#2D3436] border border-[#E9ECEF] hover:bg-[#F1F3F5]'
                         }`}
                       >
                         <Users className="w-3.5 h-3.5" />
-                        <span>👥 4인 이하 가능</span>
+                        <span>4인 이하</span>
                       </button>
 
                       <button
                         type="button"
                         onClick={() => applyPresetFilter('twoPlayers')}
-                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1 ${
+                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors flex items-center gap-1 ${
                           playerPreset === 'twoPlayers'
                             ? 'bg-[#4834D4] text-white shadow-xs'
                             : 'bg-white text-[#2D3436] border border-[#E9ECEF] hover:bg-[#F1F3F5]'
                         }`}
                       >
                         <Users className="w-3.5 h-3.5" />
-                        <span>👫 2인 추천/전용</span>
+                        <span>2인</span>
                       </button>
 
                       <button
                         type="button"
                         onClick={() => applyPresetFilter('party5Plus')}
-                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1 ${
+                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors flex items-center gap-1 ${
                           playerPreset === 'party5Plus'
                             ? 'bg-[#4834D4] text-white shadow-xs'
                             : 'bg-white text-[#2D3436] border border-[#E9ECEF] hover:bg-[#F1F3F5]'
                         }`}
                       >
                         <Users className="w-3.5 h-3.5" />
-                        <span>🎉 5인 이상 파티/단체</span>
+                        <span>5인 이상</span>
                       </button>
 
                       <button
                         type="button"
                         onClick={() => applyPresetFilter('all', '전략')}
-                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1 ${
+                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors flex items-center gap-1 ${
                           selectedGenre === '전략'
-                            ? 'bg-[#1B7A43] text-white shadow-xs'
+                            ? 'bg-[#4834D4] text-white'
                             : 'bg-white text-[#2D3436] border border-[#E9ECEF] hover:bg-[#F1F3F5]'
                         }`}
                       >
                         <Tag className="w-3.5 h-3.5" />
-                        <span>🧠 전략 장르만</span>
+                        <span>전략</span>
                       </button>
 
                       <button
                         type="button"
                         onClick={() => applyPresetFilter('all', '파티')}
-                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1 ${
+                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors flex items-center gap-1 ${
                           selectedGenre === '파티'
                             ? 'bg-[#E67E22] text-[#1A1408] shadow-xs'
                             : 'bg-white text-[#2D3436] border border-[#E9ECEF] hover:bg-[#F1F3F5]'
                         }`}
                       >
                         <Tag className="w-3.5 h-3.5" />
-                        <span>🎈 파티/블러핑만</span>
+                        <span>파티</span>
                       </button>
                     </div>
 
@@ -539,7 +529,7 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
                           <input
                             id="kakao-filter-search"
                             type="text"
-                            placeholder="게임명 검색..."
+                            placeholder="검색"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full pl-7 pr-2.5 py-1.5 bg-white border border-[#E9ECEF] rounded-xl text-xs text-[#1E272E] focus:outline-hidden"
@@ -596,13 +586,13 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
                               type="button"
                               aria-pressed={isSelected}
                               onClick={() => toggleGameSelection(game.id)}
-                              className={`w-full p-2.5 rounded-xl flex items-center justify-between gap-3 cursor-pointer transition-all text-left ${
+                              className={`w-full p-2.5 rounded-xl flex items-center justify-between gap-3 cursor-pointer transition-colors text-left ${
                                 isSelected
                                   ? 'bg-white border border-[#4834D4]/30 shadow-2xs'
                                   : 'bg-white/60 hover:bg-white border border-transparent text-[#636E72]'
                               }`}
                             >
-                              <div className="flex items-center gap-2.5 min-w-0">
+                              <div className="flex items-center gap-2 min-w-0">
                                 <span
                                   className={`w-5 h-5 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
                                     isSelected
@@ -633,10 +623,10 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
                                   </div>
                                   <div className="text-[10px] text-[#636E72] flex items-center gap-1.5 mt-0.5 flex-wrap">
                                     <span>
-                                      👥 {game.minPlayers}~{game.maxPlayers}인
+                                      {game.minPlayers}~{game.maxPlayers}인
                                     </span>
-                                    {game.playTime && <span>• ⏱ {game.playTime}분</span>}
-                                    {game.weight && <span>• ⭐ {game.weight.toFixed(1)}</span>}
+                                    {game.playTime && <span>• {game.playTime}분</span>}
+                                    {game.weight && <span>• 난이도 {game.weight.toFixed(1)}</span>}
                                     {game.genre && game.genre.length > 0 && (
                                       <span className="text-[#4834D4]">• {game.genre.slice(0, 2).join(', ')}</span>
                                     )}
@@ -660,7 +650,7 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
                 )}
 
                 {/* 4. Message Options & Greetings */}
-                <div className="p-3.5 bg-[#F8F9FA] rounded-2xl border border-[#E9ECEF] space-y-2.5">
+                <div className="p-4 bg-[#F8F9FA] rounded-2xl border border-[#E9ECEF] space-y-2">
                   <label htmlFor="kakao-custom-message" className="block text-xs font-bold text-[#1E272E]">
                     카카오톡 공유 상단 메시지 (선택 입력)
                   </label>
@@ -722,8 +712,7 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
               <div className="space-y-4">
                 <div className="p-3 bg-[#FFF3CD] border border-[#FFEBAA] rounded-2xl text-xs text-[#856404] flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-[#E67E22] shrink-0" />
-                    <span>카카오톡 대화방에 전송될 메시지 형태를 미리 확인하세요!</span>
+                    <span>카카오톡에 이렇게 보입니다</span>
                   </div>
                   <span className="font-bold">총 {gamesToShare.length}개 게임</span>
                 </div>
@@ -740,7 +729,7 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
                   <div className="flex items-start justify-end gap-2">
                     <div
                       ref={cardRef}
-                      className="max-w-md w-full bg-[#FEE500] text-[#191919] p-4 rounded-2xl rounded-tr-none shadow-md border border-[#F5DC00] space-y-2.5"
+                      className="max-w-md w-full bg-[#FEE500] text-[#191919] p-4 rounded-2xl rounded-tr-none shadow-md border border-[#F5DC00] space-y-2"
                     >
                       {/* Bubble Header */}
                       <div className="flex items-center justify-between border-b border-black/10 pb-2">
@@ -766,7 +755,7 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
                           gamesToShare.map((g, idx) => (
                             <div
                               key={g.id}
-                              className="p-2 bg-[#FFFBEA] rounded-xl flex items-center gap-2.5 border border-black/5"
+                              className="p-2 bg-[#FFFBEA] rounded-xl flex items-center gap-2 border border-black/5"
                             >
                               <span className="w-5 h-5 rounded-full bg-[#191919] text-[#FEE500] text-[10px] font-black flex items-center justify-center shrink-0">
                                 {idx + 1}
@@ -783,12 +772,12 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
                                 <div className="text-[10px] text-[#555] flex items-center gap-1 flex-wrap">
                                   {includePlayers && (
                                     <span>
-                                      👥 {g.minPlayers}~{g.maxPlayers}인
+                                      {g.minPlayers}~{g.maxPlayers}인
                                     </span>
                                   )}
-                                  {includePlaytime && g.playTime && <span>• ⏱ {g.playTime}분</span>}
-                                  {includeWeight && g.weight && <span>• ⭐ {g.weight.toFixed(1)}</span>}
-                                  {includeGenre && g.genre.length > 0 && <span>• 🏷 {g.genre[0]}</span>}
+                                  {includePlaytime && g.playTime && <span>• {g.playTime}분</span>}
+                                  {includeWeight && g.weight && <span>• 난이도 {g.weight.toFixed(1)}</span>}
+                                  {includeGenre && g.genre.length > 0 && <span>• {g.genre[0]}</span>}
                                 </div>
                               </div>
                             </div>
@@ -800,7 +789,7 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
 
                       {/* Bubble Footer */}
                       <div className="pt-1.5 border-t border-black/10 flex items-center justify-between text-[10px] text-[#555]">
-                        <span>🎲 보드게임 룸 아카이브</span>
+                        <span>보드로그</span>
                         <span className="font-bold">보드게임 로그</span>
                       </div>
                     </div>
@@ -808,7 +797,7 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
                 </div>
 
                 {/* Plain Text View Box */}
-                <div className="p-3.5 bg-[#F8F9FA] rounded-2xl border border-[#E9ECEF] space-y-1.5">
+                <div className="p-4 bg-[#F8F9FA] rounded-2xl border border-[#E9ECEF] space-y-1.5">
                   <div className="flex items-center justify-between text-xs font-bold text-[#1E272E]">
                     <span>텍스트 전문 미리보기</span>
                     <button
@@ -829,7 +818,7 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
           </div>
 
           {/* Action Footer */}
-          <div className="p-4 border-t border-[#E9ECEF] bg-white flex items-center justify-between gap-2.5 shrink-0 flex-wrap">
+          <div className="p-4 border-t border-[#E9ECEF] bg-white flex items-center justify-between gap-2 shrink-0 flex-wrap">
             <div className="flex items-center gap-1.5">
               <button
                 type="button"
@@ -847,7 +836,7 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
                 type="button"
                 onClick={handleCopyText}
                 disabled={gamesToShare.length === 0}
-                className="px-3.5 py-2.5 bg-white hover:bg-[#F8F9FA] text-[#1E272E] border border-[#E9ECEF] text-xs font-bold rounded-2xl transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                className="px-4 py-2.5 bg-white hover:bg-[#F8F9FA] text-[#1E272E] border border-[#E9ECEF] text-xs font-bold rounded-2xl transition-colors flex items-center gap-1.5 disabled:opacity-50"
                 title="카카오톡 문구 복사"
               >
                 {isCopied ? (
@@ -878,7 +867,7 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
                 type="button"
                 onClick={handleNativeOrKakaoShare}
                 disabled={gamesToShare.length === 0}
-                className="px-5 py-2.5 bg-[#FEE500] hover:bg-[#F5DC00] active:bg-[#E8CE00] text-[#191919] text-xs font-black rounded-2xl shadow-[0_4px_14px_rgba(254,229,0,0.45)] transition-all flex items-center gap-2 active:scale-95 disabled:opacity-50"
+                className="px-5 py-2.5 bg-[#FEE500] hover:bg-[#F5DC00] active:bg-[#E8CE00] text-[#191919] text-xs font-black rounded-2xl transition-colors flex items-center gap-2 disabled:opacity-50"
               >
                 <MessageCircle className="w-4 h-4 fill-[#191919]" />
                 <span>카카오톡으로 공유하기</span>

@@ -75,11 +75,11 @@ export const PrivacyNoticeModal: React.FC<PrivacyNoticeModalProps> = ({ isOpen, 
       role="dialog"
       aria-modal="true"
       aria-labelledby="privacy-notice-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
     >
-      <div className="w-full max-w-sm max-h-[85vh] overflow-y-auto bg-white rounded-[28px] p-6 shadow-2xl border border-[#E9ECEF]">
+      <div className="w-full max-w-sm max-h-[85vh] overflow-y-auto bg-white rounded-2xl p-6 shadow-2xl border border-[#E9ECEF]">
         <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-2xl bg-[#4834D4]/10 text-[#4834D4] flex items-center justify-center">
               <ShieldCheck className="w-5 h-5" />
             </div>

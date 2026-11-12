@@ -122,7 +122,7 @@ test('photo scan stays off until the server says a key exists', async ({ page })
   await page.locator('#games-add-game-btn').click();
   await visible('키 없으면 준비 중 안내', page.locator('#game-form-scan-unavailable'));
   await hidden('키 없으면 스캔 버튼 없음', page.locator('#game-form-open-scan-btn'));
-  await hasText('시드 검색은 그대로', page.locator('#game-form-modal-overlay'), '빠른 검색');
+  await hasText('시드 검색은 그대로', page.locator('#game-form-modal-overlay'), '시드 목록에서 찾기');
   await page.locator('#game-form-close-btn').click();
 
   await page.route('**/api/scan-games', (route) => {
@@ -311,10 +311,10 @@ test('kakao quick select keeps weight, and game detail lists only that game', as
   await page.locator('#kakao-share-modal-overlay').waitFor();
   await page.locator('#kakao-filter-weight').selectOption('heavy');
   await page.locator('#kakao-filter-search').fill('없는이름');
-  await page.getByRole('button', { name: '2인 추천/전용' }).click();
+  await page.getByRole('button', { name: '2인', exact: true }).click();
   await visible('난이도와 검색이 둘 다 맞을 때만 고름', page.getByText('0/2개 선택됨'));
   await page.locator('#kakao-filter-search').fill('헤비');
-  await page.getByRole('button', { name: '2인 추천/전용' }).click();
+  await page.getByRole('button', { name: '2인', exact: true }).click();
   await visible('헤비이면서 검색에 맞는 게임만', page.getByText('1/2개 선택됨'));
   const picked = (await page.locator('#kakao-share-modal-overlay').textContent()) ?? '';
   check('라이트 게임은 빠른 추천에 없음', !picked.includes('라이트합성'));
@@ -434,7 +434,7 @@ test('kakao and catalog filters are named', async ({ page }) => {
   await page.goto('/', { waitUntil: 'networkidle' });
   await page.locator('#nav-tab-games').click();
   await page.locator('#games-kakao-share-btn').click();
-  await page.getByRole('button', { name: /일부 선택 공유/ }).click();
+  await page.getByRole('button', { name: /고른 게임만/ }).click();
   await visible('카카오 장르 선택', page.getByRole('combobox', { name: '장르 선택' }));
   await visible('카카오 난이도', page.getByRole('combobox', { name: '난이도 (웨이트)' }));
   await visible('카카오 게임 검색', page.getByRole('textbox', { name: '게임 직접 검색' }));

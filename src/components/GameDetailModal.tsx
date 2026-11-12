@@ -51,7 +51,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
   const gamePlays = playsForGame(game, plays, games);
 
   const handleShareSingleGame = async () => {
-    const text = `🎲 [보드게임 추천] ${game.title}\n👥 인원: ${game.minPlayers}~${game.maxPlayers}인${game.bestPlayers ? ` (추천: ${game.bestPlayers})` : ''}\n⏱ 시간: ${game.playTime}분\n⭐ 난이도: ${game.weight?.toFixed(1) || '2.0'}/5.0\n🏷 장르: ${game.genre.join(', ')}\n${game.notes ? `💬 메모: ${game.notes}\n` : ''}\n👉 같이 플레이해요!`;
+    const text = `${game.title}\n인원: ${game.minPlayers}~${game.maxPlayers}인${game.bestPlayers ? ` (추천 ${game.bestPlayers})` : ''}\n시간: ${game.playTime}분\n난이도: ${game.weight?.toFixed(1) || '2.0'}/5.0\n장르: ${game.genre.join(', ')}\n${game.notes ? `메모: ${game.notes}\n` : ''}같이 플레이해요`;
     if (navigator.share) {
       try {
         await navigator.share({
@@ -73,13 +73,14 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
     <AnimatePresence>
       <div
         id="game-detail-modal-overlay"
-        className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40 backdrop-blur-xs overflow-y-auto"
+        className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40 overflow-y-auto"
       >
         <motion.div
-          initial={{ opacity: 0, scale: 0.96, y: 15 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.96, y: 15 }}
-          className="w-full max-w-lg md:max-w-2xl bg-white rounded-[32px] shadow-2xl border border-[#E9ECEF] overflow-hidden my-auto max-h-[92vh] flex flex-col"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+          exit={{ opacity: 0, y: 8 }}
+          className="w-full max-w-lg md:max-w-2xl bg-white rounded-2xl shadow-2xl border border-[#E9ECEF] overflow-hidden my-auto max-h-[92vh] flex flex-col"
         >
           {/* Hero Image & Floating Controls */}
           <div className="relative w-full h-56 sm:h-64 bg-[#F8F9FA] shrink-0">
@@ -96,11 +97,11 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
             {/* Top Close & Actions */}
-            <div className="absolute top-3.5 right-3.5 flex items-center gap-1.5">
+            <div className="absolute top-4 right-3.5 flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={handleShareSingleGame}
-                className="w-8 h-8 rounded-full bg-[#FEE500] text-[#191919] hover:bg-[#F5DC00] flex items-center justify-center backdrop-blur-xs transition-colors shadow-xs"
+                className="w-8 h-8 rounded-full bg-[#FEE500] text-[#191919] hover:bg-[#F5DC00] flex items-center justify-center transition-colors shadow-xs"
                 aria-label="카카오톡으로 공유하기"
                 title="카카오톡으로 공유하기"
               >
@@ -109,7 +110,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
               <button
                 type="button"
                 onClick={() => onEdit(game)}
-                className="w-8 h-8 rounded-full bg-black/40 text-white hover:bg-[#4834D4] flex items-center justify-center backdrop-blur-xs transition-colors"
+                className="w-8 h-8 rounded-full bg-black/40 text-white hover:bg-[#4834D4] flex items-center justify-center transition-colors"
                 aria-label="수정하기"
                 title="수정하기"
               >
@@ -118,7 +119,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
               <button
                 type="button"
                 onClick={() => onDelete(game)}
-                className="w-8 h-8 rounded-full bg-black/40 text-white hover:bg-[#EB4D4B] flex items-center justify-center backdrop-blur-xs transition-colors"
+                className="w-8 h-8 rounded-full bg-black/40 text-white hover:bg-[#EB4D4B] flex items-center justify-center transition-colors"
                 aria-label="삭제하기"
                 title="삭제하기"
               >
@@ -127,7 +128,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="w-8 h-8 rounded-full bg-black/40 text-white hover:bg-black/60 flex items-center justify-center backdrop-blur-xs transition-colors"
+                className="w-8 h-8 rounded-full bg-black/40 text-white hover:bg-black/60 flex items-center justify-center transition-colors"
                 aria-label="닫기"
                 title="닫기"
               >
@@ -146,7 +147,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
                   {game.ownershipStatus}
                 </span>
                 {game.condition && (
-                  <span className="px-2 py-0.5 rounded-full bg-white/20 text-white text-[10px] font-bold backdrop-blur-xs">
+                  <span className="px-2 py-0.5 rounded-full bg-white/20 text-white text-[10px] font-bold">
                     상태: {game.condition}
                   </span>
                 )}
@@ -157,9 +158,9 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
           </div>
 
           {/* Details Scroll Area */}
-          <div className="p-4.5 sm:p-5 overflow-y-auto flex-1 space-y-4">
+          <div className="p-4 sm:p-5 overflow-y-auto flex-1 space-y-4">
             {/* Quick Meta Grid */}
-            <div className="grid grid-cols-3 gap-2 p-3.5 bg-[#F8F9FA] rounded-2xl border border-[#E9ECEF] text-center">
+            <div className="grid grid-cols-3 gap-2 p-4 bg-[#F8F9FA] rounded-2xl border border-[#E9ECEF] text-center">
               <div>
                 <div className="flex items-center justify-center gap-1 text-[#636E72] mb-0.5">
                   <Users className="w-3.5 h-3.5" />
@@ -197,9 +198,9 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
             </div>
 
             {/* Play Count Banner */}
-            <div className="p-3.5 bg-white rounded-2xl border border-[#E9ECEF] shadow-sm flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-[#4834D4] text-white flex items-center justify-center shadow-[0_4px_12px_rgba(72,52,212,0.3)]">
+            <div className="p-4 bg-white rounded-2xl border border-[#E9ECEF] shadow-sm flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 rounded-xl bg-[#4834D4] text-white flex items-center justify-center">
                   <CheckSquare className="w-4.5 h-4.5" />
                 </div>
                 <div>
@@ -212,7 +213,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
                 id="game-detail-record-cta"
                 type="button"
                 onClick={() => onStartPlay(game)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#4834D4] hover:bg-[#3c2ab9] text-white rounded-full text-xs font-bold shadow-[0_4px_12px_rgba(72,52,212,0.3)] transition-all"
+                className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-[#4834D4] hover:bg-[#3c2ab9] text-white rounded-full text-xs font-bold transition-colors"
               >
                 <PlusCircle className="w-3.5 h-3.5" />
                 <span>기록 추가</span>
@@ -297,7 +298,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
 
             {/* Price Information */}
             {(game.purchasePrice > 0 || game.originalPrice > 0 || game.marketPrice > 0) && (
-              <div className="p-3.5 bg-white rounded-2xl border border-[#E9ECEF] shadow-sm space-y-2">
+              <div className="p-4 bg-white rounded-2xl border border-[#E9ECEF] shadow-sm space-y-2">
                 <div className="flex items-center justify-between text-xs font-bold text-[#1E272E]">
                   <span>가격 정보</span>
                   <span className="text-[10px] font-bold text-[#4834D4] bg-[#4834D4]/10 px-2 py-0.5 rounded-full flex items-center gap-0.5">
@@ -327,7 +328,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
 
             {/* Notes */}
             {game.notes && (
-              <div className="p-3.5 bg-[#F8F9FA] rounded-2xl border border-[#E9ECEF] text-xs text-[#636E72]">
+              <div className="p-4 bg-[#F8F9FA] rounded-2xl border border-[#E9ECEF] text-xs text-[#636E72]">
                 <span className="text-[10px] font-bold text-[#636E72] block mb-1">메모</span>
                 <p className="leading-relaxed whitespace-pre-line">{game.notes}</p>
               </div>
@@ -340,7 +341,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
               id="game-detail-delete-btn"
               type="button"
               onClick={() => onDelete(game)}
-              className="px-3.5 py-3 bg-[#FEEBEC] hover:bg-[#FCD7D7] text-[#EB4D4B] text-xs font-bold rounded-full transition-colors flex items-center justify-center gap-1 shrink-0"
+              className="px-4 py-3 bg-[#FEEBEC] hover:bg-[#FCD7D7] text-[#EB4D4B] text-xs font-bold rounded-full transition-colors flex items-center justify-center gap-1 shrink-0"
               title="게임 삭제"
             >
               <Trash2 className="w-4 h-4" />
@@ -357,7 +358,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
               id="game-detail-start-play-btn"
               type="button"
               onClick={() => onStartPlay(game)}
-              className="flex-2 py-3 bg-[#4834D4] hover:bg-[#3c2ab9] active:bg-[#3c2ab9] text-white text-xs font-bold rounded-full shadow-[0_4px_14px_rgba(72,52,212,0.3)] transition-colors text-center flex items-center justify-center gap-1.5"
+              className="flex-2 py-3 bg-[#4834D4] hover:bg-[#3c2ab9] active:bg-[#3c2ab9] text-white text-xs font-bold rounded-full transition-colors text-center flex items-center justify-center gap-1.5"
             >
               <PlusCircle className="w-4 h-4" />
               <span>플레이 기록</span>

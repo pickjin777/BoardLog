@@ -54,19 +54,19 @@ colors:
 
 내려받는 글꼴은 없다. 한글과 라틴은 같은 시스템 산세리프 스택이다.
 
-- **제목:** 굵은 이탤릭. 화면의 이름(게임, 기록, 탭 제목)에만 쓴다.
-- **본문:** 16px 근처, 보통 굵기. 긴 설명은 13~14px까지 내려가되 색은 `ink` 또는 `muted`만 쓴다.
-- **라벨:** 11~12px, 굵게. 숫자 강조(승률, 횟수)는 제목 굵기에 `gem-ink` 또는 `emerald`.
-- **상자 문구:** 15px, 굵게, `gold`. 연출에만 쓴다.
+- **제목:** 20px, 굵기 600, 이탤릭 없음. 화면의 이름(게임, 기록, 탭 제목)에만 쓴다.
+- **본문:** 16px 근처, 굵기 400. 긴 설명은 13~14px까지 내려가되 색은 `ink` 또는 `muted`만 쓴다.
+- **라벨:** 12px, 굵기 500. 숫자 강조는 표 숫자이고, 한 화면에서 횟수는 `gem-ink`, 승률은 `emerald`만 칠한다.
+- **상자 문구:** 15px, 굵기 600, `gold`. 연출에만 쓴다.
 
 ```yaml
 typography:
   headline:
     fontFamily: "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Apple SD Gothic Neo, Noto Sans KR, Malgun Gothic, sans-serif"
     fontSize: 20px
-    fontWeight: 900
+    fontWeight: 600
     lineHeight: 1.25
-    letterSpacing: -0.02em
+    letterSpacing: 0
   body:
     fontFamily: "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Apple SD Gothic Neo, Noto Sans KR, Malgun Gothic, sans-serif"
     fontSize: 16px
@@ -75,12 +75,12 @@ typography:
   label:
     fontFamily: "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Apple SD Gothic Neo, Noto Sans KR, Malgun Gothic, sans-serif"
     fontSize: 12px
-    fontWeight: 700
+    fontWeight: 500
     lineHeight: 1.3
   caption:
     fontFamily: "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Apple SD Gothic Neo, Noto Sans KR, Malgun Gothic, sans-serif"
-    fontSize: 11px
-    fontWeight: 500
+    fontSize: 12px
+    fontWeight: 400
     lineHeight: 1.45
 ```
 
@@ -99,7 +99,7 @@ spacing:
   md: 16px
   lg: 24px
   xl: 32px
-  gutter: 14px
+  gutter: 16px
   margin: 16px
   header: 60px
   tab-bar: 64px
@@ -107,13 +107,13 @@ spacing:
 
 ## Elevation & Depth
 
-그림자로 층을 만들지 않는다. 바탕 `#100E0B`, 카드 `#1C1812`, 입력 칸 `#2A241C` 순으로 한 단씩 밝아진다. 카드 맨 위에는 얇은 금 하이라이트(직선 그라데이션, 불투명도 8%)가 있다. 페이지 위쪽에는 자수정과 금의 은은한 빛이 깔린다. 반복 점 무늬는 CSS 안 SVG이고, 파일로 두지 않는다.
+그림자로 층을 만들지 않는다. 바탕 `#100E0B`, 카드 `#1C1812`, 입력 칸 `#2A241C` 순으로 한 단씩 밝아진다. 카드 맨 위에는 얇은 금 하이라이트(직선 그라데이션, 불투명도 8%)가 있다. 페이지 위쪽에는 금의 아주 옅은 빛만 깔린다. 자수정 번짐, 버튼 광채, 글자 그라데이션은 쓰지 않는다. 반복 점 무늬는 CSS 안 SVG이고, 파일로 두지 않는다.
 
 모달은 카드와 같은 면이고, 뒤는 검은 막(40~50%)이다. 사진 위의 칩은 검은 막을 유지한다. 인쇄 도록은 이 어두운 층을 쓰지 않고 흰 종이·검은 글자로 돌아간다.
 
 ## Shapes
 
-카드와 모달은 크게 둥글다(20~32px). 버튼과 필터, 탭의 선택 알약은 알약형이다. 입력은 16px. 로고 타일은 12px 사각에 자수정 면과 닫힌 상자다.
+카드는 16px, 추억 카드와 달력 칸은 24px다. 추억 카드 안쪽 여백이 16px이므로 사진 모서리는 8px다. 버튼과 필터, 탭의 선택 알약은 알약형이다. 입력은 16px. 로고 타일은 12px 사각에 자수정 면과 닫힌 상자다. 광채 그림자는 쓰지 않는다.
 
 ```yaml
 rounded:
