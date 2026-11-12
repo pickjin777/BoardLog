@@ -6,6 +6,7 @@ import type { UserGame } from '../types';
 import { useToast } from '../context/ToastContext';
 import { track } from '../services/analytics';
 import { applyImageFallback } from '../utils/imageFallback';
+import { safePageLocation } from '../utils/analyticsEvents';
 import { gameMatchesShareFilter, type SharePlayerPreset, type ShareWeightPreset } from '../utils/shareGameFilter';
 
 interface KakaoShareModalProps {
@@ -211,6 +212,8 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
   // Direct Kakao Share / Web Share API
   const handleNativeOrKakaoShare = async () => {
     const shareTitle = `${ownerName || '보드게이머'}님의 보드게임 목록 (${gamesToShare.length}종)`;
+    // A shared play sits in the hash and includes friends' names. The collection share must not carry it.
+    const pageUrl = safePageLocation(window.location.href);
 
     // 1. Try Web Share API (Natively opens KakaoTalk app on mobile/desktop!)
     if (navigator.share) {
@@ -218,7 +221,7 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
         await navigator.share({
           title: shareTitle,
           text: kakaoFormattedText,
-          url: window.location.href
+          url: pageUrl
         });
         track('kakao_list_shared');
         showToast('카카오톡 또는 원하는 앱으로 공유를 시작했습니다.', 'success');
@@ -236,7 +239,7 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
     await handleCopyText();
     // Try opening kakao sharer or talk scheme if available
     const kakaoWebSharerUrl = `https://sharer.kakao.com/talk/friends/picker/link?app_key=boardgame&shortKey=${encodeURIComponent(
-      window.location.href
+      pageUrl
     )}`;
 
     // Check if on mobile
@@ -672,42 +675,42 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
 
                   {/* Metadata Toggles */}
                   <div className="flex flex-wrap items-center gap-3 pt-1 text-xs">
-                    <label className="flex items-center gap-1.5 cursor-pointer font-medium text-[#636E72]">
+                    <label className="flex min-h-12 items-center gap-2 cursor-pointer font-medium text-[#636E72]">
                       <input
                         type="checkbox"
                         checked={includePlayers}
                         onChange={(e) => setIncludePlayers(e.target.checked)}
-                        className="rounded accent-[#4834D4]"
+                        className="h-6 w-6 shrink-0 rounded accent-[#4834D4]"
                       />
                       <span>인원수 표시</span>
                     </label>
 
-                    <label className="flex items-center gap-1.5 cursor-pointer font-medium text-[#636E72]">
+                    <label className="flex min-h-12 items-center gap-2 cursor-pointer font-medium text-[#636E72]">
                       <input
                         type="checkbox"
                         checked={includePlaytime}
                         onChange={(e) => setIncludePlaytime(e.target.checked)}
-                        className="rounded accent-[#4834D4]"
+                        className="h-6 w-6 shrink-0 rounded accent-[#4834D4]"
                       />
                       <span>플레이 시간 표시</span>
                     </label>
 
-                    <label className="flex items-center gap-1.5 cursor-pointer font-medium text-[#636E72]">
+                    <label className="flex min-h-12 items-center gap-2 cursor-pointer font-medium text-[#636E72]">
                       <input
                         type="checkbox"
                         checked={includeWeight}
                         onChange={(e) => setIncludeWeight(e.target.checked)}
-                        className="rounded accent-[#4834D4]"
+                        className="h-6 w-6 shrink-0 rounded accent-[#4834D4]"
                       />
                       <span>난이도 표시</span>
                     </label>
 
-                    <label className="flex items-center gap-1.5 cursor-pointer font-medium text-[#636E72]">
+                    <label className="flex min-h-12 items-center gap-2 cursor-pointer font-medium text-[#636E72]">
                       <input
                         type="checkbox"
                         checked={includeGenre}
                         onChange={(e) => setIncludeGenre(e.target.checked)}
-                        className="rounded accent-[#4834D4]"
+                        className="h-6 w-6 shrink-0 rounded accent-[#4834D4]"
                       />
                       <span>장르 표시</span>
                     </label>
@@ -728,7 +731,7 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
                 {/* Simulated KakaoTalk Chat Room Background */}
                 <div className="p-4 sm:p-5 rounded-3xl bg-[#B2C7D9] border border-[#9FB7CC] shadow-inner space-y-3">
                   <div className="text-center">
-                    <span className="px-3 py-1 bg-black/15 rounded-full text-[10px] text-white font-medium">
+                    <span className="px-3 py-1 bg-[#1C2830] rounded-full text-[10px] text-[#F6EBD4] font-medium">
                       보드게임 모임 카카오톡 대화방
                     </span>
                   </div>
@@ -752,7 +755,7 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
 
                       {/* Custom User Greeting Message */}
                       {customMessage && (
-                        <p className="text-xs font-semibold bg-white/70 p-2 rounded-xl border border-black/5">
+                        <p className="text-xs font-semibold text-[#191919] bg-[#FFFBEA] p-2 rounded-xl border border-black/5">
                           "{customMessage}"
                         </p>
                       )}
@@ -763,7 +766,7 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
                           gamesToShare.map((g, idx) => (
                             <div
                               key={g.id}
-                              className="p-2 bg-white/90 rounded-xl flex items-center gap-2.5 border border-black/5"
+                              className="p-2 bg-[#FFFBEA] rounded-xl flex items-center gap-2.5 border border-black/5"
                             >
                               <span className="w-5 h-5 rounded-full bg-[#191919] text-[#FEE500] text-[10px] font-black flex items-center justify-center shrink-0">
                                 {idx + 1}
@@ -791,7 +794,7 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
                             </div>
                           ))
                         ) : (
-                          <div className="p-3 text-center text-xs text-[#666]">선택된 게임이 없습니다.</div>
+                          <div className="p-3 text-center text-xs text-[#3A3A3A]">선택된 게임이 없습니다.</div>
                         )}
                       </div>
 

@@ -5,6 +5,7 @@ import {
   GOOGLE_TEST_ADMOB_APP_ID,
   GOOGLE_TEST_ADMOB_BANNER_ID,
   PLAY_SUBSCRIPTION_PRODUCT_ID,
+  shouldBundleMonetizationPlugin,
   shouldPrepareNativeFeature
 } from './nativeMonetization';
 
@@ -15,6 +16,12 @@ describe('native monetization flags', () => {
     expect(shouldPrepareNativeFeature(true, 'false')).toBe(false);
     expect(shouldPrepareNativeFeature(true, 'TRUE')).toBe(false);
     expect(shouldPrepareNativeFeature(true, 'true')).toBe(true);
+  });
+
+  it('bundles plugin JS only when the Android package and the feature are both on', () => {
+    expect(shouldBundleMonetizationPlugin(false, true)).toBe(false);
+    expect(shouldBundleMonetizationPlugin(true, false)).toBe(false);
+    expect(shouldBundleMonetizationPlugin(true, true)).toBe(true);
   });
 
   it('accepts only Google sample ad ids', () => {

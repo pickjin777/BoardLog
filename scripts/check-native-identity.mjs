@@ -187,14 +187,76 @@ if (existsSync(stringsPath)) {
   if (stringValue(xml, 'admob_app_id') !== admobAppId) problems.push('admob_app_id != GOOGLE_TEST_ADMOB_APP_ID');
 }
 
+// Same rule as manifestNodeRemoves / nativePackageEnabled in src/utils/omitNativeMonetization.ts (D-048).
+function nativePackageEnabled(gradleProperties) {
+  const matches = [...gradleProperties.matchAll(/^[ \t]*boardlog\.monetization[ \t]*=[ \t]*(.*)$/gm)];
+  if (matches.length === 0) return false;
+  return matches[matches.length - 1][1].trim() === 'true';
+}
+
+function manifestNodeRemoves(xml, androidName) {
+  const at = xml.indexOf(`android:name="${androidName}"`);
+  if (at < 0) return false;
+  const start = xml.lastIndexOf('<', at);
+  const end = xml.indexOf('>', at);
+  if (start < 0 || end < 0) return false;
+  return xml.slice(start, end + 1).includes('tools:node="remove"');
+}
+
+const REMOVED_NODES = [
+  'com.google.android.gms.permission.AD_ID',
+  'com.android.vending.BILLING',
+  'com.google.android.gms.ads.APPLICATION_ID'
+];
+const MONETIZATION_PLUGINS = ['capacitor-community-admob', 'capgo-native-purchases'];
+
+if (existsSync(gradlePath)) {
+  const appGradle = read(gradlePath);
+  if (!appGradle.includes('boardlog.monetization')) {
+    problems.push('app/build.gradle must gate native plugins on boardlog.monetization');
+  }
+  for (const marker of MONETIZATION_PLUGINS) {
+    if (!appGradle.includes(marker)) problems.push(`app/build.gradle must name ${marker} in the shipping exclusion`);
+  }
+}
+
+const packageOn = nativePackageEnabled(
+  existsSync('android/gradle.properties') ? read('android/gradle.properties') : ''
+);
+const settingsGradle = existsSync('android/capacitor.settings.gradle') ? read('android/capacitor.settings.gradle') : '';
+const capacitorBuild = existsSync('android/app/capacitor.build.gradle')
+  ? read('android/app/capacitor.build.gradle')
+  : '';
+
 if (existsSync(manifestPath)) {
   const manifest = read(manifestPath);
+  if (!manifest.includes('android.permission.INTERNET')) problems.push('manifest must keep INTERNET');
   if (!manifest.includes('@string/admob_app_id')) problems.push('manifest must reference @string/admob_app_id');
-  if (!manifest.includes('com.google.android.gms.ads.APPLICATION_ID')) {
-    problems.push('manifest is missing the AdMob application id meta-data');
+  if (!packageOn) {
+    for (const name of REMOVED_NODES) {
+      if (!manifestNodeRemoves(manifest, name)) problems.push(`shipping manifest must remove ${name}`);
+    }
+    for (const marker of MONETIZATION_PLUGINS) {
+      if (settingsGradle.includes(marker)) problems.push(`capacitor.settings.gradle still includes ${marker}`);
+      if (capacitorBuild.includes(marker)) problems.push(`capacitor.build.gradle still depends on ${marker}`);
+    }
+    if (!settingsGradle.includes('capacitor-splash-screen')) {
+      problems.push('capacitor.settings.gradle must keep the splash plugin');
+    }
+  } else {
+    for (const name of REMOVED_NODES) {
+      if (!manifest.includes(name))
+        problems.push(`boardlog.monetization=true but the manifest does not declare ${name}`);
+      if (manifestNodeRemoves(manifest, name)) {
+        problems.push(`boardlog.monetization=true but the manifest still removes ${name}`);
+      }
+    }
+    for (const marker of MONETIZATION_PLUGINS) {
+      if (!settingsGradle.includes(marker)) problems.push(`monetization on, but settings gradle omits ${marker}`);
+      if (!capacitorBuild.includes(marker))
+        problems.push(`monetization on, but capacitor.build.gradle omits ${marker}`);
+    }
   }
-  if (!manifest.includes('com.android.vending.BILLING'))
-    problems.push('manifest is missing the Play Billing permission');
 }
 
 const SKIP_DIRS = new Set(['node_modules', 'dist', 'dist-ga', 'coverage', 'build', '.gradle', '.git', 'test-results']);

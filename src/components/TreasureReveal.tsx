@@ -37,6 +37,8 @@ export const TreasureReveal: React.FC<{ kind: TreasureMoment; onDone: () => void
     };
   }, [reduced]);
 
+  const message = COPY[kind];
+
   return (
     <div
       id="treasure-reveal"
@@ -46,12 +48,16 @@ export const TreasureReveal: React.FC<{ kind: TreasureMoment; onDone: () => void
     >
       <div className="treasure-stage">
         <TreasureChest className="treasure-chest-svg" />
-        <p className="treasure-caption">{COPY[kind]}</p>
+        {/* The picture is decorative. The skip button name carries the moment, because focus moves here. */}
+        <p className="treasure-caption" aria-hidden="true">
+          {message}
+        </p>
         <button
           id="treasure-skip-btn"
           ref={skipRef}
           type="button"
           className="treasure-skip pointer-events-auto"
+          aria-label={`${message}. 건너뛰기`}
           onClick={onDone}
         >
           건너뛰기

@@ -1,10 +1,11 @@
 import type React from 'react';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Search, Plus, LayoutGrid, List, Download, MessageCircle } from 'lucide-react';
 import type { UserGame, PlayRecord, GameOwnershipStatus, MyGameResult, TabType } from './types';
 import { ToastProvider, useToast } from './context/ToastContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { track } from './services/analytics';
+import { topOverlay, type OverlayName } from './utils/overlayHistory';
 import { storage } from './services/storage';
 import { Navbar } from './components/Navbar';
 import { BottomNav } from './components/BottomNav';
@@ -71,6 +72,7 @@ const MainApp: React.FC = () => {
   const [isKakaoShareOpen, setIsKakaoShareOpen] = useState(false);
   const [isGameFormOpen, setIsGameFormOpen] = useState(false);
   const [isScanOpen, setIsScanOpen] = useState(false);
+  const [scanAllowsRecognition, setScanAllowsRecognition] = useState(true);
   const [editingGame, setEditingGame] = useState<UserGame | null>(null);
   const [viewingGame, setViewingGame] = useState<UserGame | null>(null);
 
@@ -85,6 +87,66 @@ const MainApp: React.FC = () => {
   const [deletingGame, setDeletingGame] = useState<UserGame | null>(null);
   const [deletingPlay, setDeletingPlay] = useState<PlayRecord | null>(null);
   const [treasure, setTreasure] = useState<TreasureMoment | null>('enter');
+
+  const overlay = topOverlay({
+    treasure: treasure !== null,
+    auth: isAuthOpen,
+    catalog: isCatalogModalOpen,
+    kakao: isKakaoShareOpen,
+    incoming: incomingShare !== null,
+    share: sharingPlay !== null,
+    game: viewingGame !== null,
+    play: viewingPlay !== null,
+    playForm: isPlayFormOpen,
+    gameForm: isGameFormOpen,
+    scan: isScanOpen,
+    deleteGame: deletingGame !== null,
+    deletePlay: deletingPlay !== null
+  });
+  const overlayRef = useRef(overlay);
+  overlayRef.current = overlay;
+  const pushedOverlay = useRef(false);
+
+  const closeOverlay = useCallback((name: OverlayName) => {
+    if (name === 'treasure') setTreasure(null);
+    else if (name === 'auth') setIsAuthOpen(false);
+    else if (name === 'catalog') setIsCatalogModalOpen(false);
+    else if (name === 'kakao') setIsKakaoShareOpen(false);
+    else if (name === 'incoming') setIncomingShare(null);
+    else if (name === 'share') setSharingPlay(null);
+    else if (name === 'game') setViewingGame(null);
+    else if (name === 'play') setViewingPlay(null);
+    else if (name === 'playForm') {
+      setIsPlayFormOpen(false);
+      setEditingPlay(null);
+    } else if (name === 'gameForm') {
+      setIsGameFormOpen(false);
+      setEditingGame(null);
+    } else if (name === 'scan') setIsScanOpen(false);
+    else if (name === 'deleteGame') setDeletingGame(null);
+    else setDeletingPlay(null);
+  }, []);
+
+  useEffect(() => {
+    if (!overlay) {
+      if (pushedOverlay.current) {
+        pushedOverlay.current = false;
+        history.back();
+      }
+      return;
+    }
+    if (!pushedOverlay.current) {
+      history.pushState({ boardlogOverlay: overlay }, '');
+      pushedOverlay.current = true;
+    }
+    const onPop = () => {
+      pushedOverlay.current = false;
+      const current = overlayRef.current;
+      if (current) closeOverlay(current);
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, [overlay, closeOverlay]);
 
   // Fetch all user data
   const loadData = useCallback(async () => {
@@ -381,7 +443,7 @@ const MainApp: React.FC = () => {
                     <p className="text-xs text-[#636E72]">총 {games.length}개의 게임</p>
                   </div>
 
-                  <div className="flex items-center gap-1.5 flex-wrap">
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 [&>button]:shrink-0">
                     {/* Add Game Button */}
                     <button
                       id="games-add-game-btn"
@@ -474,14 +536,14 @@ const MainApp: React.FC = () => {
                 </div>
 
                 {/* Ownership Filter Pills */}
-                <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
+                <div id="games-ownership-filters" className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
                   {OWNERSHIP_TABS.map((tab) => (
                     <button
                       key={tab}
                       type="button"
                       onClick={() => setSelectedOwnership(tab)}
                       aria-pressed={selectedOwnership === tab}
-                      className={`px-3.5 py-1.5 rounded-full font-bold whitespace-nowrap transition-all ${
+                      className={`shrink-0 px-3.5 py-1.5 rounded-full font-bold whitespace-nowrap transition-all ${
                         selectedOwnership === tab
                           ? 'bg-[#4834D4] text-white shadow-xs'
                           : 'bg-white text-[#636E72] border border-[#E9ECEF] hover:bg-[#F8F9FA]'
@@ -595,14 +657,14 @@ const MainApp: React.FC = () => {
                 </div>
 
                 {/* Result Filter Tabs */}
-                <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
+                <div id="plays-result-filters" className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
                   {PLAY_RESULT_TABS.map((tab) => (
                     <button
                       key={tab}
                       type="button"
                       onClick={() => setSelectedPlayResult(tab)}
                       aria-pressed={selectedPlayResult === tab}
-                      className={`px-3.5 py-1.5 rounded-full font-bold whitespace-nowrap transition-all ${
+                      className={`shrink-0 px-3.5 py-1.5 rounded-full font-bold whitespace-nowrap transition-all ${
                         selectedPlayResult === tab
                           ? 'bg-[#4834D4] text-white shadow-xs'
                           : 'bg-white text-[#636E72] border border-[#E9ECEF] hover:bg-[#F8F9FA]'
@@ -690,6 +752,13 @@ const MainApp: React.FC = () => {
         }}
         onSave={handleSaveGame}
         onOpenScan={() => {
+          setScanAllowsRecognition(true);
+          setIsGameFormOpen(false);
+          setEditingGame(null);
+          setIsScanOpen(true);
+        }}
+        onPickPhoto={() => {
+          setScanAllowsRecognition(false);
           setIsGameFormOpen(false);
           setEditingGame(null);
           setIsScanOpen(true);
@@ -699,7 +768,13 @@ const MainApp: React.FC = () => {
       {/* Bulk Registration from Photos */}
       <GameScanModal
         isOpen={isScanOpen}
+        allowRecognition={scanAllowsRecognition}
         onClose={() => setIsScanOpen(false)}
+        onManualEntry={() => {
+          setIsScanOpen(false);
+          setEditingGame(null);
+          setIsGameFormOpen(true);
+        }}
         existingGames={games}
         onRegister={handleRegisterScannedGames}
       />

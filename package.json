@@ -18,7 +18,7 @@
     "test": "vitest run --coverage",
     "test:e2e": "npm run build && npm run build:ga && playwright test",
     "build:ga": "vite build --mode analytics-test --outDir dist-ga",
-    "cap:sync": "npm run build && npx cap sync android",
+    "cap:sync": "npm run build && npx cap sync android && npx tsx scripts/apply-play-monetization.ts",
     "android:debug": "npm run cap:sync && cd android && ./gradlew assembleDebug"
   },
   "dependencies": {
@@ -40,6 +40,7 @@
     "react-dom": "^19.0.1"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@biomejs/biome": "2.6.4",
     "@capacitor/assets": "^4.0.0",
     "@capacitor/cli": "^8.6.0",
