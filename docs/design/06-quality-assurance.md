@@ -62,6 +62,7 @@
 | 공통 | 예시 데이터 정리·PWA: `e2e/sample-data-and-pwa.spec.ts` (이전 완료) |
 | 측정(FR-MEAS-01) | `e2e/analytics-off.spec.ts`: 측정 ID가 없으면 분석 서비스로 나가는 요청 0건 |
 | 측정(FR-MEAS-03) | `e2e/analytics-on.spec.ts`: 가짜 ID로 만든 `dist-ga` 빌드에서 허용된 이벤트만, 이름·게임명·`#` 없이 |
+| 추억 카드·달력 (D-049) | `e2e/memory-card.spec.ts` |
 
 ## 5. 자동 실행 (세부는 07 CI)
 
