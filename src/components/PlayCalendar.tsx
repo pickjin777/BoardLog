@@ -21,7 +21,7 @@ interface PlayCalendarProps {
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
-function DayThumb({ url, selected }: { url: string | null; selected: boolean }) {
+function DayThumb({ url }: { url: string | null }) {
   const [src, setSrc] = useState<string | null>(null);
 
   useEffect(() => {
@@ -39,27 +39,18 @@ function DayThumb({ url, selected }: { url: string | null; selected: boolean }) 
     };
   }, [url]);
 
-  if (src) {
-    return (
-      <img
-        src={src}
-        alt=""
-        width={22}
-        height={22}
-        className="calendar-thumb h-[22px] w-[22px] rounded-md object-cover"
-      />
-    );
-  }
-  return <span className={`calendar-day-mark h-2 w-2 rounded-full ${selected ? 'bg-white' : 'bg-[#F3D48A]'}`} />;
+  if (!src) return null;
+  return <img src={src} alt="" className="calendar-thumb absolute inset-0 h-full w-full rounded-lg object-cover" />;
 }
 
-function dayClass(cell: MonthCell, selected: boolean, today: boolean): string {
+function dayClass(cell: MonthCell, selected: boolean, today: boolean, hasPhoto: boolean): string {
   const base =
-    'flex w-full flex-col items-center justify-center gap-0.5 rounded-xl border px-0 py-1 text-xs font-bold leading-none';
-  if (selected) return `${base} border-[#F3D48A] bg-[#4834D4] text-white`;
-  if (today) return `${base} border-[#F3D48A] bg-[#2A241C] text-[#F6EBD4] shadow-[inset_0_0_0_2px_#F3D48A]`;
-  if (cell.inMonth) return `${base} border-[#5C4C38] bg-[#2A241C] text-[#F6EBD4]`;
-  return `${base} border-[#5C4C38] bg-[#100E0B] text-[#E4D3B4]`;
+    'calendar-day relative flex w-full items-center justify-center overflow-hidden rounded-lg text-xs font-bold leading-none';
+  if (selected && !hasPhoto) return `${base} border border-[#F3D48A] bg-[#4834D4] text-white`;
+  if (selected) return `${base} border border-[#F3D48A] bg-[#2A241C] text-white`;
+  if (today) return `${base} border border-[#F3D48A] bg-[#2A241C] text-[#F6EBD4]`;
+  if (cell.inMonth) return `${base} border border-[#5C4C38] bg-[#2A241C] text-[#F6EBD4]`;
+  return `${base} border border-[#5C4C38] bg-[#100E0B] text-[#E4D3B4]`;
 }
 
 export function PlayCalendar({ plays, selectedDate, onSelectDate }: PlayCalendarProps) {
@@ -84,7 +75,7 @@ export function PlayCalendar({ plays, selectedDate, onSelectDate }: PlayCalendar
     <section
       id="play-calendar"
       aria-label="플레이 달력"
-      className="play-calendar rounded-3xl border border-[#C6A36A] bg-[#1C1812] p-3"
+      className="play-calendar rounded-3xl border border-[#C6A36A] bg-[#1C1812] px-1 py-3"
     >
       <div className="mb-2 flex items-center justify-between gap-2">
         <button
@@ -109,33 +100,45 @@ export function PlayCalendar({ plays, selectedDate, onSelectDate }: PlayCalendar
           <ChevronRight className="h-5 w-5" aria-hidden="true" />
         </button>
       </div>
-      <div className="play-calendar-scroll">
-        <div className="play-calendar-grid">
-          {WEEKDAYS.map((label) => (
-            <span key={label} aria-hidden="true" className="py-1 text-center text-xs font-bold text-[#E4D3B4]">
-              {label}
-            </span>
-          ))}
-          {cells.map((cell) => {
-            const selected = selectedDate === cell.key;
-            const isToday = cell.year === today.year && cell.month === today.month && cell.day === today.day;
-            const photo = dayPhotoUrl(plays, cell.key);
-            return (
-              <button
-                key={cell.key}
-                type="button"
-                aria-label={dayAriaLabel(cell.month, cell.day, cell.playCount)}
-                aria-pressed={selected}
-                aria-current={isToday ? 'date' : undefined}
-                onClick={() => onSelectDate(cell.key)}
-                className={dayClass(cell, selected, isToday)}
+      <div className="play-calendar-grid">
+        {WEEKDAYS.map((label) => (
+          <span key={label} aria-hidden="true" className="py-1 text-center text-xs font-bold text-[#E4D3B4]">
+            {label}
+          </span>
+        ))}
+        {cells.map((cell) => {
+          const selected = selectedDate === cell.key;
+          const isToday = cell.year === today.year && cell.month === today.month && cell.day === today.day;
+          const photo = cell.playCount > 0 ? dayPhotoUrl(plays, cell.key) : null;
+          return (
+            <button
+              key={cell.key}
+              type="button"
+              aria-label={dayAriaLabel(cell.month, cell.day, cell.playCount)}
+              aria-pressed={selected}
+              aria-current={isToday ? 'date' : undefined}
+              onClick={() => onSelectDate(cell.key)}
+              className={dayClass(cell, selected, isToday, Boolean(photo))}
+            >
+              <DayThumb url={photo} />
+              {cell.playCount > 0 && !photo && (
+                <span
+                  className={`calendar-day-mark absolute top-1 h-1.5 w-1.5 rounded-full ${selected ? 'bg-white' : 'bg-[#F3D48A]'}`}
+                />
+              )}
+              <span
+                aria-hidden="true"
+                className={
+                  photo
+                    ? 'absolute inset-x-0 bottom-0 bg-[#100E0B] py-0.5 text-center text-[11px] font-bold text-[#F6EBD4]'
+                    : 'relative'
+                }
               >
-                <DayThumb url={photo} selected={selected} />
-                <span aria-hidden="true">{cell.day}</span>
-              </button>
-            );
-          })}
-        </div>
+                {cell.day}
+              </span>
+            </button>
+          );
+        })}
       </div>
     </section>
   );

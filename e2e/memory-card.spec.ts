@@ -2,22 +2,6 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { gameRow, playRow, putRows, requireUid } from './helpers';
 
-async function solidJpeg(page: Page, color: string, width: number, height: number): Promise<string> {
-  return page.evaluate(
-    ({ fill, w, h }) => {
-      const canvas = document.createElement('canvas');
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) throw new Error('canvas');
-      ctx.fillStyle = fill;
-      ctx.fillRect(0, 0, w, h);
-      return canvas.toDataURL('image/jpeg', 0.9);
-    },
-    { fill: color, w: width, h: height }
-  );
-}
-
 async function skipChest(page: Page) {
   const reveal = page.locator('#treasure-reveal');
   if (await reveal.isVisible()) await page.locator('#treasure-skip-btn').click();
@@ -28,14 +12,27 @@ async function photoData(page: Page): Promise<string> {
   return page.evaluate(() => {
     const canvas = document.createElement('canvas');
     canvas.width = 480;
-    canvas.height = 240;
+    canvas.height = 320;
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('canvas');
-    ctx.fillStyle = '#4834D4';
-    ctx.fillRect(0, 0, 480, 240);
-    ctx.fillStyle = '#F3D48A';
-    ctx.fillRect(36, 36, 140, 90);
-    return canvas.toDataURL('image/jpeg', 0.92);
+    ctx.fillStyle = '#3A2E16';
+    ctx.fillRect(0, 0, 480, 320);
+    const meeples: Array<[string, number, number]> = [
+      ['#4834D4', 120, 150],
+      ['#F3D48A', 220, 120],
+      ['#C4453C', 310, 180],
+      ['#9BE7B8', 180, 220]
+    ];
+    for (const [color, x, y] of meeples) {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(x, y - 28, 22, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(x, y + 10, 28, 36, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    return canvas.toDataURL('image/jpeg', 0.9);
   });
 }
 
@@ -55,7 +52,23 @@ async function seedHistory(page: Page) {
   await page.goto('/', { waitUntil: 'networkidle' });
   const uid = await requireUid(page);
   const photo = await photoData(page);
-  const gameArt = await solidJpeg(page, '#E2B657', 80, 80);
+  const gameArt = await page.evaluate(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 160;
+    canvas.height = 160;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('canvas');
+    ctx.fillStyle = '#4834D4';
+    ctx.fillRect(0, 0, 160, 160);
+    ctx.fillStyle = '#F3D48A';
+    ctx.beginPath();
+    ctx.arc(80, 52, 18, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(80, 108, 28, 34, 0, 0, Math.PI * 2);
+    ctx.fill();
+    return canvas.toDataURL('image/jpeg', 0.9);
+  });
   await putRows(page, [
     { store: 'games', row: gameRow({ id: 'game_mem', userId: uid, title: '카탄' }) },
     {
@@ -138,7 +151,10 @@ async function expectTouchTargets(page: Page, name: string) {
       if (style.display === 'none' || style.visibility === 'hidden') return [];
       const box = element.getBoundingClientRect();
       if (box.width < 1 || box.height < 1) return [];
-      if (box.width >= 48 && box.height >= 48) return [];
+      // Seven day columns cannot be 48px wide on a 320px phone without overlapping or scrolling.
+      // Those cells stay at least 40px wide and 48px tall, and they fill the row with no overlap.
+      const minWidth = element.classList.contains('calendar-day') && window.innerWidth < 360 ? 40 : 48;
+      if (box.width >= minWidth && box.height >= 48) return [];
       const label =
         element.getAttribute('aria-label') || element.textContent?.replace(/\s+/g, ' ').trim() || element.id;
       return [
@@ -147,6 +163,23 @@ async function expectTouchTargets(page: Page, name: string) {
     })
   );
   expect(small, name).toEqual([]);
+}
+
+async function expectWeekFits(page: Page, width: number) {
+  const saturday = page.locator('.play-calendar-grid > span').nth(6);
+  const box = await saturday.boundingBox();
+  expect(box, 'saturday column').not.toBeNull();
+  if (!box) return;
+  expect(box.x, 'saturday starts on screen').toBeGreaterThanOrEqual(-1);
+  expect(box.x + box.width, `saturday fits in ${width}`).toBeLessThanOrEqual(width + 1);
+  const gridOverflow = await page.locator('.play-calendar-grid').evaluate((el) => el.scrollWidth - el.clientWidth);
+  expect(gridOverflow, `calendar grid scroll ${width}`).toBeLessThanOrEqual(1);
+  const day = page.locator('.calendar-day').first();
+  const dayBox = await day.boundingBox();
+  expect(dayBox, 'day cell').not.toBeNull();
+  if (!dayBox) return;
+  expect(dayBox.height, 'day hit height').toBeGreaterThanOrEqual(48);
+  expect(dayBox.width, 'day hit width').toBeGreaterThanOrEqual(width >= 360 ? 48 : 40);
 }
 
 async function expectNoPageScroll(page: Page, name: string) {
@@ -202,6 +235,22 @@ test('memory cards and the month calendar stay on the device', async ({ page }, 
   const plainDay = page.getByRole('button', { name: /11월 2일, 게임 1판/ });
   await expect(plainDay.locator('img')).toHaveCount(0);
   await expect(plainDay.locator('.calendar-day-mark')).toBeVisible();
+  const emptyDay = page.getByRole('button', { name: /11월 1일, 기록 없음/ });
+  await expect(emptyDay.locator('.calendar-day-mark')).toHaveCount(0);
+  await expect(emptyDay.locator('img')).toHaveCount(0);
+  await expect(page.locator('#play-calendar .calendar-day-mark')).toHaveCount(1);
+
+  const fill = await day.evaluate((button) => {
+    const image = button.querySelector('img');
+    if (!image) return 0;
+    const buttonBox = button.getBoundingClientRect();
+    const imageBox = image.getBoundingClientRect();
+    return imageBox.width / buttonBox.width;
+  });
+  expect(fill).toBeGreaterThan(0.85);
+  const cardPad = await photoCard.evaluate((el) => Number.parseFloat(getComputedStyle(el).paddingLeft));
+  expect(cardPad).toBeGreaterThanOrEqual(16);
+  await expectWeekFits(page, 390);
 
   await page.screenshot({ path: testInfo.outputPath('memory-and-calendar-390.png'), fullPage: true });
   await page.locator('#play-calendar').screenshot({ path: testInfo.outputPath('calendar-390.png') });
@@ -235,6 +284,7 @@ test('memory cards and the month calendar stay on the device', async ({ page }, 
     await page.setViewportSize({ width, height: 800 });
     await expectNoPageScroll(page, `plays ${width}`);
     await expectTouchTargets(page, `targets ${width}`);
+    await expectWeekFits(page, width);
   }
   await page.setViewportSize({ width: 320, height: 700 });
   await page.locator('#play-calendar').evaluate((el) => el.scrollIntoView({ block: 'center' }));
