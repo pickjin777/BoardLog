@@ -5,9 +5,10 @@ import { TreasureChest } from './TreasureChest';
 
 interface NavbarProps {
   onOpenAuth: () => void;
+  chestVariant?: string;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth }) => {
+export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, chestVariant }) => {
   const { user } = useAuth();
 
   return (
@@ -16,7 +17,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth }) => {
         {/* Brand Logo & Title */}
         <div className="flex min-w-0 items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-[#4834D4]">
-            <TreasureChest className="h-8 w-8" />
+            <TreasureChest className="h-8 w-8" variant={chestVariant} />
           </div>
           <div>
             <div className="flex items-center gap-1.5">

@@ -132,7 +132,7 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
       // Reset
       setTitle('');
       setTitleEn('');
-      setImageUrl('https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?auto=format&fit=crop&w=600&q=80');
+      setImageUrl('');
       setGenres(['전략']);
       setMinPlayers(2);
       setMaxPlayers(4);
@@ -214,9 +214,7 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
         {
           title: title.trim(),
           titleEn: titleEn.trim(),
-          imageUrl:
-            imageUrl.trim() ||
-            'https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?auto=format&fit=crop&w=600&q=80',
+          imageUrl: imageUrl.trim(),
           genre: genres.length > 0 ? genres : ['기타'],
           minPlayers: Number(minPlayers) || 1,
           maxPlayers: Number(maxPlayers) || 4,

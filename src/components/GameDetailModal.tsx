@@ -20,7 +20,7 @@ import { playsForGame } from '../utils/gamePlays';
 import { formatWon } from '../utils/formatters';
 import { getOwnershipBadgeColor } from './GameCard';
 import { useToast } from '../context/ToastContext';
-import { applyImageFallback } from '../utils/imageFallback';
+import { applyImageFallback, coverSrc } from '../utils/imageFallback';
 
 interface GameDetailModalProps {
   game: UserGame | null;
@@ -85,10 +85,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
           {/* Hero Image & Floating Controls */}
           <div className="relative w-full h-56 sm:h-64 bg-[#F8F9FA] shrink-0">
             <img
-              src={
-                game.imageUrl ||
-                'https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?auto=format&fit=crop&w=600&q=80'
-              }
+              src={coverSrc(game.imageUrl)}
               alt={game.title}
               referrerPolicy="no-referrer"
               className="w-full h-full object-cover"

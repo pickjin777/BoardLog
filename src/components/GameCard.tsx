@@ -1,7 +1,7 @@
 import type React from 'react';
 import { Users, Clock, Flame, MapPin, CheckSquare, Trash2 } from 'lucide-react';
 import type { UserGame, GameOwnershipStatus } from '../types';
-import { applyImageFallback } from '../utils/imageFallback';
+import { applyImageFallback, coverSrc } from '../utils/imageFallback';
 
 export const getOwnershipBadgeColor = (status: GameOwnershipStatus): string => {
   switch (status) {
@@ -33,10 +33,7 @@ interface GameCardProps {
 
 export const GameCard: React.FC<GameCardProps> = ({ game, onClick, onDelete }) => {
   return (
-    <div
-      id={`game-card-${game.id}`}
-      className="group relative bg-white rounded-2xl border border-[#E9ECEF] shadow-sm hover:border-[#4834D4]/30 transition-colors flex flex-col"
-    >
+    <div id={`game-card-${game.id}`} className="game-box group relative flex flex-col rounded-2xl">
       <button
         type="button"
         onClick={onClick}
@@ -47,10 +44,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onClick, onDelete }) =
         {/* Top Image & Floating Badges */}
         <div className="relative w-full aspect-4/3 bg-[#F8F9FA] overflow-hidden rounded-t-2xl">
           <img
-            src={
-              game.imageUrl ||
-              'https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?auto=format&fit=crop&w=600&q=80'
-            }
+            src={coverSrc(game.imageUrl)}
             alt={game.title}
             referrerPolicy="no-referrer"
             className="w-full h-full object-cover transition-transform duration-300"
@@ -97,7 +91,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onClick, onDelete }) =
         </div>
 
         {/* Info Container */}
-        <div className="p-4 flex-1 flex flex-col justify-between">
+        <div className="paper flex flex-1 flex-col justify-between rounded-b-2xl p-3">
           <div>
             <div className="flex items-baseline gap-1.5 mb-1">
               <h3 className="text-sm font-black text-[#1E272E] line-clamp-1 group-hover:text-[#4834D4] transition-colors">

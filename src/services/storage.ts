@@ -1,6 +1,7 @@
 import type { UserGame, PlayRecord, UserProfile } from '../types';
 import { formatDate } from '../utils/formatters';
 import { type ParsedBackup, gameDedupKey, playDedupKey } from '../utils/backupImport';
+import { parseCollectorState, type CollectorState } from '../utils/collectorProgress';
 
 const DB_NAME = 'board_log_db_v1';
 const DB_VERSION = 1;
@@ -22,6 +23,8 @@ const QUOTA_MESSAGE = '저장 공간이 가득 찼습니다. 사진 수를 줄�
 
 const gamesKey = (uid: string) => `boardlog_games_${uid}`;
 const playsKey = (uid: string) => `boardlog_plays_${uid}`;
+/** XP and quest claims. Separate from games and plays so those formats stay as they are. */
+const progressKey = (uid: string) => `boardlog_progress_${uid}`;
 
 type Backend = 'idb' | 'ls';
 
@@ -406,7 +409,7 @@ class BoardLogStorage {
       for (let i = 0; i < localStorage.length; i += 1) {
         const key = localStorage.key(i);
         if (!key) continue;
-        const match = /^boardlog_(?:games|plays)_(guest_[a-z0-9]+)$/.exec(key);
+        const match = /^boardlog_(?:games|plays|progress)_(guest_[a-z0-9]+)$/.exec(key);
         if (match && match[1] !== activeGuestUid) {
           stale.push(key);
         }
@@ -458,6 +461,7 @@ class BoardLogStorage {
 
     localStorage.removeItem(gamesKey(uid));
     localStorage.removeItem(playsKey(uid));
+    localStorage.removeItem(progressKey(uid));
 
     const users = this.lsGet<Record<string, StoredUser>>(LS_ALL_USERS, {});
     let removedUser = false;
@@ -846,6 +850,19 @@ class BoardLogStorage {
     const plays = this.lsGet<PlayRecord[]>(playsKey(uid), []);
     this.lsSet(gamesKey(uid), [...plan.newGames, ...games]);
     this.lsSet(playsKey(uid), [...plan.newPlays, ...plays]);
+  }
+
+  /**
+   * Collector XP lives in localStorage, not in the game or play stores.
+   * A missing or unreadable value is treated as "not migrated yet".
+   */
+  getCollectorProgress(uid: string): CollectorState | null {
+    if (!uid) return null;
+    return parseCollectorState(this.lsGet<unknown>(progressKey(uid), null));
+  }
+
+  saveCollectorProgress(uid: string, state: CollectorState): void {
+    this.lsSet(progressKey(uid), state);
   }
 
   // --- Export JSON ---

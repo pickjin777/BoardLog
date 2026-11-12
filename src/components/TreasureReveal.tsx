@@ -5,11 +5,12 @@ import { TreasureChest } from './TreasureChest';
 const ENTER_MS = 2200;
 const REDUCED_MS = 800;
 
-export type TreasureMoment = 'enter' | 'acquire';
+export type TreasureMoment = 'enter' | 'acquire' | 'level';
 
 const COPY: Record<TreasureMoment, string> = {
   enter: '보물상자가 열립니다',
-  acquire: '새 게임이 들어왔습니다'
+  acquire: '새 게임이 들어왔습니다',
+  level: '레벨이 올랐습니다'
 };
 
 /**
@@ -17,7 +18,11 @@ const COPY: Record<TreasureMoment, string> = {
  * The veil does not take clicks, so the page underneath stays usable.
  * Escape and the skip button dismiss it. Reduced motion shows the open chest still.
  */
-export const TreasureReveal: React.FC<{ kind: TreasureMoment; onDone: () => void }> = ({ kind, onDone }) => {
+export const TreasureReveal: React.FC<{ kind: TreasureMoment; variant?: string; onDone: () => void }> = ({
+  kind,
+  variant,
+  onDone
+}) => {
   const skipRef = useRef<HTMLButtonElement>(null);
   const onDoneRef = useRef(onDone);
   onDoneRef.current = onDone;
@@ -47,7 +52,7 @@ export const TreasureReveal: React.FC<{ kind: TreasureMoment; onDone: () => void
       data-kind={kind}
     >
       <div className="treasure-stage">
-        <TreasureChest className="treasure-chest-svg" />
+        <TreasureChest className="treasure-chest-svg" variant={variant} />
         {/* The picture is decorative. The skip button name carries the moment, because focus moves here. */}
         <p className="treasure-caption" aria-hidden="true">
           {message}

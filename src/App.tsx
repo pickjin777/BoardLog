@@ -31,8 +31,25 @@ import { LocalStorageNotice } from './components/LocalStorageNotice';
 import { LoadingState, EmptyState, ErrorState } from './components/StateViews';
 import { TreasureReveal, type TreasureMoment } from './components/TreasureReveal';
 import { dayHeading } from './utils/memoryCard';
+import {
+  didLevelUp,
+  emptyCollectorState,
+  levelFromXp,
+  progressGames,
+  progressPlays,
+  questSnapshots,
+  reconcileCollector,
+  selectChestVariant,
+  totalXp,
+  visibleQuestIds,
+  type CollectorState
+} from './utils/collectorProgress';
+import type { CollectorMode } from './components/CollectorBoard';
 
 const PlayCalendar = lazy(() => import('./components/PlayCalendar').then((mod) => ({ default: mod.PlayCalendar })));
+const CollectorBoard = lazy(() =>
+  import('./components/CollectorBoard').then((mod) => ({ default: mod.CollectorBoard }))
+);
 
 const OWNERSHIP_TABS: (GameOwnershipStatus | '전체')[] = [
   '전체',
@@ -91,6 +108,8 @@ const MainApp: React.FC = () => {
   const [deletingGame, setDeletingGame] = useState<UserGame | null>(null);
   const [deletingPlay, setDeletingPlay] = useState<PlayRecord | null>(null);
   const [treasure, setTreasure] = useState<TreasureMoment | null>('enter');
+  const [progress, setProgress] = useState<CollectorState | null>(null);
+  const [collectorSheet, setCollectorSheet] = useState<Exclude<CollectorMode, 'badges'> | null>(null);
 
   const overlay = topOverlay({
     treasure: treasure !== null,
@@ -99,6 +118,7 @@ const MainApp: React.FC = () => {
     kakao: isKakaoShareOpen,
     incoming: incomingShare !== null,
     share: sharingPlay !== null,
+    collector: collectorSheet !== null,
     game: viewingGame !== null,
     play: viewingPlay !== null,
     playForm: isPlayFormOpen,
@@ -118,6 +138,7 @@ const MainApp: React.FC = () => {
     else if (name === 'kakao') setIsKakaoShareOpen(false);
     else if (name === 'incoming') setIncomingShare(null);
     else if (name === 'share') setSharingPlay(null);
+    else if (name === 'collector') setCollectorSheet(null);
     else if (name === 'game') setViewingGame(null);
     else if (name === 'play') setViewingPlay(null);
     else if (name === 'playForm') {
@@ -152,6 +173,41 @@ const MainApp: React.FC = () => {
     return () => window.removeEventListener('popstate', onPop);
   }, [overlay, closeOverlay]);
 
+  const syncProgress = useCallback(
+    (nextGames: UserGame[], nextPlays: PlayRecord[], patch?: (state: CollectorState) => CollectorState) => {
+      if (!user) return false;
+      const previous = storage.getCollectorProgress(user.uid);
+      const base = patch ? patch(previous ?? emptyCollectorState()) : previous;
+      const now = new Date();
+      const reconciled = reconcileCollector({
+        previous: base,
+        games: progressGames(nextGames),
+        plays: progressPlays(nextPlays),
+        now,
+        nowIso: now.toISOString()
+      });
+      const xp = totalXp(reconciled);
+      const level = levelFromXp(xp).level;
+      let acknowledged = reconciled.acknowledgedLevel;
+      let leveled = false;
+      if (acknowledged == null) acknowledged = level;
+      else if (didLevelUp(acknowledged, xp)) {
+        acknowledged = level;
+        leveled = true;
+        setTreasure('level');
+      }
+      const stored = { ...reconciled, acknowledgedLevel: acknowledged };
+      try {
+        storage.saveCollectorProgress(user.uid, stored);
+      } catch {
+        // The games and plays are already stored. Opening the app again derives this key.
+      }
+      setProgress(stored);
+      return leveled;
+    },
+    [user]
+  );
+
   // Fetch all user data
   const loadData = useCallback(async () => {
     if (!user) return;
@@ -164,13 +220,14 @@ const MainApp: React.FC = () => {
       ]);
       setGames(fetchedGames);
       setPlays(fetchedPlays);
+      syncProgress(fetchedGames, fetchedPlays);
     } catch {
       setLoadError('데이터를 불러오는 중 오류가 발생했습니다.');
       showToast('데이터 불러오기 실패', 'error');
     } finally {
       setIsLoading(false);
     }
-  }, [user, showToast]);
+  }, [user, showToast, syncProgress]);
 
   useEffect(() => {
     loadData();
@@ -186,7 +243,9 @@ const MainApp: React.FC = () => {
       // Update
       const updated = await storage.updateUserGame(user.uid, editingGame.id, gameData);
       if (updated) {
-        setGames((prev) => prev.map((g) => (g.id === updated.id ? updated : g)));
+        const nextGames = games.map((g) => (g.id === updated.id ? updated : g));
+        setGames(nextGames);
+        syncProgress(nextGames, plays);
         if (viewingGame?.id === updated.id) {
           setViewingGame(updated);
         }
@@ -196,8 +255,9 @@ const MainApp: React.FC = () => {
       // Create
       const newGame = await storage.addUserGame(user.uid, gameData);
       track('game_added', { method: source.fromSeed ? 'seed' : 'manual' });
-      setGames((prev) => [newGame, ...prev]);
-      setTreasure('acquire');
+      const nextGames = [newGame, ...games];
+      setGames(nextGames);
+      if (!syncProgress(nextGames, plays)) setTreasure('acquire');
       showToast(`'${newGame.title}'이(가) 내 게임에 추가되었습니다!`, 'success');
     }
     setEditingGame(null);
@@ -215,8 +275,9 @@ const MainApp: React.FC = () => {
     } finally {
       // Whatever was written before a failure is already saved, so reflect it either way.
       if (created.length > 0) {
-        setGames((prev) => [...[...created].reverse(), ...prev]);
-        setTreasure('acquire');
+        const nextGames = [...[...created].reverse(), ...games];
+        setGames(nextGames);
+        if (!syncProgress(nextGames, plays)) setTreasure('acquire');
       }
     }
     showToast(`${created.length}개 게임이 등록되었습니다.`, 'success');
@@ -227,7 +288,9 @@ const MainApp: React.FC = () => {
     try {
       const ok = await storage.deleteUserGame(user.uid, deletingGame.id);
       if (ok) {
-        setGames((prev) => prev.filter((g) => g.id !== deletingGame.id));
+        const nextGames = games.filter((g) => g.id !== deletingGame.id);
+        setGames(nextGames);
+        syncProgress(nextGames, plays);
         if (viewingGame?.id === deletingGame.id) {
           setViewingGame(null);
         }
@@ -305,13 +368,15 @@ const MainApp: React.FC = () => {
       // Update
       const updated = await storage.updatePlayRecord(user.uid, editingPlay.id, playData);
       if (updated) {
-        setPlays((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+        const nextPlays = plays.map((p) => (p.id === updated.id ? updated : p));
+        setPlays(nextPlays);
         if (viewingPlay?.id === updated.id) {
           setViewingPlay(updated);
         }
         // Refresh games play counts
         const updatedGames = await storage.getUserGames(user.uid);
         setGames(updatedGames);
+        syncProgress(updatedGames, nextPlays);
         showToast('플레이 기록이 수정되었습니다.', 'success');
       }
     } else {
@@ -319,10 +384,12 @@ const MainApp: React.FC = () => {
       const newPlay = await storage.addPlayRecord(user.uid, playData);
       track('play_saved');
       if (playData.photos.length > 0) track('play_photo_added', { count: playData.photos.length });
-      setPlays((prev) => [newPlay, ...prev]);
+      const nextPlays = [newPlay, ...plays];
+      setPlays(nextPlays);
       // Refresh games to update playCount
       const updatedGames = await storage.getUserGames(user.uid);
       setGames(updatedGames);
+      syncProgress(updatedGames, nextPlays);
       showToast('플레이 기록을 저장했습니다', 'success');
       track('share_sheet_opened');
       setSharingPlay(newPlay);
@@ -337,12 +404,14 @@ const MainApp: React.FC = () => {
     try {
       const ok = await storage.deletePlayRecord(user.uid, deletingPlay.id);
       if (ok) {
-        setPlays((prev) => prev.filter((p) => p.id !== deletingPlay.id));
+        const nextPlays = plays.filter((p) => p.id !== deletingPlay.id);
+        setPlays(nextPlays);
         if (viewingPlay?.id === deletingPlay.id) {
           setViewingPlay(null);
         }
         const updatedGames = await storage.getUserGames(user.uid);
         setGames(updatedGames);
+        syncProgress(updatedGames, nextPlays);
         showToast('플레이 기록이 삭제되었습니다.', 'info');
       }
     } catch {
@@ -389,11 +458,36 @@ const MainApp: React.FC = () => {
     return matchesSearch && matchesResult && matchesDate;
   });
 
+  const now = new Date();
+  const sourceGames = progressGames(games);
+  const sourcePlays = progressPlays(plays);
+  const weekIds = new Set(visibleQuestIds(now));
+  const weekQuests = questSnapshots(sourceGames, sourcePlays, now).filter((quest) => weekIds.has(quest.id));
+  const questTeaser = weekQuests.find((quest) => !quest.done) ?? weekQuests[0] ?? null;
+  const xp = progress ? totalXp(progress) : 0;
+  const chooseVariant = (variantId: string) => {
+    if (!user || !progress) return;
+    const done = new Set(
+      questSnapshots(sourceGames, sourcePlays, now)
+        .filter((quest) => quest.done)
+        .map((quest) => quest.id)
+    );
+    const next = selectChestVariant(progress, variantId, done);
+    try {
+      storage.saveCollectorProgress(user.uid, next);
+    } catch {
+      // The choice stays on screen. The next reconcile keeps it when the badge still holds.
+    }
+    setProgress(next);
+  };
+
   return (
     <div className="treasure-shell min-h-screen bg-[#F1F3F5] text-[#2D3436] flex flex-col font-sans selection:bg-[#4834D4]/20 selection:text-[#4834D4] lg:pl-60">
-      {treasure && <TreasureReveal kind={treasure} onDone={() => setTreasure(null)} />}
+      {treasure && !sharingPlay && (
+        <TreasureReveal kind={treasure} variant={progress?.chestVariant} onDone={() => setTreasure(null)} />
+      )}
       {/* Top Fixed Header */}
-      <Navbar onOpenAuth={() => setIsAuthOpen(true)} />
+      <Navbar onOpenAuth={() => setIsAuthOpen(true)} chestVariant={progress?.chestVariant} />
 
       {/* Phone stays a single column. Tablet and desktop use the extra width. */}
       <main
@@ -419,6 +513,10 @@ const MainApp: React.FC = () => {
               <HomeDashboard
                 games={games}
                 plays={plays}
+                xp={xp}
+                questTeaser={questTeaser}
+                onOpenLevel={() => setCollectorSheet('track')}
+                onOpenQuests={() => setCollectorSheet('quests')}
                 onRemoveSampleData={handleRemoveSampleData}
                 onOpenAddPlay={() => {
                   setEditingPlay(null);
@@ -458,11 +556,11 @@ const MainApp: React.FC = () => {
                         setEditingGame(null);
                         setIsGameFormOpen(true);
                       }}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#4834D4] hover:bg-[#3c2ab9] text-white rounded-2xl text-xs font-bold transition-colors"
-                      title="새 보드게임 추가하기"
+                      className="btn-gold inline-flex items-center gap-1.5 rounded-full px-4 text-xs font-medium"
+                      title="게임 등록"
                     >
                       <Plus className="w-3.5 h-3.5" />
-                      <span>게임 추가</span>
+                      <span>게임 등록</span>
                     </button>
 
                     {/* KakaoTalk Share Button */}
@@ -495,11 +593,7 @@ const MainApp: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setGameViewMode('grid')}
-                        className={`p-2 rounded-xl transition-colors ${
-                          gameViewMode === 'grid'
-                            ? 'bg-[#4834D4] text-white shadow-xs'
-                            : 'text-[#636E72] hover:text-[#2D3436]'
-                        }`}
+                        className={`rounded-xl ${gameViewMode === 'grid' ? 'chip-on' : 'chip-off'}`}
                         aria-label="격자 보기"
                         aria-pressed={gameViewMode === 'grid'}
                         title="격자 보기"
@@ -509,11 +603,7 @@ const MainApp: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setGameViewMode('list')}
-                        className={`p-2 rounded-xl transition-colors ${
-                          gameViewMode === 'list'
-                            ? 'bg-[#4834D4] text-white shadow-xs'
-                            : 'text-[#636E72] hover:text-[#2D3436]'
-                        }`}
+                        className={`rounded-xl ${gameViewMode === 'list' ? 'chip-on' : 'chip-off'}`}
                         aria-label="목록 보기"
                         aria-pressed={gameViewMode === 'list'}
                         title="목록 보기"
@@ -549,10 +639,8 @@ const MainApp: React.FC = () => {
                       type="button"
                       onClick={() => setSelectedOwnership(tab)}
                       aria-pressed={selectedOwnership === tab}
-                      className={`shrink-0 px-4 py-1.5 rounded-full font-bold whitespace-nowrap transition-colors ${
-                        selectedOwnership === tab
-                          ? 'bg-[#4834D4] text-white shadow-xs'
-                          : 'bg-white text-[#636E72] border border-[#E9ECEF] hover:bg-[#F8F9FA]'
+                      className={`shrink-0 whitespace-nowrap rounded-full px-4 ${
+                        selectedOwnership === tab ? 'chip-on' : 'chip-off'
                       }`}
                     >
                       {tab}
@@ -563,7 +651,7 @@ const MainApp: React.FC = () => {
                 {/* Game List / Grid */}
                 {filteredGames.length > 0 ? (
                   gameViewMode === 'grid' ? (
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <div className="game-shelf grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
                       {filteredGames.map((game) => (
                         <GameCard
                           key={game.id}
@@ -595,7 +683,7 @@ const MainApp: React.FC = () => {
                   <EmptyState
                     title="등록된 게임이 없습니다"
                     description="게임을 등록하면 플레이를 이 기록에 묶을 수 있습니다."
-                    actionText="게임 추가"
+                    actionText="게임 등록"
                     onAction={() => {
                       setEditingGame(null);
                       setIsGameFormOpen(true);
@@ -638,7 +726,7 @@ const MainApp: React.FC = () => {
                       setPreselectedGameForPlay(null);
                       setIsPlayFormOpen(true);
                     }}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#4834D4] hover:bg-[#3c2ab9] text-white rounded-full text-xs font-bold transition-colors"
+                    className="btn-gold inline-flex items-center gap-1.5 rounded-full px-4 text-xs font-medium"
                   >
                     <Plus className="w-4 h-4" />
                     <span>새 기록</span>
@@ -648,10 +736,7 @@ const MainApp: React.FC = () => {
                 {plays.length > 0 && (
                   <Suspense
                     fallback={
-                      <div
-                        role="status"
-                        className="rounded-3xl border border-[#C6A36A] bg-[#1C1812] px-4 py-6 text-sm text-[#F6EBD4]"
-                      >
+                      <div role="status" className="paper rounded-3xl px-4 py-6 text-sm text-[#1C160E]">
                         달력을 불러오는 중
                       </div>
                     }
@@ -673,7 +758,7 @@ const MainApp: React.FC = () => {
                       id="plays-show-all-btn"
                       type="button"
                       onClick={() => setSelectedPlayDate(null)}
-                      className="rounded-full bg-[#4834D4] px-4 text-sm font-bold text-white"
+                      className="btn-cream rounded-full px-4 text-sm"
                     >
                       전체 기록
                     </button>
@@ -705,10 +790,8 @@ const MainApp: React.FC = () => {
                       type="button"
                       onClick={() => setSelectedPlayResult(tab)}
                       aria-pressed={selectedPlayResult === tab}
-                      className={`shrink-0 px-4 py-1.5 rounded-full font-bold whitespace-nowrap transition-colors ${
-                        selectedPlayResult === tab
-                          ? 'bg-[#4834D4] text-white shadow-xs'
-                          : 'bg-white text-[#636E72] border border-[#E9ECEF] hover:bg-[#F8F9FA]'
+                      className={`shrink-0 whitespace-nowrap rounded-full px-4 ${
+                        selectedPlayResult === tab ? 'chip-on' : 'chip-off'
                       }`}
                     >
                       {tab}
@@ -748,6 +831,24 @@ const MainApp: React.FC = () => {
             )}
 
             {/* 4. MY PAGE TAB */}
+            {activeTab === 'mypage' && progress && (
+              <Suspense
+                fallback={
+                  <p role="status" className="paper mb-4 rounded-3xl px-4 py-4 text-sm text-[#1C160E]">
+                    배지를 불러오는 중
+                  </p>
+                }
+              >
+                <CollectorBoard
+                  mode="badges"
+                  games={sourceGames}
+                  plays={sourcePlays}
+                  state={progress}
+                  now={now}
+                  onSelectVariant={chooseVariant}
+                />
+              </Suspense>
+            )}
             {activeTab === 'mypage' && (
               <MyPageView
                 onOpenAuth={() => setIsAuthOpen(true)}
@@ -877,7 +978,30 @@ const MainApp: React.FC = () => {
         }}
       />
 
-      <PlayShareSheet play={sharingPlay} onClose={() => setSharingPlay(null)} />
+      <PlayShareSheet
+        play={sharingPlay}
+        onClose={() => setSharingPlay(null)}
+        onShared={(playId) =>
+          syncProgress(games, plays, (state) => ({
+            ...state,
+            sharedPlayIds: state.sharedPlayIds.includes(playId) ? state.sharedPlayIds : [...state.sharedPlayIds, playId]
+          }))
+        }
+      />
+      {collectorSheet && progress && (
+        <Suspense fallback={null}>
+          <CollectorBoard
+            mode={collectorSheet}
+            sheet
+            games={sourceGames}
+            plays={sourcePlays}
+            state={progress}
+            now={now}
+            onClose={() => setCollectorSheet(null)}
+            onSelectVariant={chooseVariant}
+          />
+        </Suspense>
+      )}
       <SharedPlayModal shared={incomingShare} onClose={() => setIncomingShare(null)} onAdd={handleAddSharedPlay} />
 
       {/* Auth Modal */}

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, Trophy, Clock, Calendar, MapPin, Users, Star, Edit, Trash2, Image as ImageIcon } from 'lucide-react';
 import type { PlayPhoto, PlayRecord } from '../types';
 import { formatDuration } from '../utils/formatters';
-import { applyImageFallback } from '../utils/imageFallback';
+import { applyImageFallback, coverSrc } from '../utils/imageFallback';
 
 function photoOpenName(photo: PlayPhoto, index: number): string {
   const base = `현장 사진 ${index + 1}`;
@@ -88,10 +88,7 @@ export const PlayDetailModal: React.FC<PlayDetailModalProps> = ({ play, isOpen, 
           <div className="p-4 sm:p-5 border-b border-[#E9ECEF] bg-white">
             <div className="grid grid-cols-[3rem_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-0.5">
               <img
-                src={
-                  play.gameImageUrl ||
-                  'https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?auto=format&fit=crop&w=600&q=80'
-                }
+                src={coverSrc(play.gameImageUrl)}
                 alt={play.gameTitle}
                 referrerPolicy="no-referrer"
                 onError={applyImageFallback}

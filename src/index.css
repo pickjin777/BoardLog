@@ -6,8 +6,10 @@
   }
 
   body {
-    background-color: #100e0b;
+    background-color: #0e1628;
     color: #f6ebd4;
+    word-break: keep-all;
+    overflow-wrap: break-word;
     font-family:
       -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic",
       sans-serif;
@@ -34,7 +36,7 @@
 
 @media (max-width: 1023px) {
   #app-shell-main {
-    padding-bottom: calc(8rem + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)));
+    padding-bottom: calc(9.5rem + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)));
   }
 }
 
@@ -53,8 +55,15 @@
  * #E4DCFF is the same amethyst, light enough to clear the dark surfaces.
  */
 :where(button, a, input, select, textarea, [tabindex]):focus-visible {
-  outline: 2px solid #e4dcff !important;
+  outline: 2px solid #f3d48a !important;
   outline-offset: 2px !important;
+}
+
+.paper :where(button, a, input, select, textarea):focus-visible,
+.btn-gold:focus-visible,
+.btn-cream:focus-visible,
+.chip-on:focus-visible {
+  outline-color: #1c160e !important;
 }
 
 /* 48px touch target. Icon buttons and chips were under that after the vault restyle. */
@@ -166,20 +175,20 @@ textarea {
 /* Vault theme. Component utilities keep their names; these unlayered rules repaint them.
    Normative values live in docs/design/DESIGN.md. Kakao yellow and photo scrims stay. */
 .accent-\[\#4834D4\] { accent-color: #E4DCFF; }
-.active\:bg-\[\#DFE4EA\]:active { background-color: #3A3228; }
+.active\:bg-\[\#DFE4EA\]:active { background-color: #2C3C56; }
 .bg-\[\#1B7A43\]\/10 { background-color: #9BE7B833; }
 .bg-\[\#4834D4\]\/10 { background-color: #E4DCFF2E; }
 .bg-\[\#4834D4\]\/5 { background-color: #E4DCFF2E; }
 .bg-\[\#636E72\] { background-color: #5C5144; }
 .bg-\[\#E67E22\]\/10 { background-color: #FFC58A33; }
 .bg-\[\#E8F3ED\] { background-color: #163028; }
-.bg-\[\#E9ECEF\] { background-color: #3A3228; }
+.bg-\[\#E9ECEF\] { background-color: #2C3C56; }
 .bg-\[\#EB4D4B\] { background-color: #C4453C; }
 .bg-\[\#EB4D4B\]\/10 { background-color: #3A221F; }
 .bg-\[\#EBFAEF\] { background-color: #163028; }
-.bg-\[\#F1F2F6\] { background-color: #2A241C; }
-.bg-\[\#F1F3F5\] { background-color: #2A241C; }
-.bg-\[\#F8F9FA\] { background-color: #2A241C; }
+.bg-\[\#F1F2F6\] { background-color: #243044; }
+.bg-\[\#F1F3F5\] { background-color: #243044; }
+.bg-\[\#F8F9FA\] { background-color: #243044; }
 .bg-\[\#FBF3E2\] { background-color: #3A2E16; }
 .bg-\[\#FDECEA\] { background-color: #3A221F; }
 .bg-\[\#FEEBEC\] { background-color: #3A221F; }
@@ -187,17 +196,17 @@ textarea {
 .bg-amber-100 { background-color: #3A2E16; }
 .bg-amber-50 { background-color: #3A2E16; }
 .bg-sky-50 { background-color: #1A2834; }
-.bg-stone-100 { background-color: #2A241C; }
-.bg-stone-200 { background-color: #2A241C; }
-.bg-white { background-color: #1C1812; background-image: linear-gradient(180deg, rgba(243, 212, 138, 0.08), transparent 46%); }
-.bg-white\/60 { background-color: #1C181299; }
-.bg-white\/70 { background-color: #1C1812B3; }
-.bg-white\/90 { background-color: #1C1812E6; }
-.bg-white\/95 { background-color: #1C1812F2; }
+.bg-stone-100 { background-color: #243044; }
+.bg-stone-200 { background-color: #243044; }
+.bg-white { background-color: #172033; background-image: none; box-shadow: 0 8px 18px rgba(5, 8, 16, 0.28); }
+.bg-white\/60 { background-color: #17203399; }
+.bg-white\/70 { background-color: #172033B3; }
+.bg-white\/90 { background-color: #172033E6; }
+.bg-white\/95 { background-color: #172033F2; }
 .border-\[\#1B7A43\]\/20 { border-color: #9BE7B8; }
 .border-\[\#1B7A43\]\/30 { border-color: #9BE7B8; }
 .border-\[\#1E272E\] { border-color: #C9A24A; }
-.border-\[\#1E272E\]\/10 { border-color: #5C4C38; }
+.border-\[\#1E272E\]\/10 { border-color: #2C3C56; }
 .border-\[\#4834D4\] { border-color: #E4DCFF; }
 .border-\[\#4834D4\]\/20 { border-color: #E4DCFF; }
 .border-\[\#4834D4\]\/30 { border-color: #E4DCFF; }
@@ -207,8 +216,8 @@ textarea {
 .border-\[\#CBD5E1\] { border-color: #C6A36A; }
 .border-\[\#CED4DA\] { border-color: #C6A36A; }
 .border-\[\#CED6E0\] { border-color: #C6A36A; }
-.border-\[\#E9ECEF\] { border-color: #5C4C38; }
-.border-\[\#E9ECEF\]\/70 { border-color: #5C4C38; }
+.border-\[\#E9ECEF\] { border-color: #2C3C56; }
+.border-\[\#E9ECEF\]\/70 { border-color: #2C3C56; }
 .border-\[\#EB4D4B\]\/20 { border-color: #FFC2BC; }
 .border-\[\#EB4D4B\]\/30 { border-color: #FFC2BC; }
 .border-\[\#EB4D4B\]\/40 { border-color: #FFC2BC; }
@@ -218,23 +227,23 @@ textarea {
 .border-amber-300 { border-color: #C6A36A; }
 .border-sky-300 { border-color: #8EB7E0; }
 .divide-\[\#898B8D\] > :not(:last-child) { border-color: #C6A36A; }
-.divide-\[\#E9ECEF\] > :not(:last-child) { border-color: #5C4C38; }
+.divide-\[\#E9ECEF\] > :not(:last-child) { border-color: #2C3C56; }
 .fill-\[\#B8860B\] { fill: #F3D48A; }
-.focus\:bg-white:focus { background-color: #1C1812; }
+.focus\:bg-white:focus { background-color: #172033; }
 .focus\:border-\[\#4834D4\]:focus { border-color: #E4DCFF; }
 .focus\:ring-\[\#4834D4\]\/10:focus { --tw-ring-color: #E4DCFF55; }
 .focus\:ring-\[\#4834D4\]\/20:focus { --tw-ring-color: #E4DCFF66; }
 @media (hover: hover) { .group-hover\:text-\[\#4834D4\]:is(:where(.group):hover *) { color: #E4DCFF; } }
 @media (hover: hover) { .hover\:bg-\[\#4834D4\]\/20:hover { background-color: #E4DCFF2E; } }
 @media (hover: hover) { .hover\:bg-\[\#4834D4\]\/5:hover { background-color: #E4DCFF2E; } }
-@media (hover: hover) { .hover\:bg-\[\#E9ECEF\]:hover { background-color: #3A3228; } }
+@media (hover: hover) { .hover\:bg-\[\#E9ECEF\]:hover { background-color: #2C3C56; } }
 @media (hover: hover) { .hover\:bg-\[\#EB4D4B\]:hover { background-color: #C4453C; } }
-@media (hover: hover) { .hover\:bg-\[\#F1F3F5\]:hover { background-color: #2A241C; } }
-@media (hover: hover) { .hover\:bg-\[\#F8F9FA\]:hover { background-color: #2A241C; } }
+@media (hover: hover) { .hover\:bg-\[\#F1F3F5\]:hover { background-color: #243044; } }
+@media (hover: hover) { .hover\:bg-\[\#F8F9FA\]:hover { background-color: #243044; } }
 @media (hover: hover) { .hover\:bg-\[\#FCD7D7\]:hover { background-color: #3A221F; } }
 @media (hover: hover) { .hover\:bg-\[\#FEEBEC\]:hover { background-color: #3A221F; } }
 @media (hover: hover) { .hover\:bg-amber-100:hover { background-color: #3A2E16; } }
-@media (hover: hover) { .hover\:bg-white:hover { background-color: #1C1812; } }
+@media (hover: hover) { .hover\:bg-white:hover { background-color: #172033; } }
 @media (hover: hover) { .hover\:border-\[\#4834D4\]:hover { border-color: #E4DCFF; } }
 @media (hover: hover) { .hover\:border-\[\#4834D4\]\/30:hover { border-color: #E4DCFF; } }
 @media (hover: hover) { .hover\:border-\[\#4834D4\]\/40:hover { border-color: #E4DCFF; } }
@@ -245,10 +254,10 @@ textarea {
 @media (hover: hover) { .hover\:text-\[\#B8860B\]:hover { color: #F3D48A; } }
 @media (hover: hover) { .hover\:text-\[\#EB4D4B\]:hover { color: #FFC2BC; } }
 @media (min-width: 64rem) { .lg\:bg-\[\#4834D4\]\/10 { background-color: #E4DCFF2E; } }
-@media (min-width: 64rem) { @media (hover: hover) { .lg\:hover\:bg-\[\#F8F9FA\]:hover { background-color: #2A241C; } } }
+@media (min-width: 64rem) { @media (hover: hover) { .lg\:hover\:bg-\[\#F8F9FA\]:hover { background-color: #243044; } } }
 .placeholder-stone-400::placeholder { color: #E4D3B4; }
 .ring-\[\#4834D4\]\/20 { --tw-ring-color: #E4DCFF66; }
-.ring-white { --tw-ring-color: #1C1812; }
+.ring-white { --tw-ring-color: #172033; }
 .selection\:bg-\[\#4834D4\]\/20::selection, .selection\:bg-\[\#4834D4\]\/20 ::selection { background-color: #E4DCFF2E; }
 .selection\:text-\[\#4834D4\]::selection, .selection\:text-\[\#4834D4\] ::selection { color: #E4DCFF; }
 .text-\[\#1B6B43\] { color: #9BE7B8; }
@@ -294,17 +303,15 @@ textarea {
 }
 
 .treasure-shell {
-  background-color: #100e0b;
-  background-image:
-    radial-gradient(640px 200px at 50% -16%, rgba(243, 212, 138, 0.07), transparent 62%),
-    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><g fill-opacity='0.1'><circle cx='8' cy='14' r='0.7' fill='%23F3D48A'/><circle cx='46' cy='22' r='0.5' fill='%23E4DCFF'/><circle cx='88' cy='10' r='0.6' fill='%23F3D48A'/><circle cx='24' cy='70' r='0.5' fill='%23E4DCFF'/><circle cx='70' cy='84' r='0.7' fill='%23F3D48A'/><circle cx='104' cy='58' r='0.5' fill='%23F6EBD4'/></g></svg>");
+  background-color: #0e1628;
+  background-image: radial-gradient(720px 220px at 50% -20%, rgba(226, 182, 87, 0.08), transparent 64%);
   background-attachment: fixed;
 }
 
-.treasure-hero {
-  background-color: #1c1812;
-  border: 1px solid rgba(198, 163, 106, 0.4);
-  box-shadow: inset 0 1px 0 rgba(243, 212, 138, 0.12);
+.treasure-hero,
+.home-hero {
+  background-color: #172033;
+  box-shadow: 0 10px 24px rgba(5, 8, 16, 0.28);
 }
 
 .treasure-stage {
@@ -429,5 +436,219 @@ textarea {
     transition: none !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Gold is the action color. Brand purple stays on the logo tile, not these buttons. */
+button.bg-\[\#4834D4\],
+a.bg-\[\#4834D4\] {
+  background-color: #e2b657;
+  color: #1a1408;
+}
+
+button.bg-\[\#4834D4\]:hover,
+a.bg-\[\#4834D4\]:hover {
+  background-color: #c9a24a;
+  color: #1a1408;
+}
+
+input.border-\[\#E9ECEF\],
+select.border-\[\#E9ECEF\],
+textarea.border-\[\#E9ECEF\] {
+  border-color: #c6b48a;
+}
+
+.btn-gold {
+  background-color: #e2b657;
+  color: #1a1408;
+}
+
+.btn-gold:hover {
+  background-color: #c9a24a;
+}
+
+.btn-cream {
+  background-color: #f6ebd4;
+  color: #1c160e;
+}
+
+.btn-quiet {
+  background-color: #243044;
+  color: #f6ebd4;
+}
+
+.chip-on {
+  background-color: #f6ebd4;
+  color: #1c160e;
+  box-shadow: inset 0 -3px 0 #1c160e;
+}
+
+.chip-off {
+  background-color: #172033;
+  color: #f6ebd4;
+}
+
+.paper {
+  background-color: #f6ebd4 !important;
+  background-image: none !important;
+  color: #1c160e;
+  border-color: transparent !important;
+  box-shadow: 0 10px 22px rgba(6, 10, 18, 0.28);
+}
+
+.paper .text-\[\#1E272E\],
+.paper .text-\[\#2D3436\],
+.paper .text-\[\#F6EBD4\],
+.paper .text-amber-950,
+.paper .text-amber-900 {
+  color: #1c160e;
+}
+
+.paper .text-\[\#636E72\],
+.paper .text-\[\#E4D3B4\] {
+  color: #5c4632;
+}
+
+.paper .bg-\[\#F1F3F5\] {
+  background-color: #e7d7b8;
+}
+
+.paper .on-navy,
+.paper .on-navy .text-\[\#F6EBD4\],
+.paper .on-navy .text-\[\#1C160E\] {
+  color: #f6ebd4;
+}
+
+.paper .on-navy .text-\[\#E4D3B4\],
+.paper .on-navy .is-muted {
+  color: #e4d3b4;
+}
+
+.paper .on-navy .is-ink {
+  color: #1c160e;
+}
+
+.home-chest {
+  width: min(28vw, 96px);
+  height: auto;
+  max-height: 84px;
+  object-fit: contain;
+  flex: none;
+}
+
+.stat-win {
+  color: #1b6b43;
+}
+
+.game-box {
+  background: transparent !important;
+  background-image: none !important;
+  border-color: transparent !important;
+  box-shadow: none;
+}
+
+.game-shelf {
+  position: relative;
+  padding-bottom: 16px;
+}
+
+.game-shelf::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 8px;
+  border-radius: 4px;
+  background: #3a2c22;
+  box-shadow: 0 6px 0 #241910;
+}
+
+.game-shelf > :only-child {
+  max-width: 16rem;
+}
+
+.logbook {
+  background: #f3e6cc;
+  color: #1c160e;
+  box-shadow: 0 12px 24px rgba(6, 10, 18, 0.28);
+}
+
+.calendar-selected {
+  outline: 2px solid #1c160e;
+  outline-offset: -2px;
+}
+
+.calendar-today > span:last-child {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.calendar-day-mark {
+  position: absolute;
+  top: 7px;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px 2px 4px 4px;
+  background: #1c160e;
+}
+
+.calendar-day-mark::before {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: 1px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #1c160e;
+}
+
+.level-path {
+  display: flex;
+  gap: 8px;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 18px 2px 4px;
+}
+
+.level-space {
+  position: relative;
+  display: flex;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: #1a2b4a;
+  color: #f6ebd4;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.level-space[aria-current='step'] {
+  outline: 2px solid #1c160e;
+  outline-offset: 2px;
+}
+
+.level-meeple {
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  width: 18px;
+  height: 22px;
+  transform: translateX(-50%);
+}
+
+.nav-pip {
+  width: 14px;
+  height: 3px;
+  margin-top: 2px;
+  border-radius: 999px;
+  background: transparent;
+}
+
+.nav-pip.is-on {
+  background: #e2b657;
 }
 

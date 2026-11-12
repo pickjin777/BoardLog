@@ -2,6 +2,7 @@ import 'fake-indexeddb/auto';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import type { PlayRecord, UserGame } from '../types';
 import { normalizePlay } from '../utils/backupImport';
+import { emptyCollectorState } from '../utils/collectorProgress';
 
 /** Node has no localStorage; the session pointers and the fallback store need one. */
 class MemoryStorage {
@@ -263,5 +264,43 @@ describe('storage: add never reuses a caller-supplied id', () => {
     expect(bGame.id).not.toBe(aGame.id);
     expect(bPlay.id).not.toBe(aPlay.id);
     expect((await storage.getUserGames(b)).map((g) => g.title)).toEqual(['탈취']);
+  });
+});
+
+describe('storage: collector progress is its own key', () => {
+  it('keeps each account’s XP apart from games and plays, and deletes it with the account', async () => {
+    const stamp = `${Date.now()}`;
+    const userA = await storage.signUp(`prog-a-${stamp}@example.com`, 'secret12', '에이');
+    await storage.signOut();
+    const userB = await storage.signUp(`prog-b-${stamp}@example.com`, 'secret12', '비');
+    await storage.addUserGame(userA.uid, game('카탄'));
+    const gamesBefore = localStorage.getItem(`boardlog_games_${userA.uid}`);
+    const playsBefore = localStorage.getItem(`boardlog_plays_${userA.uid}`);
+    const stateA = {
+      ...emptyCollectorState(),
+      migratedAt: '2026-11-12T00:00:00.000Z',
+      acknowledgedLevel: 1,
+      claimedDays: ['2026.11.12']
+    };
+    const stateB = { ...emptyCollectorState(), migratedAt: '2026-11-12T00:00:00.000Z', acknowledgedLevel: 2 };
+    storage.saveCollectorProgress(userA.uid, stateA);
+    storage.saveCollectorProgress(userB.uid, stateB);
+
+    expect(storage.getCollectorProgress(userA.uid)?.claimedDays).toEqual(['2026.11.12']);
+    expect(storage.getCollectorProgress(userB.uid)?.acknowledgedLevel).toBe(2);
+    expect(storage.getCollectorProgress('')).toBeNull();
+    expect(localStorage.getItem(`boardlog_games_${userA.uid}`)).toBe(gamesBefore);
+    expect(localStorage.getItem(`boardlog_plays_${userA.uid}`)).toBe(playsBefore);
+    expect(localStorage.getItem(`boardlog_progress_${userA.uid}`)).toContain('2026.11.12');
+
+    localStorage.setItem(`boardlog_progress_${userA.uid}`, '{');
+    expect(storage.getCollectorProgress(userA.uid)).toBeNull();
+    storage.saveCollectorProgress(userA.uid, stateA);
+    localStorage.setItem(`boardlog_progress_${userA.uid}`, JSON.stringify({ version: 9 }));
+    expect(storage.getCollectorProgress(userA.uid)).toBeNull();
+
+    await storage.deleteAccount(userA.uid);
+    expect(storage.getCollectorProgress(userA.uid)).toBeNull();
+    expect(storage.getCollectorProgress(userB.uid)?.acknowledgedLevel).toBe(2);
   });
 });

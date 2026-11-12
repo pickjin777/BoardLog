@@ -45,12 +45,12 @@ function DayThumb({ url }: { url: string | null }) {
 
 function dayClass(cell: MonthCell, selected: boolean, today: boolean, hasPhoto: boolean): string {
   const base =
-    'calendar-day relative flex w-full items-center justify-center overflow-hidden rounded-lg text-xs font-bold leading-none';
-  if (selected && !hasPhoto) return `${base} border border-[#F3D48A] bg-[#4834D4] text-white`;
-  if (selected) return `${base} border border-[#F3D48A] bg-[#2A241C] text-white`;
-  if (today) return `${base} border border-[#F3D48A] bg-[#2A241C] text-[#F6EBD4]`;
-  if (cell.inMonth) return `${base} border border-[#5C4C38] bg-[#2A241C] text-[#F6EBD4]`;
-  return `${base} border border-[#5C4C38] bg-[#100E0B] text-[#E4D3B4]`;
+    'calendar-day relative flex w-full items-center justify-center overflow-hidden rounded-md text-xs font-medium leading-none';
+  const todayMark = today ? ' calendar-today' : '';
+  const selectedMark = selected ? ' calendar-selected' : '';
+  if (!cell.inMonth) return `${base}${todayMark}${selectedMark} bg-[#E4D3B4] text-[#5C4632]`;
+  if (hasPhoto) return `${base}${todayMark}${selectedMark} bg-[#1C160E] text-[#F6EBD4]`;
+  return `${base}${todayMark}${selectedMark} bg-[#F6EBD4] text-[#1C160E]`;
 }
 
 export function PlayCalendar({ plays, selectedDate, onSelectDate }: PlayCalendarProps) {
@@ -72,22 +72,19 @@ export function PlayCalendar({ plays, selectedDate, onSelectDate }: PlayCalendar
   const today = { year: now.getFullYear(), month: now.getMonth() + 1, day: now.getDate() };
 
   return (
-    <section
-      id="play-calendar"
-      aria-label="플레이 달력"
-      className="play-calendar rounded-3xl border border-[#C6A36A] bg-[#1C1812] px-1 py-3"
-    >
+    <section id="play-calendar" aria-label="플레이 달력" className="play-calendar logbook rounded-3xl px-1 py-3">
       <div className="mb-2 flex items-center justify-between gap-2">
         <button
           id="calendar-prev-month"
           type="button"
           aria-label="이전 달"
           onClick={() => setCursor((current) => shiftMonth(current.year, current.month, -1))}
-          className="inline-flex shrink-0 items-center justify-center rounded-full bg-[#4834D4] text-white"
+          className="btn-gold inline-flex shrink-0 items-center justify-center gap-0.5 rounded-full px-2 text-xs"
         >
           <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+          <span>이전</span>
         </button>
-        <h3 className="min-w-0 flex-1 text-center text-base font-black text-[#F6EBD4]">
+        <h3 className="min-w-0 flex-1 text-center text-base font-medium text-[#1C160E]">
           {cursor.year}년 {cursor.month}월
         </h3>
         <button
@@ -95,14 +92,15 @@ export function PlayCalendar({ plays, selectedDate, onSelectDate }: PlayCalendar
           type="button"
           aria-label="다음 달"
           onClick={() => setCursor((current) => shiftMonth(current.year, current.month, 1))}
-          className="inline-flex shrink-0 items-center justify-center rounded-full bg-[#4834D4] text-white"
+          className="btn-gold inline-flex shrink-0 items-center justify-center gap-0.5 rounded-full px-2 text-xs"
         >
+          <span>다음</span>
           <ChevronRight className="h-5 w-5" aria-hidden="true" />
         </button>
       </div>
       <div className="play-calendar-grid">
         {WEEKDAYS.map((label) => (
-          <span key={label} aria-hidden="true" className="py-1 text-center text-xs font-bold text-[#E4D3B4]">
+          <span key={label} aria-hidden="true" className="py-1 text-center text-xs font-medium text-[#5C4632]">
             {label}
           </span>
         ))}
@@ -121,16 +119,12 @@ export function PlayCalendar({ plays, selectedDate, onSelectDate }: PlayCalendar
               className={dayClass(cell, selected, isToday, Boolean(photo))}
             >
               <DayThumb url={photo} />
-              {cell.playCount > 0 && !photo && (
-                <span
-                  className={`calendar-day-mark absolute top-1 h-1.5 w-1.5 rounded-full ${selected ? 'bg-white' : 'bg-[#F3D48A]'}`}
-                />
-              )}
+              {cell.playCount > 0 && !photo && <span className="calendar-day-mark" aria-hidden="true" />}
               <span
                 aria-hidden="true"
                 className={
                   photo
-                    ? 'absolute inset-x-0 bottom-0 bg-[#100E0B] py-0.5 text-center text-[11px] font-bold text-[#F6EBD4]'
+                    ? 'absolute inset-x-0 bottom-0 bg-[#F6EBD4] py-0.5 text-center text-[11px] font-medium text-[#1C160E]'
                     : 'relative'
                 }
               >
