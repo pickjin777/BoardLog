@@ -317,6 +317,19 @@ test('kakao quick select keeps weight, and game detail lists only that game', as
   const picked = (await page.locator('#kakao-share-modal-overlay').innerText()) ?? '';
   check('라이트 게임은 빠른 추천에 없음', !picked.includes('라이트합성'));
 
+  await page.evaluate(() => {
+    history.replaceState(null, '', `${location.pathname}${location.search}#play=friend-score`);
+    window.open = (url?: string | URL) => {
+      (window as Window & { __opened?: string }).__opened = String(url ?? '');
+      return null;
+    };
+  });
+  await page.locator('#kakao-share-execute-btn').click();
+  await page.waitForFunction(() => Boolean((window as Window & { __opened?: string }).__opened));
+  const opened = await page.evaluate(() => (window as Window & { __opened?: string }).__opened ?? '');
+  check('카카오 공유 주소에 플레이 조각이 없음', !opened.includes('#play=') && !opened.includes('friend-score'), opened);
+  check('카카오 앱 키는 가짜 값만', opened.includes('app_key=boardgame'), opened);
+
   await page.locator('#kakao-share-modal-overlay button[aria-label="닫기"]').click();
   await hidden('카카오 모달 닫힘', page.locator('#kakao-share-modal-overlay'));
 

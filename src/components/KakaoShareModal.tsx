@@ -6,6 +6,7 @@ import type { UserGame } from '../types';
 import { useToast } from '../context/ToastContext';
 import { track } from '../services/analytics';
 import { applyImageFallback } from '../utils/imageFallback';
+import { safePageLocation } from '../utils/analyticsEvents';
 import { gameMatchesShareFilter, type SharePlayerPreset, type ShareWeightPreset } from '../utils/shareGameFilter';
 
 interface KakaoShareModalProps {
@@ -211,6 +212,8 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
   // Direct Kakao Share / Web Share API
   const handleNativeOrKakaoShare = async () => {
     const shareTitle = `${ownerName || '보드게이머'}님의 보드게임 목록 (${gamesToShare.length}종)`;
+    // A shared play sits in the hash and includes friends' names. The collection share must not carry it.
+    const pageUrl = safePageLocation(window.location.href);
 
     // 1. Try Web Share API (Natively opens KakaoTalk app on mobile/desktop!)
     if (navigator.share) {
@@ -218,7 +221,7 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
         await navigator.share({
           title: shareTitle,
           text: kakaoFormattedText,
-          url: window.location.href
+          url: pageUrl
         });
         track('kakao_list_shared');
         showToast('카카오톡 또는 원하는 앱으로 공유를 시작했습니다.', 'success');
@@ -236,7 +239,7 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
     await handleCopyText();
     // Try opening kakao sharer or talk scheme if available
     const kakaoWebSharerUrl = `https://sharer.kakao.com/talk/friends/picker/link?app_key=boardgame&shortKey=${encodeURIComponent(
-      window.location.href
+      pageUrl
     )}`;
 
     // Check if on mobile
