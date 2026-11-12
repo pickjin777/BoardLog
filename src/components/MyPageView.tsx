@@ -134,10 +134,10 @@ export const MyPageView: React.FC<MyPageViewProps> = ({ onOpenAuth, onOpenCatalo
   return (
     <div className="space-y-5 pb-20 lg:mx-auto lg:max-w-3xl">
       {/* Profile Card */}
-      <div className="p-5 bg-white rounded-[28px] border border-[#E9ECEF] shadow-sm space-y-4">
+      <div className="p-5 bg-white rounded-2xl border border-[#E9ECEF] shadow-sm space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="w-13 h-13 rounded-2xl bg-[#4834D4] text-white font-black text-lg flex items-center justify-center shadow-[0_4px_12px_rgba(72,52,212,0.3)]">
+            <div className="w-13 h-13 rounded-2xl bg-[#4834D4] text-white font-black text-lg flex items-center justify-center">
               {user?.nickname ? user.nickname.slice(0, 1).toUpperCase() : 'B'}
             </div>
             <div className="min-w-0">
@@ -181,7 +181,7 @@ export const MyPageView: React.FC<MyPageViewProps> = ({ onOpenAuth, onOpenCatalo
           <button
             type="button"
             onClick={onOpenAuth}
-            className="shrink-0 px-3.5 py-1.5 bg-[#F1F3F5] hover:bg-[#E9ECEF] text-[#2D3436] rounded-full text-xs font-bold transition-colors"
+            className="shrink-0 px-4 py-1.5 bg-[#F1F3F5] hover:bg-[#E9ECEF] text-[#2D3436] rounded-full text-xs font-bold transition-colors"
           >
             {user?.isAnonymous ? '로그인 / 가입' : '계정 관리'}
           </button>
@@ -201,28 +201,25 @@ export const MyPageView: React.FC<MyPageViewProps> = ({ onOpenAuth, onOpenCatalo
       </div>
 
       {/* External Data Honesty & Database Status Card */}
-      <div className="p-4.5 bg-white rounded-[28px] border border-[#E9ECEF] shadow-sm space-y-2 text-xs">
+      <div className="p-4 bg-white rounded-2xl border border-[#E9ECEF] shadow-sm space-y-2 text-xs">
         <div className="flex items-center gap-2 font-bold text-[#1E272E]">
           <Database className="w-4 h-4 text-[#4834D4]" />
-          <span>데이터베이스 & 외부 연동 안내</span>
+          <span>저장</span>
         </div>
         <p className="text-[11px] text-[#636E72] leading-relaxed">
-          • <strong>데이터베이스 상태:</strong> 고속 브라우저 로컬 저장소(IndexedDB)에 저장되어 새로고침하거나
-          브라우저를 닫아도 안전하게 유지됩니다.
-          <br />• <strong>외부 연동 상태:</strong> 외부 보드게임 상점/BGG API는 현재 <strong>"외부 DB 미연결"</strong>{' '}
-          상태이며, 번들된 300개 인기 보드게임 시드 목록과 사용자 수동 입력을 통해 정직하게 동작합니다.
+          기록은 이 브라우저에 남습니다. 새로고침해도 유지됩니다. 외부 게임 DB는 연결되지 않았고, 들어 있는 300개 시드와
+          직접 입력으로 게임을 찾습니다.
         </p>
       </div>
 
       {/* Backup / Export Section */}
-      <div className="p-4.5 bg-white rounded-[28px] border border-[#E9ECEF] shadow-sm space-y-3">
+      <div className="p-4 bg-white rounded-2xl border border-[#E9ECEF] shadow-sm space-y-3">
         <h3 className="text-xs font-bold text-[#1E272E] flex items-center gap-1.5">
           <Download className="w-4 h-4 text-[#4834D4]" />
-          <span>데이터 백업 및 서가 도록 출력</span>
+          <span>백업과 도록</span>
         </h3>
         <p className="text-[11px] text-[#636E72] leading-relaxed">
-          내 게임 목록을 PDF 도록으로 인쇄하거나, JSON 백업 파일로 저장하고 복원할 수 있습니다. 기록은 이 브라우저에만
-          저장되니 폰을 바꾸기 전에 백업해 두세요.
+          PDF 도록으로 인쇄하거나 JSON으로 저장합니다. 기록은 이 브라우저에만 있으니 폰을 바꾸기 전에 백업하세요.
         </p>
 
         <div className="space-y-2">
@@ -231,10 +228,10 @@ export const MyPageView: React.FC<MyPageViewProps> = ({ onOpenAuth, onOpenCatalo
               id="mypage-open-catalog-btn"
               type="button"
               onClick={onOpenCatalog}
-              className="w-full py-2.5 bg-[#4834D4] hover:bg-[#3c2ab9] text-white rounded-2xl text-xs font-bold flex items-center justify-center gap-2 shadow-[0_4px_12px_rgba(72,52,212,0.3)] transition-colors"
+              className="w-full py-2.5 bg-[#4834D4] hover:bg-[#3c2ab9] text-white rounded-2xl text-xs font-bold flex items-center justify-center gap-2 transition-colors"
             >
               <Download className="w-4 h-4" />
-              <span>보드게임 서가 도록 & PDF 저장 열기</span>
+              <span>PDF 도록</span>
             </button>
           )}
 
@@ -246,7 +243,7 @@ export const MyPageView: React.FC<MyPageViewProps> = ({ onOpenAuth, onOpenCatalo
             className="w-full py-2.5 bg-[#F1F3F5] hover:bg-[#E9ECEF] text-[#2D3436] rounded-2xl text-xs font-bold flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
           >
             <Download className="w-4 h-4 text-[#4834D4]" />
-            <span>{isExporting ? '파일 생성 중...' : 'JSON 데이터 백업 다운로드'}</span>
+            <span>{isExporting ? '파일 생성 중...' : 'JSON 백업'}</span>
           </button>
 
           <button

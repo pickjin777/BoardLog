@@ -44,8 +44,8 @@ export const PlayCard: React.FC<PlayCardProps> = ({ play, onClick, variant = 'li
       <div
         className={
           variant === 'sheet'
-            ? 'h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-[#4834D4]'
-            : 'h-40 w-full overflow-hidden rounded-2xl bg-[#4834D4]'
+            ? 'h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-[#4834D4]'
+            : 'h-40 w-full overflow-hidden rounded-lg bg-[#4834D4]'
         }
       >
         <MemoryPhoto url={face.imageUrl} />
@@ -53,7 +53,7 @@ export const PlayCard: React.FC<PlayCardProps> = ({ play, onClick, variant = 'li
       <div className={variant === 'sheet' ? 'min-w-0 flex-1 space-y-1' : 'mt-3 min-w-0 space-y-1.5'}>
         <p className="text-xs font-bold text-[#F3D48A]">추억 카드</p>
         <p className="text-sm text-[#F6EBD4]">{face.dateLabel}</p>
-        <p className="break-words text-base font-black text-[#F6EBD4]">{play.gameTitle}</p>
+        <p className="break-words text-base font-medium text-[#F6EBD4]">{play.gameTitle}</p>
         <p className="break-words text-sm text-[#E4D3B4]">{face.playerLabel}</p>
         <p className="break-words text-sm font-bold text-[#F6EBD4]">{face.winnerLabel}</p>
       </div>
@@ -65,7 +65,7 @@ export const PlayCard: React.FC<PlayCardProps> = ({ play, onClick, variant = 'li
       <article
         id="saved-memory-card"
         data-image-kind={face.imageKind}
-        className="memory-card mb-3 flex gap-4 rounded-2xl border border-[#C6A36A] bg-[#100E0B] p-4"
+        className="memory-card mb-4 flex gap-4 rounded-3xl border border-[#C6A36A] bg-[#100E0B] p-4"
       >
         {body}
       </article>

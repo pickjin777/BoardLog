@@ -180,18 +180,18 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-xs p-0 sm:p-4"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-0 sm:p-4"
         >
           <motion.div
-            initial={{ y: 40, opacity: 0 }}
+            initial={{ y: 12, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 40, opacity: 0 }}
-            transition={{ type: 'spring', damping: 28, stiffness: 320 }}
+            exit={{ y: 12, opacity: 0 }}
+            transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
             id="scan-modal-sheet"
-            className="bg-white w-full sm:max-w-lg rounded-t-[28px] sm:rounded-[28px] max-h-[92vh] flex flex-col shadow-2xl"
+            className="bg-white w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl max-h-[92vh] flex flex-col shadow-2xl"
           >
             <div className="flex items-start justify-between p-4 sm:p-6 border-b border-[#E9ECEF] shrink-0">
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2">
                 <div className="w-9 h-9 rounded-2xl bg-[#4834D4]/10 text-[#4834D4] flex items-center justify-center">
                   <Camera className="w-4.5 h-4.5" />
                 </div>
@@ -227,7 +227,7 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
                   id="scan-pick-photos-btn"
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-full py-10 border-2 border-dashed border-[#E9ECEF] hover:border-[#4834D4] rounded-[24px] flex flex-col items-center gap-2 transition-colors"
+                  className="w-full py-10 border-2 border-dashed border-[#E9ECEF] hover:border-[#4834D4] rounded-2xl flex flex-col items-center gap-2 transition-colors"
                 >
                   <Camera className="w-7 h-7 text-[#636E72]" />
                   <span className="text-xs font-bold text-[#1E272E]">사진 선택 (최대 {MAX_SCAN_IMAGES}장)</span>
@@ -288,7 +288,7 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
                     </button>
                   </div>
 
-                  <div className="space-y-2.5">
+                  <div className="space-y-2">
                     {candidates.map((candidate) => {
                       const title = titles[candidate.id] ?? '';
                       const isOff = !!excluded[candidate.id];
@@ -302,7 +302,7 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
                             isOff ? 'border-[#E9ECEF] bg-[#F8F9FA] opacity-60' : 'border-[#E9ECEF] bg-white'
                           }`}
                         >
-                          <div className="flex items-start gap-2.5">
+                          <div className="flex items-start gap-2">
                             <button
                               type="button"
                               aria-label={isOff ? '등록 포함' : '등록 제외'}
@@ -360,7 +360,7 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
             </div>
 
             {candidates.length > 0 && (
-              <div className="p-4 sm:p-6 border-t border-[#E9ECEF] flex gap-2.5 shrink-0">
+              <div className="p-4 sm:p-6 border-t border-[#E9ECEF] flex gap-2 shrink-0">
                 <button
                   id="scan-cancel-btn"
                   type="button"
@@ -375,7 +375,7 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
                   type="button"
                   onClick={handleRegister}
                   disabled={isSaving || selected.length === 0}
-                  className="flex-1 py-3 bg-[#4834D4] text-white rounded-full text-xs font-bold shadow-[0_4px_14px_rgba(72,52,212,0.3)] active:scale-[0.98] transition-all disabled:opacity-50 disabled:active:scale-100 inline-flex items-center justify-center gap-2"
+                  className="flex-1 py-3 bg-[#4834D4] text-white rounded-full text-xs font-bold transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-2"
                 >
                   {isSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   <span>{isSaving ? '등록 중…' : `${selected.length}개 등록하기`}</span>
