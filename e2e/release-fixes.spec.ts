@@ -96,7 +96,7 @@ test('320px games title stays wide and the 390px empty hint clears the tab', asy
   const title = await page.locator('#games-tab-title').boundingBox();
   const add = await page.locator('#games-add-game-btn').boundingBox();
   const titleLines = await page.locator('#games-tab-title').evaluate((el) => el.getClientRects().length);
-  const titleText = ((await page.locator('#games-tab-title').innerText()) ?? '').replace(/\s+/g, '');
+  const titleText = ((await page.locator('#games-tab-title').textContent()) ?? '').replace(/\s+/g, '');
   check(
     '320px에서 제목이 버튼 위에 넓게 있음',
     !!title && !!add && title.width > 200 && add.y >= title.y + title.height - 1,
@@ -226,11 +226,13 @@ test('ownership filters keep the whole label at 320px', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 700 });
   await page.goto('/', { waitUntil: 'networkidle' });
   await page.locator('#nav-tab-games').click();
-  const clipped = await page.locator('#games-ownership-filters button').evaluateAll((buttons) =>
-    buttons.flatMap((button) =>
-      button.scrollWidth > button.clientWidth + 1 ? [button.textContent?.trim() ?? button.id] : []
-    )
-  );
+  const clipped = await page
+    .locator('#games-ownership-filters button')
+    .evaluateAll((buttons) =>
+      buttons.flatMap((button) =>
+        button.scrollWidth > button.clientWidth + 1 ? [button.textContent?.trim() ?? button.id] : []
+      )
+    );
   check('소장 상태 글자가 버튼 안에 있음', clipped.length === 0, clipped.join(','));
   await page.locator('#games-ownership-filters').evaluate((row) => {
     row.scrollLeft = row.scrollWidth;
@@ -314,7 +316,7 @@ test('kakao quick select keeps weight, and game detail lists only that game', as
   await page.locator('#kakao-filter-search').fill('헤비');
   await page.getByRole('button', { name: '2인 추천/전용' }).click();
   await visible('헤비이면서 검색에 맞는 게임만', page.getByText('1/2개 선택됨'));
-  const picked = (await page.locator('#kakao-share-modal-overlay').innerText()) ?? '';
+  const picked = (await page.locator('#kakao-share-modal-overlay').textContent()) ?? '';
   check('라이트 게임은 빠른 추천에 없음', !picked.includes('라이트합성'));
 
   await page.evaluate(() => {
@@ -327,7 +329,11 @@ test('kakao quick select keeps weight, and game detail lists only that game', as
   await page.locator('#kakao-share-execute-btn').click();
   await page.waitForFunction(() => Boolean((window as Window & { __opened?: string }).__opened));
   const opened = await page.evaluate(() => (window as Window & { __opened?: string }).__opened ?? '');
-  check('카카오 공유 주소에 플레이 조각이 없음', !opened.includes('#play=') && !opened.includes('friend-score'), opened);
+  check(
+    '카카오 공유 주소에 플레이 조각이 없음',
+    !opened.includes('#play=') && !opened.includes('friend-score'),
+    opened
+  );
   check('카카오 앱 키는 가짜 값만', opened.includes('app_key=boardgame'), opened);
 
   await page.locator('#kakao-share-modal-overlay button[aria-label="닫기"]').click();
