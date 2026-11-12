@@ -536,14 +536,14 @@ const MainApp: React.FC = () => {
                 </div>
 
                 {/* Ownership Filter Pills */}
-                <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
+                <div id="games-ownership-filters" className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
                   {OWNERSHIP_TABS.map((tab) => (
                     <button
                       key={tab}
                       type="button"
                       onClick={() => setSelectedOwnership(tab)}
                       aria-pressed={selectedOwnership === tab}
-                      className={`px-3.5 py-1.5 rounded-full font-bold whitespace-nowrap transition-all ${
+                      className={`shrink-0 px-3.5 py-1.5 rounded-full font-bold whitespace-nowrap transition-all ${
                         selectedOwnership === tab
                           ? 'bg-[#4834D4] text-white shadow-xs'
                           : 'bg-white text-[#636E72] border border-[#E9ECEF] hover:bg-[#F8F9FA]'
@@ -657,14 +657,14 @@ const MainApp: React.FC = () => {
                 </div>
 
                 {/* Result Filter Tabs */}
-                <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
+                <div id="plays-result-filters" className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
                   {PLAY_RESULT_TABS.map((tab) => (
                     <button
                       key={tab}
                       type="button"
                       onClick={() => setSelectedPlayResult(tab)}
                       aria-pressed={selectedPlayResult === tab}
-                      className={`px-3.5 py-1.5 rounded-full font-bold whitespace-nowrap transition-all ${
+                      className={`shrink-0 px-3.5 py-1.5 rounded-full font-bold whitespace-nowrap transition-all ${
                         selectedPlayResult === tab
                           ? 'bg-[#4834D4] text-white shadow-xs'
                           : 'bg-white text-[#636E72] border border-[#E9ECEF] hover:bg-[#F8F9FA]'

@@ -222,6 +222,28 @@ test('without a scan key, several photos stay on the device and open manual entr
   await hidden('사진 시트 닫힘', page.locator('#scan-modal-sheet'));
 });
 
+test('ownership filters keep the whole label at 320px', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 700 });
+  await page.goto('/', { waitUntil: 'networkidle' });
+  await page.locator('#nav-tab-games').click();
+  const clipped = await page.locator('#games-ownership-filters button').evaluateAll((buttons) =>
+    buttons.flatMap((button) =>
+      button.scrollWidth > button.clientWidth + 1 ? [button.textContent?.trim() ?? button.id] : []
+    )
+  );
+  check('소장 상태 글자가 버튼 안에 있음', clipped.length === 0, clipped.join(','));
+  await page.locator('#games-ownership-filters').evaluate((row) => {
+    row.scrollLeft = row.scrollWidth;
+  });
+  const sold = page.getByRole('button', { name: '판매완료', exact: true });
+  await visible('판매완료까지 스크롤됨', sold);
+  const inView = await sold.evaluate((button) => {
+    const box = button.getBoundingClientRect();
+    return box.left >= -1 && box.right <= window.innerWidth + 1 && button.scrollWidth <= button.clientWidth + 1;
+  });
+  check('판매완료 글자가 화면에 다 보임', inView);
+});
+
 test('kakao quick select keeps weight, and game detail lists only that game', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/', { waitUntil: 'networkidle' });
