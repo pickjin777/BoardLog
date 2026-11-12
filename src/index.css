@@ -375,3 +375,37 @@ textarea {
   }
 }
 
+/* Month grid stays inside the history column. 7×48px plus gaps is wider than a 320px phone. */
+#play-calendar {
+  width: 0;
+  min-width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.play-calendar-scroll {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-block: 4px;
+}
+
+.play-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(48px, 1fr));
+  gap: 2px;
+  width: max(100%, 348px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .memory-card,
+  .memory-card *,
+  .play-calendar,
+  .play-calendar * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+

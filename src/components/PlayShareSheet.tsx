@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { storage } from '../services/storage';
 import { formatPlayShareText } from '../utils/playShareText';
 import { buildShareLink } from '../utils/sharedPlay';
+import { PlayCard } from './PlayCard';
 
 interface PlayShareSheetProps {
   play: PlayRecord | null;
@@ -71,6 +72,7 @@ export const PlayShareSheet: React.FC<PlayShareSheetProps> = ({ play, onClose })
             exit={{ y: 40 }}
             onClick={(e) => e.stopPropagation()}
           >
+            <PlayCard play={play} variant="sheet" />
             <div className="mb-3 flex items-center justify-between">
               <h3 className="text-sm font-black italic text-[#1E272E]">같이 한 사람들에게 결과 공유</h3>
               <button
