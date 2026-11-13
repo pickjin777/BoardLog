@@ -37,6 +37,8 @@ export interface ProgressGame {
   id: string;
   title: string;
   createdAt: string;
+  /** Missing on older callers. Only `하고 싶음` is withheld from registration XP. */
+  ownershipStatus?: string;
 }
 
 export interface ProgressPlay {
@@ -49,7 +51,16 @@ export interface ProgressPlay {
 }
 
 export function progressGames(games: readonly UserGame[]): ProgressGame[] {
-  return games.map((item) => ({ id: item.id, title: item.title, createdAt: item.createdAt }));
+  return games.map((item) => ({
+    id: item.id,
+    title: item.title,
+    createdAt: item.createdAt,
+    ownershipStatus: item.ownershipStatus
+  }));
+}
+
+function countsAsOwned(game: ProgressGame): boolean {
+  return game.ownershipStatus !== '하고 싶음';
 }
 
 export function progressPlays(plays: readonly PlayRecord[]): ProgressPlay[] {
@@ -196,7 +207,7 @@ function questCurrent(id: string, games: ProgressGame[], plays: ProgressPlay[], 
     return best;
   }
   if (id === 'photos') return plays.filter((play) => play.photoCount > 0).length;
-  if (id === 'shelf') return games.length;
+  if (id === 'shelf') return games.filter(countsAsOwned).length;
   if (id === 'plays') return plays.length;
   if (id === 'together') return plays.some((play) => play.participantNames.some(isRealCompanion)) ? 1 : 0;
   return 0;
@@ -249,7 +260,9 @@ export function reconcileCollector(input: ReconcileInput): CollectorState {
 
   const titles = new Set(previous?.claimedTitles ?? []);
   for (const [title, games] of groupBy(input.games, (game) => titleKey(game.title))) {
-    const existing = games.find((game) => hasGrant(previousGrants, 'new-game', game.id));
+    const owned = games.filter(countsAsOwned);
+    if (owned.length === 0) continue;
+    const existing = owned.find((game) => hasGrant(previousGrants, 'new-game', game.id));
     if (existing) {
       grants.push({
         id: `new-game:${existing.id}`,
@@ -261,12 +274,13 @@ export function reconcileCollector(input: ReconcileInput): CollectorState {
       continue;
     }
     if (titles.has(title)) continue;
-    const earliest = byCreated(games)[0];
+    const earliest = byCreated(owned)[0];
     grants.push({ id: `new-game:${earliest.id}`, kind: 'new-game', amount: XP.firstNewGame, entityId: earliest.id });
     titles.add(title);
   }
 
   for (const game of input.games) {
+    if (!countsAsOwned(game)) continue;
     grants.push({ id: `game:${game.id}`, kind: 'game', amount: XP.gameRegistered, entityId: game.id });
   }
 

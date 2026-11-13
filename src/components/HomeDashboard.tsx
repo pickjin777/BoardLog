@@ -6,6 +6,8 @@ import { GameCard } from './GameCard';
 import { LevelTrack } from './LevelTrack';
 import { formatDuration } from '../utils/formatters';
 import { findRemovableSampleData } from '../services/storage';
+import { activitySummary, neglectedGames, recentPlayRail, todaysTreasure } from '../utils/shelf';
+import { coverSrc } from '../utils/imageFallback';
 
 export interface QuestTeaser {
   title: string;
@@ -58,25 +60,50 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
 
   const recentPlays = plays.slice(0, 3);
   const favoriteGames = [...games].sort((a, b) => (b.playCount || 0) - (a.playCount || 0)).slice(0, 4);
+  const treasure = todaysTreasure(games, plays);
+  const activity = activitySummary(plays, new Date());
+  const recentRail = recentPlayRail(plays);
+  const quietRail = neglectedGames(games, plays, new Date());
 
   return (
     <div className="space-y-3 pb-4">
-      <section className="home-hero rounded-3xl px-3 py-3">
+      <section id="home-treasure" className="home-hero rounded-3xl px-3 py-3">
         <div className="flex items-center gap-3">
           <div className="min-w-0 flex-1">
-            <p className="text-xs text-[#E2B657]">나의 보물 상자</p>
-            <h2 className="mt-1 text-xl font-medium leading-snug text-[#F6EBD4]">오늘 플레이한 게임을 기록하세요</h2>
-            <p className="mt-1 text-xs leading-relaxed text-[#E4D3B4]">게임과 함께한 시간이 이 기기에 남습니다</p>
+            <p className="text-xs text-[#E2B657]">오늘의 보물</p>
+            <h2 className="mt-1 text-xl font-medium leading-snug text-[#F6EBD4]">
+              {treasure ? treasure.title : '오늘 플레이한 게임을 기록하세요'}
+            </h2>
+            <p id="home-activity-14" className="mt-1 text-xs leading-relaxed text-[#E4D3B4]">
+              {activity.line}
+            </p>
           </div>
-          <img
-            className="home-chest"
-            src="/hero/chest-320.webp"
-            srcSet="/hero/chest-160.webp 160w, /hero/chest-320.webp 320w, /hero/chest-480.webp 480w"
-            sizes="168px"
-            alt=""
-            width={480}
-            height={410}
-          />
+          {treasure ? (
+            <button
+              type="button"
+              onClick={() => onSelectGame(treasure)}
+              className="shrink-0 rounded-xl"
+              aria-label={`${treasure.title} 열기`}
+            >
+              <img
+                src={coverSrc(treasure.imageUrl)}
+                alt=""
+                className="home-chest rounded-xl object-cover"
+                width={96}
+                height={128}
+              />
+            </button>
+          ) : (
+            <img
+              className="home-chest"
+              src="/hero/chest-320.webp"
+              srcSet="/hero/chest-160.webp 160w, /hero/chest-320.webp 320w, /hero/chest-480.webp 480w"
+              sizes="96px"
+              alt=""
+              width={480}
+              height={410}
+            />
+          )}
         </div>
         <div className="mt-3 grid grid-cols-2 gap-2">
           <button
@@ -165,6 +192,51 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           </span>
         </div>
       </div>
+
+      {recentRail.length > 0 && (
+        <section id="home-rail-recent" aria-label="최근 플레이">
+          <h3 className="mb-2 text-base font-medium text-[#F6EBD4]">최근 플레이</h3>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {recentRail.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                onClick={() => {
+                  const game = games.find((entry) => entry.id === item.gameId);
+                  if (game) onSelectGame(game);
+                  else {
+                    const play = plays.find((entry) => entry.gameTitle === item.title);
+                    if (play) onSelectPlay(play);
+                  }
+                }}
+                className="w-24 shrink-0 text-left"
+              >
+                <img src={coverSrc(item.imageUrl)} alt="" className="aspect-[3/4] w-full rounded-lg object-cover" />
+                <span className="mt-1 block text-xs text-[#F6EBD4]">{item.title}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {quietRail.length > 0 && (
+        <section id="home-rail-neglected" aria-label="오래 안 한 게임">
+          <h3 className="mb-2 text-base font-medium text-[#F6EBD4]">오래 안 한 게임</h3>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {quietRail.map((game) => (
+              <button
+                key={game.id}
+                type="button"
+                onClick={() => onSelectGame(game)}
+                className="w-24 shrink-0 text-left"
+              >
+                <img src={coverSrc(game.imageUrl)} alt="" className="aspect-[3/4] w-full rounded-lg object-cover" />
+                <span className="mt-1 block text-xs text-[#F6EBD4]">{game.title}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
 
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-2">

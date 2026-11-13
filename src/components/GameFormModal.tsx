@@ -20,6 +20,7 @@ import { SEED_GAMES } from '../data/seedGames';
 import { fetchScanAvailable } from '../services/gameScanner';
 import { formatDate } from '../utils/formatters';
 import { applyImageFallback } from '../utils/imageFallback';
+import { cleanMemo, cleanTags } from '../utils/shelf';
 
 interface GameFormModalProps {
   isOpen: boolean;
@@ -32,7 +33,16 @@ interface GameFormModalProps {
   onPickPhoto?: () => void;
 }
 
-const OWNERSHIP_OPTIONS: GameOwnershipStatus[] = ['보유중', '빌려줌', '빌림', '판매예정', '판매완료', '분실', '처분'];
+const OWNERSHIP_OPTIONS: GameOwnershipStatus[] = [
+  '보유중',
+  '하고 싶음',
+  '빌려줌',
+  '빌림',
+  '판매예정',
+  '판매완료',
+  '분실',
+  '처분'
+];
 
 const CONDITION_OPTIONS: GameCondition[] = ['최상', '상', '중', '하', '미개봉'];
 
@@ -87,6 +97,8 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
   const [condition, setCondition] = useState<GameCondition>('최상');
   const [storageLocation, setStorageLocation] = useState('');
   const [notes, setNotes] = useState('');
+  const [tagText, setTagText] = useState('');
+  const [memo, setMemo] = useState('');
   const [playCount, setPlayCount] = useState(0);
 
   // Price & Metas
@@ -121,6 +133,8 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
       setCondition(initialGame.condition || '최상');
       setStorageLocation(initialGame.storageLocation || '');
       setNotes(initialGame.notes || '');
+      setTagText((initialGame.tags || []).join(', '));
+      setMemo(initialGame.memo || '');
       setPlayCount(initialGame.playCount || 0);
       setPurchasePrice(initialGame.purchasePrice || '');
       setOriginalPrice(initialGame.originalPrice || '');
@@ -145,6 +159,8 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
       setCondition('최상');
       setStorageLocation('');
       setNotes('');
+      setTagText('');
+      setMemo('');
       setPlayCount(0);
       setPurchasePrice('');
       setOriginalPrice('');
@@ -229,8 +245,9 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
           marketPrice: Number(marketPrice) || 0,
           storageLocation: storageLocation.trim(),
           condition,
-          tags: genres,
+          tags: cleanTags(tagText),
           notes: notes.trim(),
+          memo: cleanMemo(memo),
           ownershipStatus,
           playCount: Number(playCount) || 0,
           priceMeta: {
@@ -508,6 +525,17 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                   )}
                 </div>
               </div>
+
+              <label className="block">
+                <span className="mb-1 block text-xs font-bold text-[#1E272E]">내 태그</span>
+                <input
+                  id="game-input-tags"
+                  value={tagText}
+                  onChange={(event) => setTagText(event.target.value)}
+                  placeholder="쉼표로 구분, 예: 2인, 파티"
+                  className="w-full rounded-2xl border border-[#898B8D] bg-[#F1F3F5] px-3 py-2 text-xs text-[#1E272E]"
+                />
+              </label>
 
               {/* Ownership Status & Condition */}
               <div className="grid grid-cols-2 gap-3">

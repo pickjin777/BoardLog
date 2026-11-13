@@ -14,7 +14,9 @@ import { GameCard } from './components/GameCard';
 import { GameListItem } from './components/GameListItem';
 import { GameFormModal } from './components/GameFormModal';
 import { GameScanModal } from './components/GameScanModal';
-import { GameDetailModal } from './components/GameDetailModal';
+const GameDetailModal = lazy(() =>
+  import('./components/GameDetailModal').then((mod) => ({ default: mod.GameDetailModal }))
+);
 import { GameCatalogModal } from './components/GameCatalogModal';
 import { KakaoShareModal } from './components/KakaoShareModal';
 import { PlayCard } from './components/PlayCard';
@@ -31,6 +33,7 @@ import { LocalStorageNotice } from './components/LocalStorageNotice';
 import { LoadingState, EmptyState, ErrorState } from './components/StateViews';
 import { TreasureReveal, type TreasureMoment } from './components/TreasureReveal';
 import { dayHeading } from './utils/memoryCard';
+import { cleanMemo, mostPlayed } from './utils/shelf';
 import {
   didLevelUp,
   emptyCollectorState,
@@ -54,6 +57,7 @@ const CollectorBoard = lazy(() =>
 const OWNERSHIP_TABS: (GameOwnershipStatus | '전체')[] = [
   '전체',
   '보유중',
+  '하고 싶음',
   '빌려줌',
   '빌림',
   '판매예정',
@@ -80,6 +84,7 @@ const MainApp: React.FC = () => {
   // Search & Filter States for Games tab
   const [gameSearch, setGameSearch] = useState('');
   const [selectedOwnership, setSelectedOwnership] = useState<GameOwnershipStatus | '전체'>('전체');
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [gameViewMode, setGameViewMode] = useState<'grid' | 'list'>('grid');
 
   // Search & Filter States for Plays tab
@@ -264,6 +269,14 @@ const MainApp: React.FC = () => {
     setIsGameFormOpen(false);
   };
 
+  const handleSaveMemo = async (memo: string) => {
+    if (!user || !viewingGame) return;
+    const updated = await storage.updateUserGame(user.uid, viewingGame.id, { memo: cleanMemo(memo) });
+    setGames((current) => current.map((game) => (game.id === updated.id ? updated : game)));
+    setViewingGame(updated);
+    showToast('메모를 저장했습니다.', 'success');
+  };
+
   const handleRegisterScannedGames = async (scanned: Omit<UserGame, 'id' | 'createdAt' | 'updatedAt'>[]) => {
     if (!user) return;
     const created: UserGame[] = [];
@@ -440,8 +453,9 @@ const MainApp: React.FC = () => {
       g.storageLocation.toLowerCase().includes(gameSearch.toLowerCase());
 
     const matchesOwnership = selectedOwnership === '전체' || g.ownershipStatus === selectedOwnership;
+    const matchesTag = selectedTag === null || (g.tags ?? []).includes(selectedTag);
 
-    return matchesSearch && matchesOwnership;
+    return matchesSearch && matchesOwnership && matchesTag;
   });
 
   // Filtered Plays
@@ -648,13 +662,44 @@ const MainApp: React.FC = () => {
                   ))}
                 </div>
 
+                {(() => {
+                  const tags = [...new Set(games.flatMap((game) => game.tags ?? []))].sort((a, b) =>
+                    a.localeCompare(b, 'ko')
+                  );
+                  if (tags.length === 0) return null;
+                  return (
+                    <div id="games-tag-filters" className="flex gap-1.5 overflow-x-auto pb-1 text-xs">
+                      <button
+                        type="button"
+                        aria-pressed={selectedTag === null}
+                        onClick={() => setSelectedTag(null)}
+                        className={`shrink-0 whitespace-nowrap rounded-full px-4 ${selectedTag === null ? 'chip-on' : 'chip-off'}`}
+                      >
+                        태그 전체
+                      </button>
+                      {tags.map((tag) => (
+                        <button
+                          key={tag}
+                          type="button"
+                          aria-pressed={selectedTag === tag}
+                          onClick={() => setSelectedTag(tag)}
+                          className={`shrink-0 whitespace-nowrap rounded-full px-4 ${selectedTag === tag ? 'chip-on' : 'chip-off'}`}
+                        >
+                          {tag}
+                        </button>
+                      ))}
+                    </div>
+                  );
+                })()}
+
                 {/* Game List / Grid */}
                 {filteredGames.length > 0 ? (
                   gameViewMode === 'grid' ? (
-                    <div className="game-shelf grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+                    <div className="game-shelf grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
                       {filteredGames.map((game) => (
                         <GameCard
                           key={game.id}
+                          dense
                           game={game}
                           onClick={() => setViewingGame(game)}
                           onDelete={(e) => {
@@ -846,6 +891,16 @@ const MainApp: React.FC = () => {
                   state={progress}
                   now={now}
                   onSelectVariant={chooseVariant}
+                  showcase={{
+                    mostPlayedTitle: mostPlayed(games, plays)?.title ?? null,
+                    mostPlayedCount: (() => {
+                      const favorite = mostPlayed(games, plays);
+                      if (!favorite) return 0;
+                      const linked = plays.filter((play) => play.gameId === favorite.id).length;
+                      return linked || favorite.playCount || 0;
+                    })(),
+                    photos: plays.flatMap((play) => play.photos.map((photo) => photo.url)).slice(0, 8)
+                  }}
                 />
               </Suspense>
             )}
@@ -926,27 +981,33 @@ const MainApp: React.FC = () => {
         onRegister={handleRegisterScannedGames}
       />
 
-      {/* Game Details Modal */}
-      <GameDetailModal
-        isOpen={!!viewingGame}
-        game={viewingGame}
-        plays={plays}
-        games={games}
-        onOpenPlay={(play) => {
-          setViewingGame(null);
-          setViewingPlay(play);
-        }}
-        onClose={() => setViewingGame(null)}
-        onEdit={(game) => {
-          setViewingGame(null);
-          setEditingGame(game);
-          setIsGameFormOpen(true);
-        }}
-        onDelete={(game) => {
-          setDeletingGame(game);
-        }}
-        onStartPlay={handleStartPlayForGame}
-      />
+      {viewingGame && (
+        <Suspense fallback={<p role="status">게임을 여는 중</p>}>
+          <GameDetailModal
+            isOpen
+            game={viewingGame}
+            plays={plays}
+            games={games}
+            onOpenPlay={(play) => {
+              setViewingGame(null);
+              setViewingPlay(play);
+            }}
+            onClose={() => setViewingGame(null)}
+            onEdit={(game) => {
+              setViewingGame(null);
+              setEditingGame(game);
+              setIsGameFormOpen(true);
+            }}
+            onDelete={(game) => {
+              setDeletingGame(game);
+            }}
+            onStartPlay={handleStartPlayForGame}
+            onSaveMemo={(memo) => {
+              void handleSaveMemo(memo);
+            }}
+          />
+        </Suspense>
+      )}
 
       {/* Play Add/Edit Modal */}
       <PlayRecordFormModal

@@ -24,6 +24,7 @@ interface CollectorBoardProps {
   now: Date;
   onClose?: () => void;
   onSelectVariant: (variantId: string) => void;
+  showcase?: { mostPlayedTitle: string | null; mostPlayedCount: number; photos: string[] };
 }
 
 function QuestRow({ quest }: { quest: QuestSnapshot }) {
@@ -58,7 +59,8 @@ function BoardBody({
   plays,
   state,
   now,
-  onSelectVariant
+  onSelectVariant,
+  showcase
 }: Omit<CollectorBoardProps, 'sheet' | 'onClose'>) {
   const xp = totalXp(state);
   const info = levelFromXp(xp);
@@ -109,8 +111,38 @@ function BoardBody({
     );
   }
 
+  const featured = snapshots.find((quest) => quest.done);
+
   return (
     <section id="badge-shelf" aria-label="배지">
+      <div id="profile-showcase" className="mb-4">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-xs text-[#5C4632]">수집가</p>
+            <p className="text-xl font-medium text-[#1C160E]">Lv.{info.level}</p>
+          </div>
+          <div className="on-navy rounded-2xl bg-[#172033] px-3 py-2">
+            <p className="text-xs text-[#E4D3B4]">대표 배지</p>
+            <p className="text-sm font-medium text-[#F6EBD4]">{featured ? featured.badge : '아직 없음'}</p>
+          </div>
+        </div>
+        <h2 className="mt-4 text-lg font-medium text-[#1C160E]">전시대</h2>
+        <p className="mt-1 text-sm text-[#5C4632]">
+          {showcase?.mostPlayedTitle
+            ? `가장 많이 한 게임 ${showcase.mostPlayedTitle} · ${showcase.mostPlayedCount}회`
+            : '아직 많이 한 게임이 없어요'}
+        </p>
+        <p className="mt-1 text-sm text-[#5C4632]">
+          잠금 {CHEST_VARIANTS.find((item) => item.id === state.chestVariant)?.label ?? '금색 미플 잠금'}
+        </p>
+        {showcase && showcase.photos.length > 0 && (
+          <div id="profile-photo-strip" className="mt-2 flex gap-2 overflow-x-auto">
+            {showcase.photos.map((url) => (
+              <img key={url} src={url} alt="" className="h-16 w-16 shrink-0 rounded-lg object-cover" />
+            ))}
+          </div>
+        )}
+      </div>
       <h2 className="text-lg font-medium text-[#1C160E]">배지</h2>
       <p className="mt-1 text-sm text-[#5C4632]">
         {snapshots.filter((quest) => quest.done).length}/{snapshots.length}개 획득

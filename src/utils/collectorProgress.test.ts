@@ -248,6 +248,17 @@ describe('reconcileCollector', () => {
     expect(lost.chestVariant).toBe('lock-gold');
   });
 
+  it('withholds registration XP while a game is only a wish, then pays it once the game is owned', () => {
+    const wished = run(
+      [game('g1', '카탄')].map((item) => ({ ...item, ownershipStatus: '하고 싶음' })),
+      []
+    );
+    expect(wished.grants.some((grant) => grant.kind === 'game' || grant.kind === 'new-game')).toBe(false);
+    const owned = run([game('g1', '카탄')], [], wished);
+    expect(owned.grants.filter((grant) => grant.kind === 'game')).toHaveLength(1);
+    expect(owned.grants.filter((grant) => grant.kind === 'new-game')).toHaveLength(1);
+  });
+
   it('gives the new-title bonus to the earliest game when several share a title', () => {
     const state = run([game('late', '카탄', '2026.05.01'), game('early', '카탄', '2026.01.01')], []);
     expect(state.grants.find((grant) => grant.kind === 'new-game')?.entityId).toBe('early');

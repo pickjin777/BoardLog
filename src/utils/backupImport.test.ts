@@ -263,6 +263,35 @@ describe('normalizePlay', () => {
   });
 });
 
+describe('optional memo, tags, and wishlist', () => {
+  it('loads an old game that has no memo, and keeps a wishlist with tags and a memo', () => {
+    const old = parseBackup(JSON.stringify({ games: [{ title: '카탄' }], plays: [] }));
+    expect(old.games[0].data.memo).toBeUndefined();
+    expect(old.games[0].data.ownershipStatus).toBe('보유중');
+    const next = parseBackup(
+      JSON.stringify({
+        games: [
+          {
+            title: '스플렌더',
+            ownershipStatus: '하고 싶음',
+            tags: [' 2인 ', '2인', '가족'],
+            memo: '  다음에 사자  ',
+            userId: 'stolen',
+            order: 9
+          }
+        ],
+        plays: []
+      })
+    );
+    expect(next.games[0].data.ownershipStatus).toBe('하고 싶음');
+    expect(next.games[0].data.tags).toEqual(['2인', '가족']);
+    expect(next.games[0].data.memo).toBe('다음에 사자');
+    expect(next.games[0].data).not.toHaveProperty('userId');
+    const unknown = parseBackup(JSON.stringify({ games: [{ title: '뱅', ownershipStatus: '없는상태' }], plays: [] }));
+    expect(unknown.games[0].data.ownershipStatus).toBe('보유중');
+  });
+});
+
 describe('dedup keys', () => {
   it('compares game titles ignoring case and surrounding spaces', () => {
     expect(gameDedupKey('  Catan ')).toBe('catan');
