@@ -1,4 +1,5 @@
 import type React from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   X,
@@ -20,7 +21,9 @@ import { playsForGame } from '../utils/gamePlays';
 import { formatWon } from '../utils/formatters';
 import { getOwnershipBadgeColor } from './GameCard';
 import { useToast } from '../context/ToastContext';
-import { applyImageFallback } from '../utils/imageFallback';
+import { formatDuration } from '../utils/formatters';
+import { applyImageFallback, coverSrc } from '../utils/imageFallback';
+import { cleanMemo } from '../utils/shelf';
 
 interface GameDetailModalProps {
   game: UserGame | null;
@@ -32,6 +35,7 @@ interface GameDetailModalProps {
   onDelete: (game: UserGame) => void;
   onStartPlay: (game: UserGame) => void;
   onOpenPlay?: (play: PlayRecord) => void;
+  onSaveMemo?: (memo: string) => void;
 }
 
 export const GameDetailModal: React.FC<GameDetailModalProps> = ({
@@ -43,12 +47,22 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
   onEdit,
   onDelete,
   onStartPlay,
-  onOpenPlay
+  onOpenPlay,
+  onSaveMemo
 }) => {
   const { showToast } = useToast();
+  const [memo, setMemo] = useState(game?.memo ?? '');
+  useEffect(() => {
+    const next = game?.memo ?? '';
+    setMemo(next);
+  }, [game]);
   if (!isOpen || !game) return null;
 
   const gamePlays = playsForGame(game, plays, games);
+  const wins = gamePlays.filter((play) => play.myResult === '승리').length;
+  const minutes = gamePlays.reduce((sum, play) => sum + (play.durationMinutes || 0), 0);
+  const winRate = gamePlays.length > 0 ? Math.round((wins / gamePlays.length) * 100) : 0;
+  const photos = gamePlays.flatMap((play) => play.photos.map((photo) => photo.url)).slice(0, 12);
 
   const handleShareSingleGame = async () => {
     const text = `${game.title}\n인원: ${game.minPlayers}~${game.maxPlayers}인${game.bestPlayers ? ` (추천 ${game.bestPlayers})` : ''}\n시간: ${game.playTime}분\n난이도: ${game.weight?.toFixed(1) || '2.0'}/5.0\n장르: ${game.genre.join(', ')}\n${game.notes ? `메모: ${game.notes}\n` : ''}같이 플레이해요`;
@@ -85,10 +99,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
           {/* Hero Image & Floating Controls */}
           <div className="relative w-full h-56 sm:h-64 bg-[#F8F9FA] shrink-0">
             <img
-              src={
-                game.imageUrl ||
-                'https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?auto=format&fit=crop&w=600&q=80'
-              }
+              src={coverSrc(game.imageUrl)}
               alt={game.title}
               referrerPolicy="no-referrer"
               className="w-full h-full object-cover"
@@ -196,6 +207,68 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
                 </span>
               </div>
             </div>
+
+            <div id="game-detail-stats" className="grid grid-cols-2 gap-2 text-center text-xs">
+              <div className="rounded-2xl bg-[#F8F9FA] px-2 py-2">
+                <p className="text-[#636E72]">플레이</p>
+                <p className="text-base font-medium text-[#1E272E]">{gamePlays.length}회</p>
+              </div>
+              <div className="rounded-2xl bg-[#F8F9FA] px-2 py-2">
+                <p className="text-[#636E72]">승 / 승률</p>
+                <p className="text-base font-medium text-[#1E272E]">
+                  {wins}승 · {winRate}%
+                </p>
+              </div>
+              <div className="rounded-2xl bg-[#F8F9FA] px-2 py-2">
+                <p className="text-[#636E72]">마지막</p>
+                <p className="text-base font-medium text-[#1E272E]">{gamePlays[0]?.date || '없음'}</p>
+              </div>
+              <div className="rounded-2xl bg-[#F8F9FA] px-2 py-2">
+                <p className="text-[#636E72]">총 시간</p>
+                <p className="text-base font-medium text-[#1E272E]">{formatDuration(minutes)}</p>
+              </div>
+            </div>
+
+            {photos.length > 0 && (
+              <div id="game-detail-photos" className="flex gap-2 overflow-x-auto">
+                {photos.map((url) => (
+                  <img key={url} src={url} alt="" className="h-20 w-20 shrink-0 rounded-lg object-cover" />
+                ))}
+              </div>
+            )}
+
+            {game.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {game.tags.map((tag) => (
+                  <span key={tag} className="rounded-full bg-[#F1F3F5] px-2 py-1 text-xs text-[#1E272E]">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            <form
+              className="flex items-center gap-2"
+              onSubmit={(event) => {
+                event.preventDefault();
+                onSaveMemo?.(cleanMemo(memo));
+              }}
+            >
+              <label className="min-w-0 flex-1">
+                <span className="mb-1 block text-xs text-[#636E72]">한 줄 메모</span>
+                <input
+                  id="game-detail-memo"
+                  value={memo}
+                  maxLength={80}
+                  onChange={(event) => setMemo(event.target.value)}
+                  placeholder="이 게임에 대한 한 줄"
+                  className="w-full rounded-full border border-[#E9ECEF] bg-white px-3 text-sm text-[#1E272E]"
+                />
+              </label>
+              <button id="game-detail-memo-save" type="submit" className="btn-gold shrink-0 rounded-full px-3 text-xs">
+                메모 저장
+              </button>
+            </form>
 
             {/* Play Count Banner */}
             <div className="p-4 bg-white rounded-2xl border border-[#E9ECEF] shadow-sm flex items-center justify-between">

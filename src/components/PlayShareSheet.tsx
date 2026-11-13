@@ -13,9 +13,10 @@ import { PlayCard } from './PlayCard';
 interface PlayShareSheetProps {
   play: PlayRecord | null;
   onClose: () => void;
+  onShared?: (playId: string) => void;
 }
 
-export const PlayShareSheet: React.FC<PlayShareSheetProps> = ({ play, onClose }) => {
+export const PlayShareSheet: React.FC<PlayShareSheetProps> = ({ play, onClose, onShared }) => {
   const { showToast } = useToast();
   const { user } = useAuth();
   // Friends cannot tell who '게스트 플레이어' is, so a guest is asked for a name once.
@@ -35,6 +36,7 @@ export const PlayShareSheet: React.FC<PlayShareSheetProps> = ({ play, onClose })
     storage.setShareName(sharerName);
     try {
       await navigator.clipboard.writeText(text);
+      if (play) onShared?.(play.id);
       showToast('결과가 복사됐어요. 카톡 채팅방에 붙여넣으세요.', 'success');
       onClose();
     } catch {
@@ -46,6 +48,7 @@ export const PlayShareSheet: React.FC<PlayShareSheetProps> = ({ play, onClose })
     storage.setShareName(sharerName);
     try {
       await navigator.share({ text });
+      if (play) onShared?.(play.id);
       onClose();
     } catch (err) {
       // The user backing out of the share sheet is not a failure.
@@ -60,9 +63,9 @@ export const PlayShareSheet: React.FC<PlayShareSheetProps> = ({ play, onClose })
         <motion.div
           id="play-share-sheet"
           className="fixed inset-0 z-[60] flex items-end justify-center bg-black/40 p-3 sm:items-center"
-          initial={{ opacity: 0 }}
+          initial={{ opacity: 1 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+          exit={{ opacity: 1 }}
           onClick={onClose}
         >
           <motion.div

@@ -194,7 +194,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
       setGameId(null);
       setGameTitle('');
       setGameTitleEn('');
-      setGameImageUrl('https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?auto=format&fit=crop&w=600&q=80');
+      setGameImageUrl('');
       setPlayDate(formatDate());
       setStartTime(formatCurrentTime());
 
@@ -503,9 +503,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
       await onSave({
         gameId,
         gameTitle: gameTitle.trim(),
-        gameImageUrl:
-          gameImageUrl ||
-          'https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?auto=format&fit=crop&w=600&q=80',
+        gameImageUrl: gameImageUrl.trim(),
         date: playDate || formatDate(),
         startTime: startTime || '19:00',
         endTime: endTime || '20:00',

@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import type { UserGame, GameOwnershipStatus } from '../types';
 import { formatDate } from '../utils/formatters';
-import { applyImageFallback } from '../utils/imageFallback';
+import { applyImageFallback, coverSrc } from '../utils/imageFallback';
 import { getGameIndexKey, KOREAN_INDEX_KEYS } from '../utils/koreanIndex';
 import { useToast } from '../context/ToastContext';
 import { track } from '../services/analytics';
@@ -538,10 +538,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                           {showImages && (
                             <td className="p-2 text-center">
                               <img
-                                src={
-                                  game.imageUrl ||
-                                  'https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?auto=format&fit=crop&w=300&q=80'
-                                }
+                                src={coverSrc(game.imageUrl)}
                                 alt=""
                                 referrerPolicy="no-referrer"
                                 onError={applyImageFallback}
@@ -638,10 +635,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
 
                     {showImages && (
                       <img
-                        src={
-                          game.imageUrl ||
-                          'https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?auto=format&fit=crop&w=300&q=80'
-                        }
+                        src={coverSrc(game.imageUrl)}
                         alt=""
                         referrerPolicy="no-referrer"
                         onError={applyImageFallback}
