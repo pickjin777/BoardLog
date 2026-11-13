@@ -81,7 +81,7 @@ export interface ChestVariant {
 export const CHEST_VARIANTS: readonly ChestVariant[] = [
   { id: 'lock-gold', label: '금색 미플 잠금', badgeId: null },
   { id: 'lock-cream', label: '크림 미플 잠금', badgeId: 'regular' },
-  { id: 'lock-purple', label: '보라 미플 잠금', badgeId: 'photos' }
+  { id: 'lock-bronze', label: '청동 미플 잠금', badgeId: 'photos' }
 ];
 
 export const DEFAULT_CHEST_VARIANT = 'lock-gold';

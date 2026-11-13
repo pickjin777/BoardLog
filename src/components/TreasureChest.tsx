@@ -3,7 +3,9 @@ import type React from 'react';
 const LOCK_FILL: Record<string, string> = {
   'lock-gold': '#E2B657',
   'lock-cream': '#F6EBD4',
-  'lock-purple': '#4834D4'
+  'lock-bronze': '#C9956A',
+  /** Saved before the purple lock was retired. */
+  'lock-purple': '#C9956A'
 };
 
 /**

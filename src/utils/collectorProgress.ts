@@ -308,7 +308,7 @@ export function reconcileCollector(input: ReconcileInput): CollectorState {
   }
 
   grants.sort((a, b) => a.id.localeCompare(b.id));
-  const requested = previous?.chestVariant ?? DEFAULT_CHEST_VARIANT;
+  const requested = normalizeChestVariant(previous?.chestVariant ?? DEFAULT_CHEST_VARIANT);
   const chestVariant = chestVariantUnlocked(requested, doneQuestIds) ? requested : DEFAULT_CHEST_VARIANT;
 
   return {
@@ -323,8 +323,14 @@ export function reconcileCollector(input: ReconcileInput): CollectorState {
   };
 }
 
+/** The purple lock shipped briefly. Keep its unlock as bronze. */
+export function normalizeChestVariant(variantId: string): string {
+  return variantId === 'lock-purple' ? 'lock-bronze' : variantId;
+}
+
 export function chestVariantUnlocked(variantId: string, doneQuestIds: ReadonlySet<string>): boolean {
-  const variant = CHEST_VARIANTS.find((item) => item.id === variantId);
+  const id = normalizeChestVariant(variantId);
+  const variant = CHEST_VARIANTS.find((item) => item.id === id);
   if (!variant) return false;
   return variant.badgeId == null || doneQuestIds.has(variant.badgeId);
 }
@@ -334,9 +340,10 @@ export function selectChestVariant(
   variantId: string,
   doneQuestIds: ReadonlySet<string>
 ): CollectorState {
-  if (!chestVariantUnlocked(variantId, doneQuestIds)) return state;
-  if (state.chestVariant === variantId) return state;
-  return { ...state, chestVariant: variantId };
+  const id = normalizeChestVariant(variantId);
+  if (!chestVariantUnlocked(id, doneQuestIds)) return state;
+  if (state.chestVariant === id) return state;
+  return { ...state, chestVariant: id };
 }
 
 function stringList(value: unknown): string[] {
@@ -368,7 +375,10 @@ export function parseCollectorState(value: unknown): CollectorState | null {
     claimedDays: stringList(raw.claimedDays),
     claimedTitles: stringList(raw.claimedTitles),
     sharedPlayIds: stringList(raw.sharedPlayIds),
-    chestVariant: typeof raw.chestVariant === 'string' && raw.chestVariant ? raw.chestVariant : DEFAULT_CHEST_VARIANT,
+    chestVariant:
+      typeof raw.chestVariant === 'string' && raw.chestVariant
+        ? normalizeChestVariant(raw.chestVariant)
+        : DEFAULT_CHEST_VARIANT,
     acknowledgedLevel: typeof acknowledged === 'number' && Number.isFinite(acknowledged) ? acknowledged : null,
     migratedAt: typeof raw.migratedAt === 'string' ? raw.migratedAt : null
   };

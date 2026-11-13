@@ -16,7 +16,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, chestVariant }) => {
       <div className="mx-auto flex min-h-15 max-w-xl flex-wrap items-center justify-between gap-x-2 gap-y-1 px-4 py-2 md:max-w-3xl md:px-6 lg:max-w-6xl">
         {/* Brand Logo & Title */}
         <div className="flex min-w-0 items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-[#4834D4]">
+          <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-[#E2B657]">
             <TreasureChest className="h-8 w-8" variant={chestVariant} />
           </div>
           <div>

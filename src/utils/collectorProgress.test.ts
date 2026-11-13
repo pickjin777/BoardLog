@@ -275,12 +275,13 @@ describe('quests and chest variants', () => {
 
   it('refuses a variant the badges do not unlock', () => {
     const state = emptyCollectorState();
-    expect(selectChestVariant(state, 'lock-purple', new Set())).toBe(state);
+    expect(selectChestVariant(state, 'lock-bronze', new Set())).toBe(state);
     expect(selectChestVariant(state, 'nope', new Set(['photos']))).toBe(state);
     expect(selectChestVariant(state, 'lock-gold', new Set()).chestVariant).toBe('lock-gold');
-    const purple = selectChestVariant(state, 'lock-purple', new Set(['photos']));
-    expect(purple.chestVariant).toBe('lock-purple');
-    expect(selectChestVariant(purple, 'lock-purple', new Set(['photos']))).toBe(purple);
+    const bronze = selectChestVariant(state, 'lock-bronze', new Set(['photos']));
+    expect(bronze.chestVariant).toBe('lock-bronze');
+    expect(selectChestVariant(bronze, 'lock-bronze', new Set(['photos']))).toBe(bronze);
+    expect(selectChestVariant(state, 'lock-purple', new Set(['photos'])).chestVariant).toBe('lock-bronze');
   });
 
   it('normalizes titles only by case and spaces', () => {
