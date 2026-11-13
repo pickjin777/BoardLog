@@ -19,7 +19,8 @@
     "test:e2e": "npm run build && npm run build:ga && playwright test",
     "build:ga": "vite build --mode analytics-test --outDir dist-ga",
     "cap:sync": "npm run build && npx cap sync android && npx tsx scripts/apply-play-monetization.ts",
-    "android:debug": "npm run cap:sync && cd android && ./gradlew assembleDebug"
+    "android:debug": "npm run cap:sync && cd android && ./gradlew assembleDebug",
+    "desktop:win": "npm run build && node scripts/build-windows.mjs"
   },
   "dependencies": {
     "@capacitor-community/admob": "^8.3.0",
@@ -50,6 +51,8 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitest/coverage-v8": "5.0.5",
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8",
     "esbuild": "^0.25.0",
     "fake-indexeddb": "6.2.6",
     "tailwindcss": "^4.1.14",

@@ -12,3 +12,6 @@ coverage/
 *.keystore
 test-results/
 playwright-report/
+dist-desktop/
+desktop/bundle/
+release/
