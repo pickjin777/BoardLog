@@ -1,9 +1,12 @@
 import type React from 'react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Mail, Lock, User, LogIn, UserPlus, LogOut, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { isNativeShell } from '../utils/nativeShell';
+import { storagePlace } from '../utils/storageNotice';
+import { useDialogA11y } from './useDialogA11y';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -20,6 +23,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [nickname, setNickname] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const onDevice = storagePlace(isNativeShell(), navigator.userAgent) === 'device';
+  useDialogA11y(isOpen, onClose, dialogRef);
 
   if (!isOpen) return null;
 
@@ -80,7 +86,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
   return (
     <AnimatePresence>
-      <div id="auth-modal-backdrop" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+      <div
+        id="auth-modal-backdrop"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="auth-modal-title"
+        tabIndex={-1}
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
+      >
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -94,7 +108,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               <div className="w-8 h-8 rounded-xl bg-[#4834D4]/10 text-[#4834D4] flex items-center justify-center">
                 <ShieldCheck className="w-4.5 h-4.5" />
               </div>
-              <h2 className="text-base font-black text-[#1E272E]">
+              <h2 id="auth-modal-title" className="text-base font-black text-[#1E272E]">
                 {user && !user.isAnonymous ? '내 계정 정보' : mode === 'login' ? '로그인' : '회원가입'}
               </h2>
             </div>
@@ -143,8 +157,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             <>
               {user?.isAnonymous && (
                 <p className="mb-4 rounded-2xl border border-[#E9ECEF] bg-[#F8F9FA] p-3 text-xs leading-relaxed text-[#F6EBD4]">
-                  게스트로 쓰는 중입니다. 가입해도 기록은 이 브라우저에만 남습니다. 기기를 바꾸기 전에 마이에서
-                  백업하세요.
+                  게스트로 쓰는 중입니다. 가입해도 기록은 {onDevice ? '이 기기에만' : '이 브라우저에만'} 남습니다.
+                  기기를 바꾸기 전에 마이에서 백업하세요.
                 </p>
               )}
 

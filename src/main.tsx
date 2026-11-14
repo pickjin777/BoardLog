@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
+import { ErrorBoundary, PreviewCrash } from './components/ErrorBoundary.tsx';
 import { VercelAnalytics } from './components/VercelAnalytics.tsx';
 import './index.css';
 import { initAnalytics } from './services/analytics.ts';
@@ -67,7 +68,10 @@ if (!rootElement) throw new Error('Root element #root not found');
 
 createRoot(rootElement).render(
   <StrictMode>
-    <App />
-    <VercelAnalytics />
+    <ErrorBoundary>
+      <PreviewCrash />
+      <App />
+      <VercelAnalytics />
+    </ErrorBoundary>
   </StrictMode>
 );

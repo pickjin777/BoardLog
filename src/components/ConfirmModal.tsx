@@ -1,6 +1,8 @@
 import type React from 'react';
+import { useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AlertTriangle, X } from 'lucide-react';
+import { useDialogA11y } from './useDialogA11y';
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -23,11 +25,21 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   onConfirm,
   onCancel
 }) => {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useDialogA11y(isOpen, onCancel, dialogRef);
   if (!isOpen) return null;
 
   return (
     <AnimatePresence>
-      <div id="confirm-modal-overlay" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+      <div
+        id="confirm-modal-overlay"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="confirm-modal-title"
+        tabIndex={-1}
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
+      >
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -44,7 +56,9 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
               >
                 <AlertTriangle className="w-5 h-5" />
               </div>
-              <h3 className="text-base font-black text-[#1E272E]">{title}</h3>
+              <h3 id="confirm-modal-title" className="text-base font-black text-[#1E272E]">
+                {title}
+              </h3>
             </div>
             <button
               type="button"

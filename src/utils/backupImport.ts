@@ -7,6 +7,7 @@ import type {
   GameOwnershipStatus,
   GameCondition
 } from '../types';
+import { parseCollectorState, type CollectorState } from './collectorProgress';
 import { cleanMemo, cleanTags } from './shelf';
 
 /** Photos are stored as data URLs, so a real backup can be large; this only stops a runaway file. */
@@ -23,6 +24,8 @@ export interface ImportedGame {
 }
 
 export interface ImportedPlay {
+  /** Id the play had in the file. Used only to re-link collector progress. Never stored. */
+  sourceId: string;
   sourceGameId: string | null;
   data: Omit<PlayRecord, 'id'>;
 }
@@ -32,6 +35,8 @@ export interface ParsedBackup {
   plays: ImportedPlay[];
   /** Entries dropped because they lacked a title or were not objects. */
   invalidCount: number;
+  /** Null for a backup from before progress was included, or when the field cannot be read. */
+  progress: CollectorState | null;
 }
 
 const OWNERSHIP: readonly GameOwnershipStatus[] = [
@@ -147,6 +152,7 @@ export function normalizePlay(raw: unknown): ImportedPlay | null {
   const sourceGameId = str(raw.gameId);
 
   return {
+    sourceId: str(raw.id),
     sourceGameId: sourceGameId || null,
     data: {
       gameId: null,
@@ -196,7 +202,8 @@ export function parseBackup(text: string): ParsedBackup {
   return {
     games: validGames,
     plays: validPlays,
-    invalidCount: games.length - validGames.length + (plays.length - validPlays.length)
+    invalidCount: games.length - validGames.length + (plays.length - validPlays.length),
+    progress: 'progress' in root ? parseCollectorState(root.progress) : null
   };
 }
 

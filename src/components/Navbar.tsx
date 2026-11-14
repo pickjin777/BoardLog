@@ -1,6 +1,8 @@
 import type React from 'react';
 import { Database, UserCheck, LogIn } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { isNativeShell } from '../utils/nativeShell';
+import { storagePlace } from '../utils/storageNotice';
 import { TreasureChest } from './TreasureChest';
 
 interface NavbarProps {
@@ -10,6 +12,7 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, chestVariant }) => {
   const { user } = useAuth();
+  const onDevice = storagePlace(isNativeShell(), navigator.userAgent) === 'device';
 
   return (
     <header id="top-app-header" className="sticky top-0 z-30 bg-white/90 border-b border-[#E9ECEF]">
@@ -32,7 +35,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, chestVariant }) => {
         {/* Right action & status */}
         <div className="flex items-center gap-2">
           <div
-            title="브라우저 고속 IndexedDB 가동 중 (새로고침 후에도 영구 유지)"
+            title={
+              onDevice
+                ? '이 기기에 저장됩니다. 새로고침 후에도 남습니다.'
+                : '이 브라우저에 저장됩니다. 새로고침 후에도 남습니다.'
+            }
             className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#F1F3F5] border border-[#E9ECEF] text-[11px] text-[#636E72] font-medium"
           >
             <Database className="w-3 h-3 text-[#1B7A43]" />
@@ -45,8 +52,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, chestVariant }) => {
             onClick={onOpenAuth}
             title={
               user?.isAnonymous
-                ? '이 브라우저에만 있는 계정입니다. 다른 기기와 동기화되지 않습니다.'
-                : '이 브라우저에 저장된 계정'
+                ? onDevice
+                  ? '이 기기에만 있는 계정입니다. 다른 기기와 동기화되지 않습니다.'
+                  : '이 브라우저에만 있는 계정입니다. 다른 기기와 동기화되지 않습니다.'
+                : onDevice
+                  ? '이 기기에 저장된 계정'
+                  : '이 브라우저에 저장된 계정'
             }
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#F1F3F5] hover:bg-[#E9ECEF] active:bg-[#DFE4EA] text-[#2D3436] text-xs font-semibold transition-colors"
           >

@@ -1,7 +1,8 @@
 import type { UserGame, PlayRecord, UserProfile } from '../types';
 import { formatDate } from '../utils/formatters';
 import { type ParsedBackup, gameDedupKey, playDedupKey } from '../utils/backupImport';
-import { parseCollectorState, type CollectorState } from '../utils/collectorProgress';
+import { parseCollectorState, remapCollectorIds, type CollectorState } from '../utils/collectorProgress';
+import { loginFailureDelayMs, waitMs } from '../utils/loginBackoff';
 
 const DB_NAME = 'board_log_db_v1';
 const DB_VERSION = 1;
@@ -13,6 +14,9 @@ const LS_ACTIVE_USER = 'boardlog_active_user';
 const LS_ALL_USERS = 'boardlog_all_users';
 const LS_GUEST_UID = 'boardlog_guest_uid';
 const LS_SHARE_NAME = 'boardlog_share_name';
+const LS_SCAN_ENABLED = 'boardlog_scan_enabled';
+const LS_SCAN_CONSENT = 'boardlog_scan_consent';
+const LS_LOGIN_FAILURES = 'boardlog_login_failures';
 
 const PBKDF2_ITERATIONS = 210_000;
 const PBKDF2_HASH = 'SHA-256';
@@ -123,6 +127,8 @@ export interface ImportPlan {
   skippedGames: number;
   skippedPlays: number;
   invalidCount: number;
+  /** Null when the file has no readable collector progress. */
+  progress: CollectorState | null;
 }
 
 class BoardLogStorage {
@@ -357,13 +363,17 @@ class BoardLogStorage {
   }
 
   async signIn(email: string, password: string): Promise<UserProfile> {
+    const failures = this.lsGet<number>(LS_LOGIN_FAILURES, 0);
+    await waitMs(loginFailureDelayMs(failures));
     const users = this.lsGet<Record<string, StoredUser>>(LS_ALL_USERS, {});
     const cleanEmail = email.trim().toLowerCase();
     const record = users[cleanEmail];
+    const reject = (message: string): never => {
+      this.lsSetQuiet(LS_LOGIN_FAILURES, failures + 1);
+      throw new Error(message);
+    };
 
-    if (!record) {
-      throw new Error('등록되지 않은 이메일 계정입니다.');
-    }
+    if (!record) reject('등록되지 않은 이메일 계정입니다.');
 
     if (record.password) {
       const candidate = await derivePasswordHash(
@@ -371,18 +381,17 @@ class BoardLogStorage {
         base64ToBytes(record.password.salt),
         record.password.iterations
       );
-      if (candidate !== record.password.hash) {
-        throw new Error('비밀번호가 일치하지 않습니다.');
-      }
+      if (candidate !== record.password.hash) reject('비밀번호가 일치하지 않습니다.');
     } else if (record.passwordHash && legacyHashMatches(password, record.passwordHash)) {
       record.password = await createPasswordRecord(password);
       delete record.passwordHash;
       users[cleanEmail] = record;
       this.lsSet(LS_ALL_USERS, users);
     } else {
-      throw new Error('비밀번호가 일치하지 않습니다.');
+      reject('비밀번호가 일치하지 않습니다.');
     }
 
+    this.lsSetQuiet(LS_LOGIN_FAILURES, 0);
     await this.setActiveSession(record.profile);
     return record.profile;
   }
@@ -730,6 +739,27 @@ class BoardLogStorage {
     this.lsSetQuiet(LS_SHARE_NAME, name.trim());
   }
 
+  /** Missing key means on. Off blocks every scan request, including the availability probe. */
+  isPhotoRecognitionEnabled(): boolean {
+    return this.lsGet<string>(LS_SCAN_ENABLED, '1') !== '0';
+  }
+
+  setPhotoRecognitionEnabled(enabled: boolean): void {
+    this.lsSetQuiet(LS_SCAN_ENABLED, enabled ? '1' : '0');
+  }
+
+  hasPhotoScanConsent(): boolean {
+    return this.lsGet<string>(LS_SCAN_CONSENT, '') === '1';
+  }
+
+  grantPhotoScanConsent(): void {
+    this.lsSetQuiet(LS_SCAN_CONSENT, '1');
+  }
+
+  revokePhotoScanConsent(): void {
+    this.lsSetQuiet(LS_SCAN_CONSENT, '');
+  }
+
   // --- Import JSON backup ---
   /**
    * Read-only: works out what a backup would add so the user can confirm first.
@@ -767,12 +797,15 @@ class BoardLogStorage {
     const playKeys = new Set(existingPlays.map(playDedupKey));
     const newPlays: PlayRecord[] = [];
     const playCountBumps = new Map<string, number>();
+    const sourcePlayToTarget = new Map<string, string>();
     let skippedPlays = 0;
 
-    parsed.plays.forEach(({ sourceGameId, data }) => {
+    parsed.plays.forEach(({ sourceId, sourceGameId, data }) => {
       const key = playDedupKey(data);
       if (playKeys.has(key)) {
         skippedPlays += 1;
+        const existing = existingPlays.find((play) => playDedupKey(play) === key);
+        if (sourceId && existing) sourcePlayToTarget.set(sourceId, existing.id);
         return;
       }
       playKeys.add(key);
@@ -782,9 +815,11 @@ class BoardLogStorage {
         (sourceGameId ? sourceToTarget.get(sourceGameId) : undefined) ??
         gameIdByKey.get(gameDedupKey(data.gameTitle)) ??
         null;
+      const id = randomId('play');
+      if (sourceId) sourcePlayToTarget.set(sourceId, id);
       newPlays.push({
         ...data,
-        id: randomId('play'),
+        id,
         gameId,
         createdAt: data.createdAt || formatDate(),
         updatedAt: formatDate()
@@ -801,11 +836,15 @@ class BoardLogStorage {
       playCountBumps,
       skippedGames,
       skippedPlays,
-      invalidCount: parsed.invalidCount
+      invalidCount: parsed.invalidCount,
+      progress: parsed.progress
+        ? remapCollectorIds(parsed.progress, { games: sourceToTarget, plays: sourcePlayToTarget })
+        : null
     };
   }
 
   async commitImport(uid: string, plan: ImportPlan): Promise<void> {
+    if (plan.progress) this.saveCollectorProgress(uid, plan.progress);
     if (plan.newGames.length === 0 && plan.newPlays.length === 0) return;
 
     if ((await this.resolveBackend(uid)) === 'idb') {
@@ -876,7 +915,8 @@ class BoardLogStorage {
         exportedAt: new Date().toISOString(),
         user: session,
         games,
-        plays
+        plays,
+        progress: this.getCollectorProgress(uid)
       },
       null,
       2

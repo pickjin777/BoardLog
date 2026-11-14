@@ -14,7 +14,7 @@
 
 | 데이터 | 수집 | 공유 | 코드 근거 | 목적 | 선택 여부 |
 |---|---|---|---|---|---|
-| 사진 | 예, 조건부 | 예. Vercel 함수를 거쳐 Google Gemini | `src/services/gameScanner.ts`가 POST `/api/scan-games`로 줄인 이미지를 보낸다. `api/scan-games.ts`가 Gemini `generateContent`에 넣는다. 키 `GEMINI_API_KEY`가 없으면 503이고 사진을 넘기지 않는다. 함수는 이미지를 DB에 쓰지 않는다 | 앱 기능 (상자 이름 읽기) | 사용자가 사진 등록을 실행할 때만. 앱 안에 끄는 스위치는 없고, 키가 없으면 경로가 닫힌다 |
+| 사진 | 예, 조건부 | 예. Vercel 함수를 거쳐 Google Gemini | 설정의 사진 인식이 켜져 있고, 사용자가 확인란을 직접 체크해 동의한 뒤에만 `src/services/gameScanner.ts`가 POST `/api/scan-games`로 줄인 이미지(최대 4장, 긴 변 1600, JPEG, EXIF 제거)를 보낸다. 끄거나 동의 전에는 GET도 POST도 하지 않는다. `api/scan-games.ts`가 Gemini `generateContent`에 넣는다. 키 `GEMINI_API_KEY`가 없으면 503이고 사진을 넘기지 않는다. 함수는 이미지를 DB에 쓰지 않는다. 화면에는 제공자 원문과 모델 목록을 보여 주지 않는다 | 앱 기능 (상자 이름 읽기) | 선택. 기본 스위치는 켜짐이지만 동의는 미리 체크되지 않는다. 설정에서 끄거나 동의를 철회하면 그 경로는 닫힌다 |
 | 앱 상호작용 (방문) | 이 안드로이드 앱은 아니오. 웹사이트는 예 | 웹만 Vercel Web Analytics. 광고 회사로 넘기는 코드는 없다 | `src/components/VercelAnalytics.tsx`. localhost에서는 렌더하지 않음. 앱 WebView 출처는 `https://localhost`. 주소의 `#` 제거 | 분석 | 앱 패키지에 대해서는 수집 아니오. 웹을 양식에 넣을지는 사용자 확인 필요 |
 | 앱 상호작용 (기능 횟수) | 측정 ID가 있을 때만 | Google Analytics | `src/services/analytics.ts`, 허용 목록 `src/utils/analyticsEvents.ts`. 이름·제목·장소·점수·사진·공유 조각은 거절. `allow_google_signals`와 `allow_ad_personalization_signals`는 false | 분석 | 프로덕션 묶음에 ID가 없으면 스크립트를 넣지 않는다. 2026-11-10 공개 묶음에서 `G-` 측정 ID는 찾지 못했다 |
 
@@ -57,6 +57,12 @@ IARC 설문이 등급을 정한다. 이 초안은 등급 이름(전체이용가 
 | 사용자가 정보를 다른 사람에게 보낼 수 있나 | 예. 공유 링크와 운영체제 공유 시트 | `src/utils/sharedPlay.ts`, 게임 상세의 공유 버튼. 링크에 사람 이름과 점수가 들어감. 사진은 링크에 없음 | 확실 |
 | 실제 위치 공유 | 아니오. GPS 권한 없음. 장소는 글 | 위치 권한 코드를 찾지 못함 | 설문 문장이 자유 입력 장소까지 물으면 미확인 |
 | 디지털 구매 | 없음 | 출시 패키지에 결제 라이브러리와 구매 화면이 없다(D-048). 다시 켜면 설문을 다시 냄 | 확실. 자세한 데이터 보안 답은 [data-safety.md](data-safety.md) |
-| 제한 없는 웹 탐색 | 앱은 보드로그와 사진 인식 API만 연다. 일반 브라우저는 아님 | Capacitor WebView. 페이지 출처는 `https://localhost`. `/api`만 `https://board-log.vercel.app` | 사용자가 주소창에 아무 사이트나 넣는 기능은 없다 |
+| 제한 없는 웹 탐색 | 아니오. 주소창은 없다 | 페이지 출처는 `https://localhost`. 시드 표지는 앱 안 그림이라 `images.unsplash.com`을 열지 않는다. 사진 인식이 켜져 있고 동의한 뒤 사진을 보낼 때만 `https://board-log.vercel.app/api/scan-games`를 연다. 측정 ID가 없는 이 빌드는 Google Analytics를 열지 않는다. 카카오 앱 키는 비어 있어 `sharer.kakao.com`을 열지 않는다. 광고·결제 주소는 열지 않는다. 사용자가 게임 칸에 직접 적은 이미지 주소가 있으면 WebView가 그 주소의 그림을 연다 | 사용자가 주소창에 아무 사이트나 넣는 기능은 없다 |
 
 사용자가 올린 사진과 글을 앱이 검토하거나 신고받는 절차는 없다. 설문이 "사용자 생성 콘텐츠를 조정하는가"를 물으면, 조정하지 않는다고 답하는 쪽이 코드와 맞다. 질문 문장은 미확인.
+
+## 권한과 광고 식별자
+
+출시 패키지(`boardlog.monetization=false`)의 매니페스트 권한은 `android.permission.INTERNET`뿐이다. 사진 선택은 시스템 사진 고르기를 쓰며 `READ_MEDIA_IMAGES`나 `CAMERA`를 요청하지 않는다. `AD_ID`와 `com.android.vending.BILLING`은 `tools:node="remove"`다. 광고 식별자를 읽지 않고 결제를 시작하지 않는다.
+
+`android:allowBackup="false"`이고 `dataExtractionRules`와 `fullBackupContent`는 클라우드 백업과 기기 간 전송에 데이터를 넣지 않는다. 다른 기기로 옮기는 공식 경로는 마이 화면의 JSON 파일이다. 그 파일에는 게임, 플레이, 수집 진행(`progress`)이 들어간다. 진행 칸이 없는 예전 파일도 읽는다.
