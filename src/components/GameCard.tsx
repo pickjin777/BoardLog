@@ -1,7 +1,7 @@
 import type React from 'react';
 import { Users, Clock, Flame, MapPin, CheckSquare, Trash2 } from 'lucide-react';
 import type { UserGame, GameOwnershipStatus } from '../types';
-import { applyImageFallback, coverSrc } from '../utils/imageFallback';
+import { CoverImage } from './CoverPlaceholder';
 
 export const getOwnershipBadgeColor = (status: GameOwnershipStatus): string => {
   switch (status) {
@@ -48,12 +48,11 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onClick, onDelete, den
         <div
           className={`relative w-full overflow-hidden rounded-t-2xl bg-[#F8F9FA] ${dense ? 'aspect-[3/4]' : 'aspect-4/3'}`}
         >
-          <img
-            src={coverSrc(game.imageUrl)}
+          <CoverImage
+            title={game.title}
+            imageUrl={game.imageUrl}
             alt={game.title}
-            referrerPolicy="no-referrer"
-            className="w-full h-full object-cover transition-transform duration-300"
-            onError={applyImageFallback}
+            className="h-full w-full object-cover"
           />
 
           {/* Ownership Status Pill */}

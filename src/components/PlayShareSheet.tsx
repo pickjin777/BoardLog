@@ -1,5 +1,5 @@
 import type React from 'react';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Share2, Copy, X } from 'lucide-react';
 import type { PlayRecord } from '../types';
@@ -9,6 +9,7 @@ import { storage } from '../services/storage';
 import { formatPlayShareText } from '../utils/playShareText';
 import { buildShareLink } from '../utils/sharedPlay';
 import { PlayCard } from './PlayCard';
+import { useDialogA11y } from './useDialogA11y';
 
 interface PlayShareSheetProps {
   play: PlayRecord | null;
@@ -18,6 +19,8 @@ interface PlayShareSheetProps {
 
 export const PlayShareSheet: React.FC<PlayShareSheetProps> = ({ play, onClose, onShared }) => {
   const { showToast } = useToast();
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useDialogA11y(!!play, onClose, dialogRef);
   const { user } = useAuth();
   // Friends cannot tell who '게스트 플레이어' is, so a guest is asked for a name once.
   const [sharerName, setSharerName] = useState(
@@ -62,6 +65,10 @@ export const PlayShareSheet: React.FC<PlayShareSheetProps> = ({ play, onClose, o
       {play && (
         <motion.div
           id="play-share-sheet"
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          tabIndex={-1}
           className="fixed inset-0 z-[60] flex items-end justify-center bg-black/40 p-3 sm:items-center"
           initial={{ opacity: 1 }}
           animate={{ opacity: 1 }}

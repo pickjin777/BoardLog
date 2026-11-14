@@ -5,7 +5,10 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { track } from '../services/analytics';
 import { storage, type ImportPlan } from '../services/storage';
+import { CONTACT, contactHref } from '../config/contact';
 import { parseBackup, MAX_BACKUP_BYTES } from '../utils/backupImport';
+import { isNativeShell } from '../utils/nativeShell';
+import { storagePlace } from '../utils/storageNotice';
 import { ConfirmModal } from './ConfirmModal';
 import { PrivacyNoticeModal } from './PrivacyNoticeModal';
 
@@ -27,7 +30,11 @@ export const MyPageView: React.FC<MyPageViewProps> = ({ onOpenAuth, onOpenCatalo
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [scanOn, setScanOn] = useState(() => storage.isPhotoRecognitionEnabled());
+  const [scanConsent, setScanConsent] = useState(() => storage.hasPhotoScanConsent());
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const place = storagePlace(isNativeShell(), navigator.userAgent);
+  const contactLink = contactHref(CONTACT);
 
   const handleBackupChosen = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -207,9 +214,81 @@ export const MyPageView: React.FC<MyPageViewProps> = ({ onOpenAuth, onOpenCatalo
           <span>저장</span>
         </div>
         <p className="text-[11px] text-[#636E72] leading-relaxed">
-          기록은 이 브라우저에 남습니다. 새로고침해도 유지됩니다. 외부 게임 DB는 연결되지 않았고, 들어 있는 300개 시드와
-          직접 입력으로 게임을 찾습니다.
+          기록은 {place === 'device' ? '이 기기에' : '이 브라우저에'} 남습니다. 새로고침해도 유지됩니다. 외부 게임
+          데이터베이스는 연결되지 않았습니다. 앱에 넣어 둔 게임 목록과 직접 입력으로 게임을 찾습니다.
         </p>
+      </div>
+
+      <div
+        id="settings-photo-recognition"
+        className="space-y-3 rounded-2xl border border-[#E9ECEF] bg-white p-4 shadow-sm"
+      >
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h3 className="text-xs font-bold text-[#1E272E]">사진 인식</h3>
+            <p className="mt-1 text-[11px] leading-relaxed text-[#636E72]">
+              끄면 사진을 서버로 보내지 않습니다. 동의는 미리 체크되지 않습니다.
+            </p>
+          </div>
+          <button
+            id="settings-photo-recognition-toggle"
+            type="button"
+            role="switch"
+            aria-checked={scanOn}
+            onClick={() => {
+              const next = !scanOn;
+              storage.setPhotoRecognitionEnabled(next);
+              setScanOn(next);
+            }}
+            className={`min-h-12 shrink-0 rounded-full px-4 text-xs font-bold ${
+              scanOn ? 'bg-[#E2B657] text-[#1A1408]' : 'bg-[#F1F3F5] text-[#1C160E]'
+            }`}
+          >
+            {scanOn ? '켜짐' : '꺼짐'}
+          </button>
+        </div>
+        {scanConsent ? (
+          <button
+            id="settings-scan-consent-revoke"
+            type="button"
+            onClick={() => {
+              storage.revokePhotoScanConsent();
+              setScanConsent(false);
+            }}
+            className="min-h-12 w-full rounded-full bg-[#F1F3F5] text-xs font-bold text-[#1C160E]"
+          >
+            사진 인식 동의 철회
+          </button>
+        ) : (
+          <p className="text-[11px] text-[#636E72]">다음 사진 인식 때 안내를 확인하고 동의해야 합니다.</p>
+        )}
+      </div>
+
+      <div id="settings-contact-card" className="space-y-2 rounded-2xl border border-[#E9ECEF] bg-white p-4 shadow-sm">
+        <h3 className="text-xs font-bold text-[#1E272E]">문의</h3>
+        {contactLink ? (
+          <a
+            id="settings-contact"
+            href={contactLink}
+            className="flex min-h-12 items-center justify-center rounded-full bg-[#E2B657] text-xs font-bold text-[#1A1408]"
+          >
+            문의하기
+          </a>
+        ) : (
+          <button
+            id="settings-contact"
+            type="button"
+            disabled
+            className="min-h-12 w-full rounded-full bg-[#F1F3F5] text-xs font-bold text-[#636E72]"
+          >
+            문의
+          </button>
+        )}
+        {!contactLink && (
+          <p className="text-[11px] leading-relaxed text-[#636E72]">
+            개발자 이름, 메일, 공개 주소는 아직 정해지지 않았습니다.
+          </p>
+        )}
       </div>
 
       {/* Backup / Export Section */}
@@ -219,7 +298,8 @@ export const MyPageView: React.FC<MyPageViewProps> = ({ onOpenAuth, onOpenCatalo
           <span>백업과 도록</span>
         </h3>
         <p className="text-[11px] text-[#636E72] leading-relaxed">
-          PDF 도록으로 인쇄하거나 JSON으로 저장합니다. 기록은 이 브라우저에만 있으니 폰을 바꾸기 전에 백업하세요.
+          PDF 도록으로 인쇄하거나 JSON으로 저장합니다. 기록은 이 기기에만 있으니 기기를 바꾸거나 앱을 지우기 전에
+          백업하세요.
         </p>
 
         <div className="space-y-2">

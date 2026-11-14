@@ -7,7 +7,7 @@ import { LevelTrack } from './LevelTrack';
 import { formatDuration } from '../utils/formatters';
 import { findRemovableSampleData } from '../services/storage';
 import { activitySummary, neglectedGames, recentPlayRail, todaysTreasure } from '../utils/shelf';
-import { coverSrc } from '../utils/imageFallback';
+import { CoverImage } from './CoverPlaceholder';
 
 export interface QuestTeaser {
   title: string;
@@ -85,12 +85,10 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
               className="shrink-0 rounded-xl"
               aria-label={`${treasure.title} 열기`}
             >
-              <img
-                src={coverSrc(treasure.imageUrl)}
-                alt=""
+              <CoverImage
+                title={treasure.title}
+                imageUrl={treasure.imageUrl}
                 className="home-chest rounded-xl object-cover"
-                width={96}
-                height={128}
               />
             </button>
           ) : (
@@ -211,7 +209,11 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                 }}
                 className="w-24 shrink-0 text-left"
               >
-                <img src={coverSrc(item.imageUrl)} alt="" className="aspect-[3/4] w-full rounded-lg object-cover" />
+                <CoverImage
+                  title={item.title}
+                  imageUrl={item.imageUrl}
+                  className="aspect-[3/4] w-full rounded-lg object-cover"
+                />
                 <span className="mt-1 block text-xs text-[#F6EBD4]">{item.title}</span>
               </button>
             ))}
@@ -230,7 +232,11 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                 onClick={() => onSelectGame(game)}
                 className="w-24 shrink-0 text-left"
               >
-                <img src={coverSrc(game.imageUrl)} alt="" className="aspect-[3/4] w-full rounded-lg object-cover" />
+                <CoverImage
+                  title={game.title}
+                  imageUrl={game.imageUrl}
+                  className="aspect-[3/4] w-full rounded-lg object-cover"
+                />
                 <span className="mt-1 block text-xs text-[#F6EBD4]">{game.title}</span>
               </button>
             ))}

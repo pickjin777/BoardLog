@@ -1,5 +1,5 @@
 import type React from 'react';
-import { useState, useMemo } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Printer,
@@ -17,7 +17,8 @@ import {
 } from 'lucide-react';
 import type { UserGame, GameOwnershipStatus } from '../types';
 import { formatDate } from '../utils/formatters';
-import { applyImageFallback, coverSrc } from '../utils/imageFallback';
+import { CoverImage } from './CoverPlaceholder';
+import { useDialogA11y } from './useDialogA11y';
 import { getGameIndexKey, KOREAN_INDEX_KEYS } from '../utils/koreanIndex';
 import { useToast } from '../context/ToastContext';
 import { track } from '../services/analytics';
@@ -217,12 +218,19 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
     showToast('엑셀/스프레드시트에 붙여넣을 수 있는 표 데이터가 복사되었습니다.', 'success');
   };
 
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useDialogA11y(isOpen, onClose, dialogRef);
+
   if (!isOpen) return null;
 
   return (
     <AnimatePresence>
       <div
         id="game-catalog-modal-overlay"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        tabIndex={-1}
         className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/50 overflow-y-auto"
       >
         <motion.div
@@ -537,12 +545,10 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
 
                           {showImages && (
                             <td className="p-2 text-center">
-                              <img
-                                src={coverSrc(game.imageUrl)}
-                                alt=""
-                                referrerPolicy="no-referrer"
-                                onError={applyImageFallback}
-                                className="w-9 h-9 rounded-lg object-cover bg-stone-100 mx-auto border border-[#E9ECEF]"
+                              <CoverImage
+                                title={game.title}
+                                imageUrl={game.imageUrl}
+                                className="mx-auto h-9 w-9 rounded-lg border border-[#E9ECEF] object-cover"
                               />
                             </td>
                           )}
@@ -634,12 +640,10 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                     </div>
 
                     {showImages && (
-                      <img
-                        src={coverSrc(game.imageUrl)}
-                        alt=""
-                        referrerPolicy="no-referrer"
-                        onError={applyImageFallback}
-                        className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl object-cover bg-stone-100 shrink-0 border border-[#E9ECEF] shadow-xs"
+                      <CoverImage
+                        title={game.title}
+                        imageUrl={game.imageUrl}
+                        className="h-20 w-20 shrink-0 rounded-xl border border-[#E9ECEF] object-cover shadow-xs sm:h-24 sm:w-24"
                       />
                     )}
 

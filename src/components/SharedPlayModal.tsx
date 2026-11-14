@@ -1,9 +1,10 @@
 import type React from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Trophy, X, Check } from 'lucide-react';
 import { type SharedPlay, resultFor } from '../utils/sharedPlay';
 import { formatDuration } from '../utils/formatters';
+import { useDialogA11y } from './useDialogA11y';
 
 interface SharedPlayModalProps {
   shared: SharedPlay | null;
@@ -14,6 +15,8 @@ interface SharedPlayModalProps {
 export const SharedPlayModal: React.FC<SharedPlayModalProps> = ({ shared, onClose, onAdd }) => {
   const [myIndex, setMyIndex] = useState<number | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useDialogA11y(!!shared, onClose, dialogRef);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: `shared` is the reset trigger (a new link clears the picked row); the effect body does not read it
   useEffect(() => {
@@ -37,6 +40,10 @@ export const SharedPlayModal: React.FC<SharedPlayModalProps> = ({ shared, onClos
       {shared && (
         <motion.div
           id="shared-play-modal"
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          tabIndex={-1}
           className="fixed inset-0 z-[60] flex items-end justify-center bg-black/40 p-3 sm:items-center"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

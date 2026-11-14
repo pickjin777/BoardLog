@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import type { PlayRecord, UserGame } from '../types';
-import { normalizePlay } from '../utils/backupImport';
+import { normalizePlay, parseBackup } from '../utils/backupImport';
 import { emptyCollectorState } from '../utils/collectorProgress';
 
 /** Node has no localStorage; the session pointers and the fallback store need one. */
@@ -223,7 +223,8 @@ describe('storage: restore never reuses or takes over ids (invariant 3)', () => 
     const plan = await storage.planImport(b, {
       games: [{ sourceId: aGame.id, data: { ...aGame, createdAt: '', updatedAt: '' } }],
       plays: [imported],
-      invalidCount: 0
+      invalidCount: 0,
+      progress: null
     });
     await storage.commitImport(b, plan);
 
@@ -243,7 +244,7 @@ describe('storage: restore never reuses or takes over ids (invariant 3)', () => 
     const aCountBefore = (await storage.getUserGames(a))[0].playCount;
     const imported = normalizePlay(play('카탄', null, { date: '2026.01.01' }));
     if (!imported) throw new Error('fixture did not normalize');
-    const plan = await storage.planImport(b, { games: [], plays: [imported], invalidCount: 0 });
+    const plan = await storage.planImport(b, { games: [], plays: [imported], invalidCount: 0, progress: null });
     await storage.commitImport(b, plan);
 
     expect((await storage.getUserGames(b)).find((g) => g.id === bGame.id)?.playCount).toBe(1);
@@ -302,5 +303,71 @@ describe('storage: collector progress is its own key', () => {
     await storage.deleteAccount(userA.uid);
     expect(storage.getCollectorProgress(userA.uid)).toBeNull();
     expect(storage.getCollectorProgress(userB.uid)?.acknowledgedLevel).toBe(2);
+  });
+});
+
+describe('storage: JSON backup includes collector progress', () => {
+  it('restores progress onto the importing account and leaves an older file untouched', async () => {
+    const stamp = `${Date.now()}`;
+    const userA = await storage.signUp(`bak-a-${stamp}@example.com`, 'secret12', '에이');
+    const gameA = await storage.addUserGame(userA.uid, game('카탄'));
+    const playA = await storage.addPlayRecord(userA.uid, play('카탄', gameA.id));
+    storage.saveCollectorProgress(userA.uid, {
+      ...emptyCollectorState(),
+      acknowledgedLevel: 4,
+      claimedDays: ['2026.11.02'],
+      grants: [{ id: `play:${playA.id}`, kind: 'play', amount: 15, entityId: playA.id }]
+    });
+    const exported = JSON.parse(await storage.exportUserDataJson(userA.uid)) as {
+      progress: { acknowledgedLevel: number };
+    };
+    expect(exported.progress.acknowledgedLevel).toBe(4);
+
+    await storage.signOut();
+    const userB = await storage.signUp(`bak-b-${stamp}@example.com`, 'secret12', '비');
+    storage.saveCollectorProgress(userB.uid, { ...emptyCollectorState(), acknowledgedLevel: 1 });
+    const plan = await storage.planImport(userB.uid, parseBackup(JSON.stringify(exported)));
+    await storage.commitImport(userB.uid, plan);
+    const restored = storage.getCollectorProgress(userB.uid);
+    expect(restored?.acknowledgedLevel).toBe(4);
+    expect(restored?.claimedDays).toEqual(['2026.11.02']);
+    expect(restored?.grants[0]?.entityId).not.toBe(playA.id);
+    expect(storage.getCollectorProgress(userA.uid)?.acknowledgedLevel).toBe(4);
+
+    const oldPlan = await storage.planImport(userB.uid, parseBackup(JSON.stringify({ games: [], plays: [] })));
+    expect(oldPlan.progress).toBeNull();
+    await storage.commitImport(userB.uid, oldPlan);
+    expect(storage.getCollectorProgress(userB.uid)?.acknowledgedLevel).toBe(4);
+  });
+});
+
+describe('storage: photo recognition prefs and login delay', () => {
+  it('remembers consent separately from the off switch', () => {
+    expect(storage.isPhotoRecognitionEnabled()).toBe(true);
+    expect(storage.hasPhotoScanConsent()).toBe(false);
+    storage.grantPhotoScanConsent();
+    expect(storage.hasPhotoScanConsent()).toBe(true);
+    storage.setPhotoRecognitionEnabled(false);
+    expect(storage.isPhotoRecognitionEnabled()).toBe(false);
+    expect(storage.hasPhotoScanConsent()).toBe(true);
+    storage.revokePhotoScanConsent();
+    storage.setPhotoRecognitionEnabled(true);
+    expect(storage.hasPhotoScanConsent()).toBe(false);
+  });
+
+  it('waits longer after a repeated wrong password and resets after success', async () => {
+    const stamp = `${Date.now()}`;
+    const email = `slow-${stamp}@example.com`;
+    await storage.signUp(email, 'secret12', '느림');
+    await storage.signOut();
+    await expect(storage.signIn(email, 'wrong')).rejects.toThrow('비밀번호');
+    const started = Date.now();
+    await expect(storage.signIn(email, 'wrong-again')).rejects.toThrow('비밀번호');
+    expect(Date.now() - started).toBeGreaterThanOrEqual(350);
+    await storage.signIn(email, 'secret12');
+    await storage.signOut();
+    const reset = Date.now();
+    await expect(storage.signIn(email, 'wrong')).rejects.toThrow('비밀번호');
+    expect(Date.now() - reset).toBeLessThan(200);
   });
 });

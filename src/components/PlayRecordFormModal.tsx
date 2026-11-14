@@ -24,6 +24,8 @@ import { SEED_GAMES } from '../data/seedGames';
 import { formatDate, formatCurrentTime, calculateDurationMinutes, formatDuration } from '../utils/formatters';
 import { compressImage, rotateDataUrl } from '../utils/imageCompressor';
 import { applyImageFallback } from '../utils/imageFallback';
+import { CoverImage } from './CoverPlaceholder';
+import { useDialogA11y } from './useDialogA11y';
 
 interface PlayRecordFormModalProps {
   isOpen: boolean;
@@ -59,33 +61,6 @@ const deriveMyResult = (participants: PlayParticipant[]): MyGameResult | null =>
 };
 
 const LOCATION_PRESETS = ['보드게임 카페', '우리 집', '친구 집', '동호회 모임', 'MT / 파티룸', '아지트'];
-
-const PRESET_GAME_IMAGES = [
-  {
-    label: '보석/전략',
-    url: 'https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?auto=format&fit=crop&w=600&q=80'
-  },
-  {
-    label: '주사위',
-    url: 'https://images.unsplash.com/photo-1577741314755-048d8525d31e?auto=format&fit=crop&w=600&q=80'
-  },
-  {
-    label: '카드/타일',
-    url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80'
-  },
-  {
-    label: '개척/지도',
-    url: 'https://images.unsplash.com/photo-1606167668584-78701c57f13d?auto=format&fit=crop&w=600&q=80'
-  },
-  {
-    label: 'SF/우주',
-    url: 'https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?auto=format&fit=crop&w=600&q=80'
-  },
-  {
-    label: '자연/동물',
-    url: 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=600&q=80'
-  }
-];
 
 export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
   isOpen,
@@ -369,9 +344,6 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
     setGameId(null);
     setGameTitle(customName.trim());
     setGameTitleEn('');
-    if (!gameImageUrl) {
-      setGameImageUrl(PRESET_GAME_IMAGES[0].url);
-    }
     setIsSelectingGame(false);
     setFormError(null);
   };
@@ -528,12 +500,19 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
     }
   };
 
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useDialogA11y(isOpen, onClose, dialogRef);
+
   if (!isOpen) return null;
 
   return (
     <AnimatePresence>
       <div
         id="play-record-modal-overlay"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        tabIndex={-1}
         className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40 overflow-y-auto"
       >
         <motion.div
@@ -601,12 +580,11 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
               {!isSelectingGame && gameTitle ? (
                 <div className="p-4 bg-[#F8F9FA] rounded-2xl border border-[#E9ECEF] flex items-center justify-between gap-3 shadow-xs">
                   <div className="flex items-center gap-3 min-w-0">
-                    <img
-                      src={gameImageUrl}
+                    <CoverImage
+                      title={gameTitle}
+                      imageUrl={gameImageUrl}
                       alt={gameTitle}
-                      referrerPolicy="no-referrer"
-                      className="w-12 h-12 rounded-xl object-cover border border-[#E9ECEF] shrink-0 bg-white"
-                      onError={applyImageFallback}
+                      className="h-12 w-12 shrink-0 rounded-xl border border-[#E9ECEF] object-cover"
                     />
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5 flex-wrap">
@@ -647,7 +625,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                           : 'bg-white text-[#636E72] border border-[#898B8D] hover:bg-[#F1F3F5]'
                       }`}
                     >
-                      전체 DB ({combinedCatalog.length})
+                      전체 목록 ({combinedCatalog.length})
                     </button>
                     <button
                       type="button"
@@ -658,7 +636,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                           : 'bg-white text-[#636E72] border border-[#898B8D] hover:bg-[#F1F3F5]'
                       }`}
                     >
-                      카페 / 인기 게임 DB ({SEED_GAMES.length})
+                      포함된 게임 목록 ({SEED_GAMES.length})
                     </button>
                     {userGames.length > 0 && (
                       <button
@@ -743,12 +721,11 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                           className="w-full p-2 rounded-xl bg-white hover:bg-[#F1F3F5] border border-[#898B8D] cursor-pointer flex items-center justify-between gap-2 transition-colors text-left"
                         >
                           <div className="flex items-center gap-2 min-w-0">
-                            <img
-                              src={game.imageUrl}
-                              alt={game.title}
-                              referrerPolicy="no-referrer"
-                              className="w-9 h-9 rounded-lg object-cover bg-stone-100 shrink-0 border border-[#E9ECEF]"
-                              onError={applyImageFallback}
+                            <CoverImage
+                              title={game.title}
+                              imageUrl={game.imageUrl}
+                              alt=""
+                              className="h-9 w-9 shrink-0 rounded-lg border border-[#E9ECEF] object-cover"
                             />
                             <div className="min-w-0">
                               <div className="flex items-center gap-1.5">
@@ -764,7 +741,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                                   </span>
                                 ) : (
                                   <span className="text-[9px] px-1.5 py-0.2 rounded-md bg-[#1B7A43]/10 text-[#1B7A43] font-bold shrink-0">
-                                    DB
+                                    목록
                                   </span>
                                 )}
                               </div>

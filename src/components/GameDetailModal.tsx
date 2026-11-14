@@ -1,5 +1,5 @@
 import type React from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   X,
@@ -22,7 +22,8 @@ import { formatWon } from '../utils/formatters';
 import { getOwnershipBadgeColor } from './GameCard';
 import { useToast } from '../context/ToastContext';
 import { formatDuration } from '../utils/formatters';
-import { applyImageFallback, coverSrc } from '../utils/imageFallback';
+import { CoverImage } from './CoverPlaceholder';
+import { useDialogA11y } from './useDialogA11y';
 import { cleanMemo } from '../utils/shelf';
 
 interface GameDetailModalProps {
@@ -56,6 +57,8 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
     const next = game?.memo ?? '';
     setMemo(next);
   }, [game]);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useDialogA11y(isOpen && !!game, onClose, dialogRef);
   if (!isOpen || !game) return null;
 
   const gamePlays = playsForGame(game, plays, games);
@@ -87,6 +90,10 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
     <AnimatePresence>
       <div
         id="game-detail-modal-overlay"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        tabIndex={-1}
         className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40 overflow-y-auto"
       >
         <motion.div
@@ -98,12 +105,11 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
         >
           {/* Hero Image & Floating Controls */}
           <div className="relative w-full h-56 sm:h-64 bg-[#F8F9FA] shrink-0">
-            <img
-              src={coverSrc(game.imageUrl)}
+            <CoverImage
+              title={game.title}
+              imageUrl={game.imageUrl}
               alt={game.title}
-              referrerPolicy="no-referrer"
-              className="w-full h-full object-cover"
-              onError={applyImageFallback}
+              className="h-full w-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
