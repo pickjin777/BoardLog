@@ -50,16 +50,14 @@
  * Tailwind marks focused fields outline-style:none, and Chrome's own ring is easy to miss on
  * this gray page. !important keeps a 2px brand ring on keyboard focus.
  */
-/* Focus is gold on navy and ink on cream. Brand purple is not used in the app UI. */
+/* Focus is gold on navy and ink on cream. Brand purple is not used in the app UI.
+   Brass plates set their own double ring later so it stays visible on both grounds. */
 :where(button, a, input, select, textarea, [tabindex]):focus-visible {
   outline: 2px solid #f3d48a !important;
   outline-offset: 2px !important;
 }
 
-.paper :where(button, a, input, select, textarea):focus-visible,
-.btn-gold:focus-visible,
-.btn-cream:focus-visible,
-.chip-on:focus-visible {
+.paper :where(button, a, input, select, textarea):focus-visible {
   outline-color: #1c160e !important;
 }
 
@@ -452,13 +450,13 @@ textarea {
 button.bg-\[\#4834D4\],
 a.bg-\[\#4834D4\] {
   background-color: #e2b657;
-  color: #1a1408;
+  color: #0e1628;
 }
 
 button.bg-\[\#4834D4\]:hover,
 a.bg-\[\#4834D4\]:hover {
   background-color: #c9a24a;
-  color: #1a1408;
+  color: #0e1628;
 }
 
 input.border-\[\#E9ECEF\],
@@ -467,34 +465,359 @@ textarea.border-\[\#E9ECEF\] {
   border-color: #c6b48a;
 }
 
-.btn-gold {
-  background-color: #e2b657;
-  color: #1a1408;
+/*
+ * Brass nameplate. One set of tokens paints every major action.
+ * Primary: gold plate, navy label. Secondary: navy plate, brass rim, cream label.
+ * Chips and icon buttons stay in the same metals and skip the corner rivets.
+ * Kakao yellow and the ruby destructive fill are not plates.
+ */
+:root {
+  --brass-hi: #fbf6df;
+  --brass-mid: #e8c56a;
+  --brass-low: #8a6424;
+  --brass-edge: #6e5420;
+  --brass-ink: #0e1628;
+  --plate-navy-hi: #2a3c5c;
+  --plate-navy: #172033;
+  --plate-navy-low: #10182a;
+  --plate-cream: #f6ebd4;
+  --plate-line: #c6a36a;
+  --plate-focus: #f6ebd4;
+  --plate-focus-ink: #0e1628;
+  --plate-rivet: radial-gradient(circle, #3d2c10 0 1px, #fff8dc 1.15px 1.8px, #6b501c 1.9px 2.45px, transparent 2.6px);
 }
 
-.btn-gold:hover {
-  background-color: #c9a24a;
+:is(
+  .btn-gold,
+  button.bg-\[\#4834D4\]:not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(.py-1\.5):not(.shadow-xs):not(.shadow-2xs):not([aria-pressed]),
+  a.bg-\[\#4834D4\],
+  button.bg-\[\#E2B657\],
+  a.bg-\[\#E2B657\]
+) {
+  position: relative;
+  border: 1px solid var(--brass-edge);
+  border-radius: 8px;
+  background-color: var(--brass-mid);
+  background-image: linear-gradient(
+    180deg,
+    var(--brass-hi) 0%,
+    #f3d48a 16%,
+    var(--brass-mid) 48%,
+    #c4963c 78%,
+    var(--brass-low) 100%
+  );
+  color: var(--brass-ink);
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: keep-all;
+  box-shadow:
+    inset 0 1px 0 rgb(255 250 230 / 95%),
+    inset 0 0 0 1px rgb(92 64 18 / 45%),
+    inset 0 -1px 0 rgb(62 42 12 / 55%),
+    0 1px 0 #5c4314;
+  transition:
+    transform 90ms ease,
+    box-shadow 90ms ease,
+    filter 90ms ease;
 }
 
-.btn-cream {
-  background-color: #f6ebd4;
-  color: #1c160e;
+:is(
+  .btn-cream,
+  .btn-quiet,
+  button.bg-\[\#F1F3F5\]:not([aria-pressed]):not(.calendar-day):not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(:has(img)),
+  button.rounded-2xl.bg-white:not([class*='EB4D4B']):not(:has(img)),
+  button.rounded-full.font-bold.hover\:bg-\[\#F1F3F5\]:not(.bg-white):not(.bg-\[\#F1F3F5\]):not([class*='4834D4']):not(
+      [class*='FEE500']
+    ):not([class*='EB4D4B'])
+) {
+  position: relative;
+  border: 1px solid var(--plate-line);
+  border-radius: 8px;
+  background-color: var(--plate-navy);
+  background-image: linear-gradient(180deg, var(--plate-navy-hi) 0%, var(--plate-navy) 46%, var(--plate-navy-low) 100%);
+  color: var(--plate-cream);
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: keep-all;
+  box-shadow:
+    inset 0 1px 0 rgb(243 212 138 / 45%),
+    inset 0 0 0 1px rgb(14 20 36 / 80%),
+    0 1px 0 #6e5420;
+  transition:
+    transform 90ms ease,
+    box-shadow 90ms ease,
+    filter 90ms ease;
 }
 
-.btn-quiet {
-  background-color: #243044;
-  color: #f6ebd4;
+:is(
+    .btn-gold,
+    button.bg-\[\#4834D4\]:not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(.py-1\.5):not(.shadow-xs):not(
+        .shadow-2xs
+      ):not([aria-pressed]),
+    a.bg-\[\#4834D4\],
+    button.bg-\[\#E2B657\],
+    a.bg-\[\#E2B657\],
+    .btn-cream,
+    .btn-quiet,
+    button.bg-\[\#F1F3F5\]:not([aria-pressed]):not(.calendar-day):not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(:has(img)),
+    button.rounded-2xl.bg-white:not([class*='EB4D4B']):not(:has(img)),
+    button.rounded-full.font-bold.hover\:bg-\[\#F1F3F5\]:not(.bg-white):not(.bg-\[\#F1F3F5\]):not([class*='4834D4']):not(
+        [class*='FEE500']
+      ):not([class*='EB4D4B'])
+  )
+  :where(svg, span, strong) {
+  color: inherit;
 }
 
-.chip-on {
-  background-color: #f6ebd4;
-  color: #1c160e;
-  box-shadow: inset 0 -3px 0 #1c160e;
+:is(
+    .btn-gold,
+    button.bg-\[\#4834D4\]:not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(.py-1\.5):not(.shadow-xs):not(
+        .shadow-2xs
+      ):not([aria-pressed]),
+    a.bg-\[\#4834D4\],
+    button.bg-\[\#E2B657\],
+    a.bg-\[\#E2B657\],
+    .btn-cream,
+    .btn-quiet,
+    button.bg-\[\#F1F3F5\]:not([aria-pressed]):not(.calendar-day):not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(:has(img)),
+    button.rounded-2xl.bg-white:not([class*='EB4D4B']):not(:has(img)),
+    button.rounded-full.font-bold.hover\:bg-\[\#F1F3F5\]:not(.bg-white):not(.bg-\[\#F1F3F5\]):not([class*='4834D4']):not(
+        [class*='FEE500']
+      ):not([class*='EB4D4B'])
+  ):not(:has(> svg:only-child)):not(.px-2)::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    var(--plate-rivet) 6px 6px / 6px 6px no-repeat,
+    var(--plate-rivet) calc(100% - 6px) 6px / 6px 6px no-repeat,
+    var(--plate-rivet) 6px calc(100% - 6px) / 6px 6px no-repeat,
+    var(--plate-rivet) calc(100% - 6px) calc(100% - 6px) / 6px 6px no-repeat;
 }
 
-.chip-off {
-  background-color: #172033;
-  color: #f6ebd4;
+@media (max-width: 1023px) {
+  #nav-fab-add-play {
+    border-radius: 999px;
+  }
+
+  #nav-fab-add-play::before {
+    content: none;
+  }
+}
+
+@media (hover: hover) {
+  :is(
+    .btn-gold,
+    button.bg-\[\#4834D4\]:not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(.py-1\.5):not(.shadow-xs):not(
+        .shadow-2xs
+      ):not([aria-pressed]),
+    a.bg-\[\#4834D4\],
+    button.bg-\[\#E2B657\],
+    a.bg-\[\#E2B657\]
+  ):hover:not(:disabled) {
+    background-image: linear-gradient(180deg, #fffaf0 0%, #f8e7b0 18%, #e2b657 50%, #c9a24a 100%);
+  }
+
+  :is(
+    .btn-cream,
+    .btn-quiet,
+    button.bg-\[\#F1F3F5\]:not([aria-pressed]):not(.calendar-day):not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(:has(img)),
+    button.rounded-2xl.bg-white:not([class*='EB4D4B']):not(:has(img)),
+    button.rounded-full.font-bold.hover\:bg-\[\#F1F3F5\]:not(.bg-white):not(.bg-\[\#F1F3F5\]):not([class*='4834D4']):not(
+        [class*='FEE500']
+      ):not([class*='EB4D4B'])
+  ):hover:not(:disabled) {
+    background-image: linear-gradient(180deg, #35486c 0%, #1c2944 48%, #121a2c 100%);
+  }
+}
+
+:is(
+  .btn-gold,
+  button.bg-\[\#4834D4\]:not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(.py-1\.5):not(.shadow-xs):not(.shadow-2xs):not([aria-pressed]),
+  a.bg-\[\#4834D4\],
+  button.bg-\[\#E2B657\],
+  a.bg-\[\#E2B657\]
+):active:not(:disabled) {
+  transform: translateY(2px);
+  background-image: linear-gradient(180deg, #c9a24a 0%, #a07c32 42%, #6e5420 100%);
+  box-shadow:
+    inset 0 3px 6px rgb(40 26 8 / 50%),
+    inset 0 0 0 1px rgb(62 42 12 / 65%);
+}
+
+:is(
+  .btn-cream,
+  .btn-quiet,
+  button.bg-\[\#F1F3F5\]:not([aria-pressed]):not(.calendar-day):not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(:has(img)),
+  button.rounded-2xl.bg-white:not([class*='EB4D4B']):not(:has(img)),
+  button.rounded-full.font-bold.hover\:bg-\[\#F1F3F5\]:not(.bg-white):not(.bg-\[\#F1F3F5\]):not([class*='4834D4']):not(
+      [class*='FEE500']
+    ):not([class*='EB4D4B'])
+):active:not(:disabled) {
+  transform: translateY(2px);
+  background-image: linear-gradient(180deg, #1a2740 0%, #0e1628 100%);
+  box-shadow:
+    inset 0 3px 6px rgb(0 0 0 / 48%),
+    inset 0 0 0 1px rgb(198 163 106 / 40%);
+}
+
+:is(
+  .btn-gold,
+  button.bg-\[\#4834D4\]:not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(.py-1\.5):not(.shadow-xs):not(.shadow-2xs):not([aria-pressed]),
+  a.bg-\[\#4834D4\],
+  button.bg-\[\#E2B657\],
+  a.bg-\[\#E2B657\],
+  .btn-cream,
+  .btn-quiet,
+  button.bg-\[\#F1F3F5\]:not([aria-pressed]):not(.calendar-day):not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(:has(img)),
+  button.rounded-2xl.bg-white:not([class*='EB4D4B']):not(:has(img)),
+  button.rounded-full.font-bold.hover\:bg-\[\#F1F3F5\]:not(.bg-white):not(.bg-\[\#F1F3F5\]):not([class*='4834D4']):not(
+      [class*='FEE500']
+    ):not([class*='EB4D4B']),
+  .chip-on,
+  .chip-off,
+  button.shadow-xs.bg-\[\#4834D4\],
+  button.shadow-2xs.bg-\[\#4834D4\],
+  button.py-1.bg-\[\#4834D4\],
+  button.py-1\.5.bg-\[\#4834D4\],
+  button.text-\[10px\].bg-\[\#4834D4\],
+  button.text-\[11px\].bg-\[\#4834D4\],
+  button.bg-\[\#1B7A43\],
+  button:has(> svg:only-child):not([aria-pressed]):not([class*='EB4D4B']):not([class*='FEE500']):not(.calendar-day):not(
+      .chip-on
+    ):not(.chip-off)
+):focus-visible {
+  outline: 2px solid var(--plate-focus-ink) !important;
+  outline-offset: 4px !important;
+  box-shadow:
+    inset 0 1px 0 rgb(255 250 230 / 70%),
+    inset 0 0 0 1px rgb(90 62 18 / 40%),
+    0 0 0 3px var(--plate-focus);
+}
+
+:is(
+  .btn-gold,
+  button.bg-\[\#4834D4\]:not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(.py-1\.5):not(.shadow-xs):not(.shadow-2xs):not([aria-pressed]),
+  a.bg-\[\#4834D4\],
+  button.bg-\[\#E2B657\],
+  a.bg-\[\#E2B657\],
+  .btn-cream,
+  .btn-quiet,
+  button.bg-\[\#F1F3F5\]:not([aria-pressed]):not(.calendar-day):not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(:has(img)),
+  button.rounded-2xl.bg-white:not([class*='EB4D4B']):not(:has(img)),
+  button.rounded-full.font-bold.hover\:bg-\[\#F1F3F5\]:not(.bg-white):not(.bg-\[\#F1F3F5\]):not([class*='4834D4']):not(
+      [class*='FEE500']
+    ):not([class*='EB4D4B'])
+):disabled {
+  filter: saturate(0.22) brightness(0.96);
+  opacity: 0.68;
+  box-shadow: inset 0 0 0 1px rgb(70 55 30 / 28%);
+  cursor: not-allowed;
+}
+
+:is(
+  .btn-gold,
+  button.bg-\[\#4834D4\]:not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(.py-1\.5):not(.shadow-xs):not(.shadow-2xs):not([aria-pressed]),
+  a.bg-\[\#4834D4\],
+  button.bg-\[\#E2B657\],
+  a.bg-\[\#E2B657\],
+  .btn-cream,
+  .btn-quiet,
+  button.bg-\[\#F1F3F5\]:not([aria-pressed]):not(.calendar-day):not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(:has(img)),
+  button.rounded-2xl.bg-white:not([class*='EB4D4B']):not(:has(img)),
+  button.rounded-full.font-bold.hover\:bg-\[\#F1F3F5\]:not(.bg-white):not(.bg-\[\#F1F3F5\]):not([class*='4834D4']):not(
+      [class*='FEE500']
+    ):not([class*='EB4D4B'])
+):disabled::before {
+  opacity: 0.35;
+}
+
+.chip-on,
+button.shadow-xs.bg-\[\#4834D4\],
+button.shadow-2xs.bg-\[\#4834D4\],
+button.py-1.bg-\[\#4834D4\],
+button.py-1\.5.bg-\[\#4834D4\],
+button.text-\[10px\].bg-\[\#4834D4\],
+button.text-\[11px\].bg-\[\#4834D4\],
+button.bg-\[\#1B7A43\] {
+  border: 1px solid var(--brass-edge);
+  border-radius: 999px;
+  background-color: var(--brass-mid);
+  background-image: linear-gradient(180deg, var(--brass-hi) 0%, var(--brass-mid) 55%, #b8893a 100%);
+  color: var(--brass-ink);
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1px rgb(92 64 18 / 40%);
+}
+
+.chip-off,
+button[aria-pressed='false'].rounded-full:not(.calendar-day),
+button.rounded-full.bg-white.text-\[10px\],
+button.rounded-full.bg-white.text-\[11px\],
+button.rounded-full.bg-white.py-1,
+button.rounded-full.bg-white.py-1\.5 {
+  border: 1px solid var(--plate-line);
+  border-radius: 999px;
+  background-color: var(--plate-navy);
+  background-image: linear-gradient(180deg, #243044 0%, var(--plate-navy) 100%);
+  color: var(--plate-cream);
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1px rgb(14 22 40 / 65%);
+}
+
+button:has(> svg:only-child):not([aria-pressed]):not([class*='EB4D4B']):not([class*='FEE500']):not(.btn-gold):not(
+    .calendar-day
+  ):not(.chip-on):not(.chip-off):not(.treasure-skip) {
+  border: 1px solid var(--plate-line);
+  border-radius: 8px;
+  background-color: var(--plate-navy);
+  background-image: linear-gradient(180deg, #243656 0%, var(--plate-navy-low) 100%);
+  color: var(--plate-cream);
+  box-shadow:
+    inset 0 1px 0 rgb(243 212 138 / 35%),
+    inset 0 0 0 1px rgb(8 12 22 / 55%);
+}
+
+button:has(> svg:only-child):not([aria-pressed]):not([class*='EB4D4B']):not([class*='FEE500']):not(.btn-gold):not(
+    .calendar-day
+  ):not(.chip-on):not(.chip-off):not(.treasure-skip):active:not(:disabled) {
+  transform: translateY(1px);
+  background-image: linear-gradient(180deg, #172033 0%, #0c1220 100%);
+  box-shadow: inset 0 2px 4px rgb(0 0 0 / 45%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :is(
+    .btn-gold,
+    .btn-cream,
+    .btn-quiet,
+    button.bg-\[\#4834D4\],
+    a.bg-\[\#4834D4\],
+    button.bg-\[\#E2B657\],
+    a.bg-\[\#E2B657\],
+    button.bg-\[\#F1F3F5\],
+    .chip-on,
+    .chip-off
+  ),
+  :is(.btn-gold, .btn-cream, .btn-quiet)::before,
+  button:has(> svg:only-child) {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  :is(.btn-gold, .btn-cream, .btn-quiet, button.bg-\[\#4834D4\], button.bg-\[\#E2B657\], button.bg-\[\#F1F3F5\]):active,
+  button:has(> svg:only-child):active {
+    transform: none;
+  }
 }
 
 .paper {
