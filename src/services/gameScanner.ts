@@ -1,9 +1,11 @@
 import type { SeedGame } from '../types';
 import { PRODUCTION_ORIGIN } from '../config/appIdentity';
 import { SEED_GAMES } from '../data/seedGames';
+import { storage } from './storage';
 import { resolveApiUrl } from '../utils/apiOrigin';
 import { compressImage } from '../utils/imageCompressor';
 import { isNativeShell } from '../utils/nativeShell';
+import { PUBLIC_SCAN_ERROR } from '../utils/publicScanError';
 import { scanAvailableFromResponse } from '../utils/scanAvailability';
 import { findSeedMatch, type SeedMatch } from '../utils/titleMatch';
 
@@ -30,6 +32,45 @@ export class ScanNotConfiguredError extends Error {
     super('사진 인식 기능이 아직 설정되지 않았습니다. 관리자에게 문의해주세요.');
     this.name = 'ScanNotConfiguredError';
   }
+}
+
+export class ScanConsentRequiredError extends Error {
+  constructor() {
+    super('사진 인식 동의가 필요합니다.');
+    this.name = 'ScanConsentRequiredError';
+  }
+}
+
+export class ScanDisabledError extends Error {
+  constructor() {
+    super('사진 인식이 꺼져 있습니다.');
+    this.name = 'ScanDisabledError';
+  }
+}
+
+export class ScanFailedError extends Error {
+  constructor() {
+    super(PUBLIC_SCAN_ERROR);
+    this.name = 'ScanFailedError';
+  }
+}
+
+function looksLikeProviderDump(text: string): boolean {
+  return /gemini|model|모델|쓸 수 있는/i.test(text);
+}
+
+/** Validation text we wrote may be shown. Provider text and model lists never are. */
+export function errorForScanResponse(payload: { code?: unknown; error?: unknown }): Error {
+  if (payload.code === 'NOT_CONFIGURED') return new ScanNotConfiguredError();
+  if (payload.code === 'VALIDATION' && typeof payload.error === 'string' && !looksLikeProviderDump(payload.error)) {
+    return new Error(payload.error);
+  }
+  return new ScanFailedError();
+}
+
+function assertScanAllowed(): void {
+  if (!storage.isPhotoRecognitionEnabled()) throw new ScanDisabledError();
+  if (!storage.hasPhotoScanConsent()) throw new ScanConsentRequiredError();
 }
 
 function toInlineImage(dataUrl: string): { data: string; mimeType: string } {
@@ -60,6 +101,7 @@ function scanApiUrl(): string {
 }
 
 export async function fetchScanAvailable(): Promise<boolean> {
+  if (!storage.isPhotoRecognitionEnabled() || !storage.hasPhotoScanConsent()) return false;
   try {
     const response = await fetch(scanApiUrl(), { method: 'GET' });
     let body: unknown = null;
@@ -75,6 +117,7 @@ export async function fetchScanAvailable(): Promise<boolean> {
 }
 
 export async function scanGamePhotos(files: File[], seeds: SeedGame[] = SEED_GAMES): Promise<ScanCandidate[]> {
+  assertScanAllowed();
   if (files.length === 0) return [];
   if (files.length > MAX_SCAN_IMAGES) {
     throw new Error(`사진은 한 번에 ${MAX_SCAN_IMAGES}장까지 인식할 수 있습니다.`);
@@ -96,14 +139,7 @@ export async function scanGamePhotos(files: File[], seeds: SeedGame[] = SEED_GAM
     throw new Error('사진 인식 서버 응답을 읽지 못했습니다.');
   }
 
-  if (!response.ok) {
-    if (payload.code === 'NOT_CONFIGURED') throw new ScanNotConfiguredError();
-    const message = typeof payload.error === 'string' ? payload.error : '사진 인식에 실패했습니다.';
-    const available = Array.isArray(payload.available)
-      ? payload.available.filter((name): name is string => typeof name === 'string')
-      : [];
-    throw new Error(available.length > 0 ? `${message}\n\n쓸 수 있는 모델:\n${available.join('\n')}` : message);
-  }
+  if (!response.ok) throw errorForScanResponse(payload);
 
   const raw = Array.isArray(payload.detections) ? payload.detections : [];
   const seen = new Set<string>();

@@ -13,7 +13,7 @@ test('privacy notice opens from My page and says Google Analytics is not used wh
   const modal = page.locator('#privacy-notice-modal');
   await visible('안내 화면 표시', modal);
   await hasText('저장 위치 안내: 이 기기의 브라우저에만 저장', modal, '이 기기의 브라우저에만 저장됩니다');
-  await hasText('사진 인식은 키가 없으면 꺼져 있음', modal, '사진 인식을 사용하지 않습니다');
+  await hasText('사진 인식은 동의 뒤에만', modal, '안내를 확인한 뒤');
   await hasText('공유 링크에 이름이 들어 있음을 밝힘', modal, '공유 링크 안에는');
   await hasText(
     'Google Analytics 미사용 문구 (측정 ID 없는 빌드)',

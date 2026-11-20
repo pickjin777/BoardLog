@@ -5,7 +5,9 @@ import { Copy, Check, Users, Search, X, MessageCircle, Tag, Dices, Image as Imag
 import type { UserGame } from '../types';
 import { useToast } from '../context/ToastContext';
 import { track } from '../services/analytics';
-import { applyImageFallback } from '../utils/imageFallback';
+import { KAKAO_APP_KEY, kakaoSharerUrl } from '../config/kakao';
+import { CoverImage } from './CoverPlaceholder';
+import { useDialogA11y } from './useDialogA11y';
 import { safePageLocation } from '../utils/analyticsEvents';
 import { gameMatchesShareFilter, type SharePlayerPreset, type ShareWeightPreset } from '../utils/shareGameFilter';
 
@@ -230,20 +232,10 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
       }
     }
 
-    // 2. Fallback: Copy to clipboard and offer kakao web sharer
     await handleCopyText();
-    // Try opening kakao sharer or talk scheme if available
-    const kakaoWebSharerUrl = `https://sharer.kakao.com/talk/friends/picker/link?app_key=boardgame&shortKey=${encodeURIComponent(
-      pageUrl
-    )}`;
-
-    // Check if on mobile
-    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    if (isMobile) {
-      window.location.href = `kakaolink://send?text=${encodeURIComponent(kakaoFormattedText)}`;
-    } else {
-      window.open(kakaoWebSharerUrl, '_blank', 'width=450,height=600');
-    }
+    const sharer = kakaoSharerUrl(pageUrl, KAKAO_APP_KEY);
+    if (!sharer) return;
+    window.open(sharer, '_blank', 'width=450,height=600');
   };
 
   // Export as Image Card
@@ -277,12 +269,19 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
     }
   };
 
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useDialogA11y(isOpen, onClose, dialogRef);
+
   if (!isOpen) return null;
 
   return (
     <AnimatePresence>
       <div
         id="kakao-share-modal-overlay"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        tabIndex={-1}
         className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 overflow-y-auto"
       >
         <motion.div
@@ -603,12 +602,11 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
                                   <Check className="w-3.5 h-3.5 stroke-[3]" />
                                 </span>
 
-                                <img
-                                  src={game.imageUrl}
+                                <CoverImage
+                                  title={game.title}
+                                  imageUrl={game.imageUrl}
                                   alt={game.title}
-                                  referrerPolicy="no-referrer"
-                                  className="w-10 h-10 rounded-lg object-cover bg-stone-100 shrink-0 border border-[#E9ECEF]"
-                                  onError={applyImageFallback}
+                                  className="h-10 w-10 shrink-0 rounded-lg border border-[#E9ECEF] object-cover"
                                 />
 
                                 <div className="min-w-0">
@@ -760,12 +758,11 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
                               <span className="w-5 h-5 rounded-full bg-[#191919] text-[#FEE500] text-[10px] font-black flex items-center justify-center shrink-0">
                                 {idx + 1}
                               </span>
-                              <img
-                                src={g.imageUrl}
+                              <CoverImage
+                                title={g.title}
+                                imageUrl={g.imageUrl}
                                 alt={g.title}
-                                referrerPolicy="no-referrer"
-                                className="w-8 h-8 rounded-lg object-cover shrink-0"
-                                onError={applyImageFallback}
+                                className="h-8 w-8 shrink-0 rounded-lg object-cover"
                               />
                               <div className="min-w-0 flex-1">
                                 <div className="text-xs font-black text-[#191919] truncate">{g.title}</div>

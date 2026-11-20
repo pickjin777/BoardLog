@@ -1,5 +1,5 @@
 import type React from 'react';
-import { useState, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   X,
@@ -17,10 +17,12 @@ import {
 } from 'lucide-react';
 import type { UserGame, SeedGame, GameOwnershipStatus, GameCondition } from '../types';
 import { SEED_GAMES } from '../data/seedGames';
-import { fetchScanAvailable } from '../services/gameScanner';
+import { storage } from '../services/storage';
 import { formatDate } from '../utils/formatters';
 import { applyImageFallback } from '../utils/imageFallback';
 import { cleanMemo, cleanTags } from '../utils/shelf';
+import { CoverImage } from './CoverPlaceholder';
+import { useDialogA11y } from './useDialogA11y';
 
 interface GameFormModalProps {
   isOpen: boolean;
@@ -112,7 +114,8 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
-  const [scanAvailability, setScanAvailability] = useState<'unknown' | 'on' | 'off'>('unknown');
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const recognitionOn = storage.isPhotoRecognitionEnabled();
 
   // Initialize or reset form
   // biome-ignore lint/correctness/useExhaustiveDependencies: `isOpen` is a trigger so reopening the modal re-initializes the form; the body does not read it
@@ -266,17 +269,7 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
     }
   };
 
-  useEffect(() => {
-    if (!isOpen || initialGame) return;
-    let cancelled = false;
-    setScanAvailability('unknown');
-    fetchScanAvailable().then((available) => {
-      if (!cancelled) setScanAvailability(available ? 'on' : 'off');
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [isOpen, initialGame]);
+  useDialogA11y(isOpen, onClose, dialogRef);
 
   if (!isOpen) return null;
 
@@ -284,6 +277,11 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
     <AnimatePresence>
       <div
         id="game-form-modal-overlay"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="game-form-title"
+        tabIndex={-1}
         className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40 overflow-y-auto"
       >
         <motion.div
@@ -300,7 +298,7 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                 <Plus className="w-4.5 h-4.5" />
               </div>
               <div>
-                <h2 className="text-base font-black text-[#1E272E]">
+                <h2 id="game-form-title" className="text-base font-black text-[#1E272E]">
                   {initialGame ? '보드게임 정보 수정' : '새 보드게임 등록'}
                 </h2>
                 <p className="text-[11px] text-[#636E72]">내 컬렉션에 추가하고 플레이를 기록하세요</p>
@@ -321,7 +319,7 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
           <div className="p-4 sm:p-6 overflow-y-auto flex-1 space-y-5">
             {/* Bulk path: one photo of a shelf instead of filling this form per game.
                 Hidden until the server says a key exists, so a 503 does not dead-end the form. */}
-            {!initialGame && scanAvailability === 'on' && onOpenScan && (
+            {!initialGame && recognitionOn && onOpenScan && (
               <button
                 id="game-form-open-scan-btn"
                 type="button"
@@ -339,14 +337,14 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                 </div>
               </button>
             )}
-            {!initialGame && scanAvailability === 'off' && (
+            {!initialGame && !recognitionOn && (
               <div
                 id="game-form-scan-unavailable"
                 className="w-full p-4 bg-[#F8F9FA] border border-[#898B8D] rounded-2xl text-left"
               >
-                <p className="text-xs font-bold text-[#1E272E]">사진으로 여러 개 등록은 아직 준비 중이에요.</p>
+                <p className="text-xs font-bold text-[#1E272E]">사진 인식이 꺼져 있습니다.</p>
                 <p className="text-[11px] text-[#636E72] mt-1 leading-relaxed">
-                  사진은 고를 수 있어요. 이름은 읽지 않고, 서버로 보내지 않습니다. 고른 뒤 직접 입력으로 등록하세요.
+                  이름은 읽지 않고, 사진을 서버로 보내지 않습니다. 고른 뒤 직접 입력으로 등록하세요.
                 </p>
                 {onPickPhoto && (
                   <button
@@ -399,11 +397,10 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                             selectedSeed?.id === seed.id ? 'bg-[#4834D4]/10 font-bold' : ''
                           }`}
                         >
-                          <img
-                            src={seed.imageUrl}
-                            alt={seed.title}
-                            referrerPolicy="no-referrer"
-                            onError={applyImageFallback}
+                          <CoverImage
+                            title={seed.title}
+                            imageUrl={seed.imageUrl}
+                            alt=""
                             className="w-10 h-10 rounded-xl object-cover bg-stone-100 shrink-0"
                           />
                           <div className="flex-1 min-w-0">

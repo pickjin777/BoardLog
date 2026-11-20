@@ -397,3 +397,29 @@ export function parseCollectorState(value: unknown): CollectorState | null {
     migratedAt: typeof raw.migratedAt === 'string' ? raw.migratedAt : null
   };
 }
+
+const GAME_GRANT_KINDS = new Set<GrantKind>(['game', 'new-game']);
+const PLAY_GRANT_KINDS = new Set<GrantKind>(['play', 'photo', 'party', 'share', 'first-day']);
+
+/**
+ * Backup import issues fresh game and play ids. Point restored XP at those new ids.
+ * Quest ids are not record ids, so they stay. Unknown ids are left as-is.
+ */
+export function remapCollectorIds(
+  state: CollectorState,
+  ids: { games: ReadonlyMap<string, string>; plays: ReadonlyMap<string, string> }
+): CollectorState {
+  const mapEntity = (kind: GrantKind, entityId: string): string => {
+    if (GAME_GRANT_KINDS.has(kind)) return ids.games.get(entityId) ?? entityId;
+    if (PLAY_GRANT_KINDS.has(kind)) return ids.plays.get(entityId) ?? entityId;
+    return entityId;
+  };
+  return {
+    ...state,
+    grants: state.grants.map((grant) => {
+      const entityId = mapEntity(grant.kind, grant.entityId);
+      return { ...grant, entityId, id: `${grant.kind}:${entityId}` };
+    }),
+    sharedPlayIds: state.sharedPlayIds.map((id) => ids.plays.get(id) ?? id)
+  };
+}

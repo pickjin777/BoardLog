@@ -8,6 +8,7 @@ import {
   levelSpaces,
   parseCollectorState,
   reconcileCollector,
+  remapCollectorIds,
   selectChestVariant,
   titleKey,
   totalXp,
@@ -320,5 +321,24 @@ describe('parseCollectorState', () => {
     expect(
       parseCollectorState({ version: 1, acknowledgedLevel: 'soon', chestVariant: '' })?.acknowledgedLevel
     ).toBeNull();
+  });
+});
+
+describe('remapCollectorIds', () => {
+  it('points game and play grants at the fresh ids and leaves quest ids', () => {
+    const state = emptyCollectorState();
+    state.grants = [
+      { id: 'game:old-game', kind: 'game', amount: 10, entityId: 'old-game' },
+      { id: 'play:old-play', kind: 'play', amount: 15, entityId: 'old-play' },
+      { id: 'quest:shelf', kind: 'quest', amount: 20, entityId: 'shelf' }
+    ];
+    state.sharedPlayIds = ['old-play', 'missing'];
+    const next = remapCollectorIds(state, {
+      games: new Map([['old-game', 'new-game']]),
+      plays: new Map([['old-play', 'new-play']])
+    });
+    expect(next.grants.map((grant) => grant.entityId)).toEqual(['new-game', 'new-play', 'shelf']);
+    expect(next.grants.map((grant) => grant.id)).toEqual(['game:new-game', 'play:new-play', 'quest:shelf']);
+    expect(next.sharedPlayIds).toEqual(['new-play', 'missing']);
   });
 });

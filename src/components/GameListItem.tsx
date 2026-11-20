@@ -2,7 +2,7 @@ import type React from 'react';
 import { Users, Clock, Flame, CheckSquare, Trash2 } from 'lucide-react';
 import type { UserGame } from '../types';
 import { getOwnershipBadgeColor } from './GameCard';
-import { applyImageFallback, coverSrc } from '../utils/imageFallback';
+import { CoverImage } from './CoverPlaceholder';
 
 interface GameListItemProps {
   game: UserGame;
@@ -25,12 +25,11 @@ export const GameListItem: React.FC<GameListItemProps> = ({ game, onClick, onDel
       <div className="relative z-10 flex min-w-0 flex-1 items-center gap-4 pointer-events-none">
         {/* Thumbnail */}
         <div className="relative w-16 h-16 rounded-xl bg-[#F8F9FA] overflow-hidden shrink-0 border border-[#E9ECEF]">
-          <img
-            src={coverSrc(game.imageUrl)}
+          <CoverImage
+            title={game.title}
+            imageUrl={game.imageUrl}
             alt={game.title}
-            referrerPolicy="no-referrer"
-            className="w-full h-full object-cover transition-transform"
-            onError={applyImageFallback}
+            className="h-full w-full object-cover"
           />
         </div>
 

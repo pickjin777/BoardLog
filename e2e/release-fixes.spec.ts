@@ -115,31 +115,34 @@ test('320px games title stays wide and the 390px empty hint clears the tab', asy
   );
 });
 
-test('photo scan stays off until the server says a key exists', async ({ page }) => {
+test('photo scan makes no network call before consent', async ({ page }) => {
+  let calls = 0;
+  await page.route('**/api/scan-games', (route) => {
+    calls += 1;
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ available: true })
+    });
+  });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/', { waitUntil: 'networkidle' });
   await page.locator('#nav-tab-games').click();
   await page.locator('#games-add-game-btn').click();
-  await visible('키 없으면 준비 중 안내', page.locator('#game-form-scan-unavailable'));
-  await hidden('키 없으면 스캔 버튼 없음', page.locator('#game-form-open-scan-btn'));
+  await visible('인식이 켜져 있으면 스캔 버튼', page.locator('#game-form-open-scan-btn'));
+  await hidden('동의 전에는 꺼짐 안내가 아님', page.locator('#game-form-scan-unavailable'));
   await hasText('시드 검색은 그대로', page.locator('#game-form-modal-overlay'), '시드 목록에서 찾기');
-  await page.locator('#game-form-close-btn').click();
-
-  await page.route('**/api/scan-games', (route) => {
-    if (route.request().method() === 'GET') {
-      route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ available: true })
-      });
-      return;
-    }
-    route.fulfill({ status: 500, contentType: 'application/json', body: '{"error":"no photo"}' });
-  });
-
-  await page.locator('#games-add-game-btn').click();
-  await visible('키가 생기면 스캔 버튼', page.locator('#game-form-open-scan-btn'));
-  await hidden('준비 중 안내가 사라짐', page.locator('#game-form-scan-unavailable'));
+  check('게임 폼을 열어도 인식 요청 없음', calls === 0, String(calls));
+  await page.locator('#game-form-open-scan-btn').click();
+  await visible('동의 안내', page.locator('#scan-consent-dialog'));
+  check('동의 창에서도 인식 요청 없음', calls === 0, String(calls));
+  const confirm = page.locator('#scan-consent-confirm');
+  await expect(confirm).toBeDisabled();
+  await page.locator('#scan-consent-check').check();
+  await expect(confirm).toBeEnabled();
+  await confirm.click();
+  await visible('동의 후 사진 선택', page.locator('#scan-pick-photos-btn'));
+  check('사진을 고르기 전에는 요청 없음', calls === 0, String(calls));
 });
 
 test('without a scan key, a chosen photo falls back to manual entry and saves', async ({ page }) => {
@@ -156,8 +159,9 @@ test('without a scan key, a chosen photo falls back to manual entry and saves', 
   await page.locator('#treasure-skip-btn').click();
   await page.locator('#nav-tab-games').click();
   await page.locator('#games-add-game-btn').click();
-  await visible('키 없으면 준비 중 안내', page.locator('#game-form-scan-unavailable'));
-  await page.locator('#game-form-pick-photo-btn').click();
+  await page.locator('#game-form-open-scan-btn').click();
+  await page.locator('#scan-consent-check').check();
+  await page.locator('#scan-consent-confirm').click();
   await visible('사진 선택 시트', page.locator('#scan-modal-sheet'));
 
   await page.locator('#scan-file-input').setInputFiles({
@@ -194,7 +198,9 @@ test('without a scan key, several photos stay on the device and open manual entr
   await page.locator('#treasure-skip-btn').click();
   await page.locator('#nav-tab-games').click();
   await page.locator('#games-add-game-btn').click();
-  await page.locator('#game-form-pick-photo-btn').click();
+  await page.locator('#game-form-open-scan-btn').click();
+  await page.locator('#scan-consent-check').check();
+  await page.locator('#scan-consent-confirm').click();
   await visible('사진 선택 시트', page.locator('#scan-modal-sheet'));
 
   const png = Buffer.from(
@@ -327,14 +333,14 @@ test('kakao quick select keeps weight, and game detail lists only that game', as
     };
   });
   await page.locator('#kakao-share-execute-btn').click();
-  await page.waitForFunction(() => Boolean((window as Window & { __opened?: string }).__opened));
+  await page.waitForTimeout(500);
   const opened = await page.evaluate(() => (window as Window & { __opened?: string }).__opened ?? '');
+  check('가짜 카카오 키로 창을 열지 않음', opened === '', opened);
   check(
     '카카오 공유 주소에 플레이 조각이 없음',
     !opened.includes('#play=') && !opened.includes('friend-score'),
     opened
   );
-  check('카카오 앱 키는 가짜 값만', opened.includes('app_key=boardgame'), opened);
 
   await page.locator('#kakao-share-modal-overlay button[aria-label="닫기"]').click();
   await hidden('카카오 모달 닫힘', page.locator('#kakao-share-modal-overlay'));
@@ -611,7 +617,14 @@ test('broken catalog, seed, and play-form photos use the same fallback', async (
 
   await page.locator('#games-add-game-btn').click();
   await page.locator('#seed-game-search-input').fill('카탄');
-  await usesFallback('시드 검색 표지', '#game-form-modal-overlay img[alt="카탄"]');
+  await visible(
+    '시드 검색은 외부 사진 없이 자리 표시',
+    page.locator('#game-form-modal-overlay [data-cover="placeholder"]')
+  );
+  check(
+    '시드 검색이 이미지를 요청하지 않음',
+    (await page.locator('#game-form-modal-overlay img[alt="카탄"]').count()) === 0
+  );
   await page.locator('#game-form-close-btn').click();
 
   await page.locator('#nav-tab-plays').click();

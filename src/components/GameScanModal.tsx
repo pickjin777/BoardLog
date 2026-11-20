@@ -1,17 +1,24 @@
 import type React from 'react';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Camera, Loader2, AlertCircle, Check, RotateCw, ArrowDown, ArrowRight } from 'lucide-react';
 import type { UserGame } from '../types';
 import { formatDate } from '../utils/formatters';
+import { storage } from '../services/storage';
 import {
+  fetchScanAvailable,
   scanGamePhotos,
   type ScanCandidate,
+  ScanConsentRequiredError,
+  ScanDisabledError,
+  ScanFailedError,
   ScanNotConfiguredError,
   type TitleOrientation,
   MAX_SCAN_IMAGES
 } from '../services/gameScanner';
+import { PUBLIC_SCAN_ERROR } from '../utils/publicScanError';
 import { normalizeTitle } from '../utils/titleMatch';
+import { useDialogA11y } from './useDialogA11y';
 
 type NewGame = Omit<UserGame, 'id' | 'createdAt' | 'updatedAt'>;
 
@@ -51,7 +58,10 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
   onRegister
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const [isScanning, setIsScanning] = useState(false);
+  const [consentChecked, setConsentChecked] = useState(false);
+  const [hasConsent, setHasConsent] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [candidates, setCandidates] = useState<ScanCandidate[]>([]);
@@ -75,8 +85,18 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
 
   const handleClose = useCallback(() => {
     reset();
+    setConsentChecked(false);
     onClose();
   }, [reset, onClose]);
+
+  const recognitionOn = allowRecognition && storage.isPhotoRecognitionEnabled();
+  useDialogA11y(isOpen, handleClose, dialogRef);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setHasConsent(storage.hasPhotoScanConsent());
+    setConsentChecked(false);
+  }, [isOpen]);
 
   const handleFiles = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -91,7 +111,14 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
 
       const label = files.map((file) => file.name).join(', ');
       setPickedLabel(label);
-      if (!allowRecognition) {
+      if (!recognitionOn || !storage.hasPhotoScanConsent()) {
+        setManualEntry(!recognitionOn);
+        setError(null);
+        setCandidates([]);
+        return;
+      }
+      const ready = await fetchScanAvailable();
+      if (!ready) {
         setManualEntry(true);
         setError(null);
         setCandidates([]);
@@ -110,17 +137,22 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
         setCandidates(found);
         setTitles(Object.fromEntries(found.map((c) => [c.id, c.match?.game.title ?? c.detection.title])));
       } catch (err) {
-        if (err instanceof ScanNotConfiguredError) {
+        if (err instanceof ScanNotConfiguredError || err instanceof ScanDisabledError) {
           setManualEntry(true);
           setError(null);
           return;
         }
-        setError(err instanceof Error ? err.message : '사진 인식에 실패했습니다.');
+        if (err instanceof ScanConsentRequiredError) {
+          setHasConsent(false);
+          setError(null);
+          return;
+        }
+        setError(err instanceof ScanFailedError ? err.message : err instanceof Error ? err.message : PUBLIC_SCAN_ERROR);
       } finally {
         setIsScanning(false);
       }
     },
-    [allowRecognition]
+    [recognitionOn]
   );
 
   const selected = useMemo(
@@ -187,7 +219,12 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 12, opacity: 0 }}
             transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+            ref={dialogRef}
             id="scan-modal-sheet"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="scan-modal-title"
+            tabIndex={-1}
             className="bg-white w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl max-h-[92vh] flex flex-col shadow-2xl"
           >
             <div className="flex items-start justify-between p-4 sm:p-6 border-b border-[#E9ECEF] shrink-0">
@@ -196,7 +233,9 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
                   <Camera className="w-4.5 h-4.5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-black text-[#1E272E]">사진으로 일괄 등록</h2>
+                  <h2 id="scan-modal-title" className="text-base font-black text-[#1E272E]">
+                    사진으로 일괄 등록
+                  </h2>
                   <p className="text-[11px] text-[#636E72]">책장 사진을 올리면 박스 제목을 읽어 한 번에 등록합니다</p>
                 </div>
               </div>
@@ -222,7 +261,56 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
                 className="hidden"
               />
 
-              {candidates.length === 0 && !isScanning && !manualEntry && (
+              {candidates.length === 0 && !isScanning && !manualEntry && recognitionOn && !hasConsent && (
+                <div
+                  id="scan-consent-dialog"
+                  className="space-y-3 rounded-2xl border border-[#C6B48A] bg-[#F6EBD4] p-4"
+                >
+                  <h3 className="text-sm font-medium text-[#1C160E]">사진 인식 안내</h3>
+                  <p className="text-xs leading-relaxed text-[#1C160E]">
+                    고른 사진(최대 {MAX_SCAN_IMAGES}장)은 이 기기에서 크기를 줄이고, 위치 등 사진에 붙은 정보(EXIF)를
+                    제거한 뒤 보드로그 서버를 거쳐 Google Gemini로 보내 게임 이름을 읽는 데 쓰입니다. 보드로그는 이
+                    사진을 저장하지 않습니다.
+                  </p>
+                  <label
+                    className="flex min-h-12 items-center gap-2 text-xs text-[#1C160E]"
+                    htmlFor="scan-consent-check"
+                  >
+                    <input
+                      id="scan-consent-check"
+                      type="checkbox"
+                      checked={consentChecked}
+                      onChange={(event) => setConsentChecked(event.target.checked)}
+                    />
+                    위 내용을 확인했습니다
+                  </label>
+                  <div className="flex gap-2">
+                    <button
+                      id="scan-consent-decline"
+                      type="button"
+                      onClick={handleClose}
+                      className="min-h-12 flex-1 rounded-full bg-[#243044] px-3 text-xs font-medium text-[#F6EBD4]"
+                    >
+                      동의하지 않음
+                    </button>
+                    <button
+                      id="scan-consent-confirm"
+                      type="button"
+                      disabled={!consentChecked}
+                      onClick={() => {
+                        storage.grantPhotoScanConsent();
+                        setHasConsent(true);
+                        setConsentChecked(false);
+                      }}
+                      className="btn-gold min-h-12 flex-1 rounded-full px-3 text-xs font-medium disabled:opacity-50"
+                    >
+                      동의하고 계속
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {candidates.length === 0 && !isScanning && !manualEntry && (!recognitionOn || hasConsent) && (
                 <button
                   id="scan-pick-photos-btn"
                   type="button"

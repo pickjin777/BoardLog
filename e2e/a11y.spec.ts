@@ -85,7 +85,7 @@ test('main screens meet axe and 48px targets', async ({ page }) => {
   await expectAxe(page, 'game form');
   await expectContrast(page, 'game form contrast');
   await expectTouchTargets(page, 'game form targets');
-  await page.locator('#game-form-pick-photo-btn').click();
+  await page.locator('#game-form-open-scan-btn').click();
   await visible('사진 시트', page.locator('#scan-modal-sheet'));
   await expectAxe(page, 'photo sheet');
   await expectContrast(page, 'photo sheet contrast');

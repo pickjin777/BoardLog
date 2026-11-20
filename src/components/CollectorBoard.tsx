@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useDialogA11y } from './useDialogA11y';
 import { CHEST_VARIANTS } from '../config/collectorXp';
 import {
   chestVariantUnlocked,
@@ -187,6 +188,8 @@ function BoardBody({
 
 export function CollectorBoard(props: CollectorBoardProps) {
   const closeRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useDialogA11y(Boolean(props.sheet), () => props.onClose?.(), dialogRef);
   useEffect(() => {
     if (props.sheet) closeRef.current?.focus();
   }, [props.sheet]);
@@ -199,13 +202,12 @@ export function CollectorBoard(props: CollectorBoardProps) {
   return (
     <div
       id="collector-sheet"
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-labelledby="collector-sheet-title"
+      tabIndex={-1}
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-3 sm:items-center"
-      onKeyDown={(event) => {
-        if (event.key === 'Escape') props.onClose?.();
-      }}
     >
       <div className="paper max-h-[85vh] w-full max-w-md overflow-y-auto rounded-3xl px-4 py-4">
         <div className="mb-3 flex items-center justify-between gap-2">

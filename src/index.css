@@ -548,6 +548,31 @@ textarea.border-\[\#E9ECEF\] {
   color: #1c160e;
 }
 
+.cover-placeholder {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #172033;
+  color: #f6ebd4;
+}
+
+.cover-motif {
+  position: absolute;
+  inset: 12% 18%;
+  width: 64%;
+  height: 76%;
+}
+
+.cover-initials {
+  position: relative;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: #f6ebd4;
+}
+
 .home-chest {
   width: min(28vw, 96px);
   height: auto;

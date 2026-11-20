@@ -49,7 +49,12 @@ describe('parseBackup: whole-file checks', () => {
   });
 
   it('accepts an empty backup', () => {
-    expect(parseBackup('{"games":[],"plays":[]}')).toEqual({ games: [], plays: [], invalidCount: 0 });
+    expect(parseBackup('{"games":[],"plays":[]}')).toEqual({
+      games: [],
+      plays: [],
+      invalidCount: 0,
+      progress: null
+    });
   });
 
   it('counts dropped entries across games and plays', () => {
@@ -169,6 +174,7 @@ describe('normalizePlay', () => {
   it('builds a minimal play and never reuses ids', () => {
     const play = normalizePlay({ id: 'play_x', gameTitle: ' 카탄 ', userId: 'attacker' });
     expect(play).toEqual({
+      sourceId: 'play_x',
       sourceGameId: null,
       data: {
         gameId: null,
@@ -289,6 +295,22 @@ describe('optional memo, tags, and wishlist', () => {
     expect(next.games[0].data).not.toHaveProperty('userId');
     const unknown = parseBackup(JSON.stringify({ games: [{ title: '뱅', ownershipStatus: '없는상태' }], plays: [] }));
     expect(unknown.games[0].data.ownershipStatus).toBe('보유중');
+  });
+});
+
+describe('parseBackup progress', () => {
+  it('keeps a version-1 collector blob and ignores an unreadable one', () => {
+    const kept = parseBackup(
+      JSON.stringify({
+        games: [],
+        plays: [],
+        progress: { version: 1, claimedDays: ['2026.11.01'], grants: [], acknowledgedLevel: 3 }
+      })
+    );
+    expect(kept.progress?.claimedDays).toEqual(['2026.11.01']);
+    expect(kept.progress?.acknowledgedLevel).toBe(3);
+    const dropped = parseBackup(JSON.stringify({ games: [], plays: [], progress: { version: 9 } }));
+    expect(dropped.progress).toBeNull();
   });
 });
 

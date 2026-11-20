@@ -347,7 +347,12 @@ const MainApp: React.FC = () => {
     }
     try {
       // Same path as backup restore: fresh id, whitelisted fields, duplicate check, ownership.
-      const plan = await storage.planImport(user.uid, { games: [], plays: [imported], invalidCount: 0 });
+      const plan = await storage.planImport(user.uid, {
+        games: [],
+        plays: [imported],
+        invalidCount: 0,
+        progress: null
+      });
       if (plan.newPlays.length === 0) {
         showToast('이미 내 기록에 있는 게임이에요.', 'info');
       } else {

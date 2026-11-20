@@ -1,10 +1,11 @@
 import type React from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Trophy, Clock, Calendar, MapPin, Users, Star, Edit, Trash2, Image as ImageIcon } from 'lucide-react';
 import type { PlayPhoto, PlayRecord } from '../types';
 import { formatDuration } from '../utils/formatters';
 import { applyImageFallback, coverSrc } from '../utils/imageFallback';
+import { useDialogA11y } from './useDialogA11y';
 
 function photoOpenName(photo: PlayPhoto, index: number): string {
   const base = `현장 사진 ${index + 1}`;
@@ -43,31 +44,10 @@ export const PlayDetailModal: React.FC<PlayDetailModalProps> = ({ play, isOpen, 
   };
 
   const closePhoto = () => setSelectedPhotoIndex(null);
-
-  useEffect(() => {
-    if (!isOpen || selectedPhotoIndex === null) {
-      if (!isOpen || returnFocusIndex.current === null) return;
-      const index = returnFocusIndex.current;
-      returnFocusIndex.current = null;
-      photoButtons.current[index]?.focus();
-      return;
-    }
-
-    lightboxCloseRef.current?.focus();
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        setSelectedPhotoIndex(null);
-        return;
-      }
-      if (event.key === 'Tab') {
-        event.preventDefault();
-        lightboxCloseRef.current?.focus();
-      }
-    };
-    document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
-  }, [isOpen, selectedPhotoIndex]);
+  const detailRef = useRef<HTMLDivElement>(null);
+  const lightboxRef = useRef<HTMLDivElement>(null);
+  useDialogA11y(isOpen && !!play, onClose, detailRef);
+  useDialogA11y(isOpen && selectedPhotoIndex !== null, closePhoto, lightboxRef);
 
   if (!isOpen || !play) return null;
 
@@ -75,6 +55,10 @@ export const PlayDetailModal: React.FC<PlayDetailModalProps> = ({ play, isOpen, 
     <AnimatePresence>
       <div
         id="play-detail-modal-overlay"
+        ref={detailRef}
+        role="dialog"
+        aria-modal="true"
+        tabIndex={-1}
         className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40 overflow-y-auto"
       >
         <motion.div
@@ -298,9 +282,11 @@ export const PlayDetailModal: React.FC<PlayDetailModalProps> = ({ play, isOpen, 
         {selectedPhotoIndex !== null && play.photos[selectedPhotoIndex] && (
           <div
             id="photo-lightbox-modal"
+            ref={lightboxRef}
             role="dialog"
             aria-modal="true"
             aria-label="확대 사진"
+            tabIndex={-1}
             className="fixed inset-0 z-60 bg-black/90 flex flex-col items-center justify-center p-4"
           >
             <button
