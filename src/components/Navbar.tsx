@@ -41,12 +41,17 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth }) => {
             id="header-user-profile-btn"
             type="button"
             onClick={onOpenAuth}
+            title={
+              user?.isAnonymous
+                ? '이 브라우저에만 있는 계정입니다. 다른 기기와 동기화되지 않습니다.'
+                : '이 브라우저에 저장된 계정'
+            }
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#F1F3F5] hover:bg-[#E9ECEF] active:bg-[#DFE4EA] text-[#2D3436] text-xs font-semibold transition-colors"
           >
             {user?.isAnonymous ? (
               <>
                 <LogIn className="w-3.5 h-3.5 text-[#636E72]" />
-                <span className="max-w-[70px] truncate">로그인</span>
+                <span className="max-w-[70px] truncate">이 기기</span>
               </>
             ) : (
               <>

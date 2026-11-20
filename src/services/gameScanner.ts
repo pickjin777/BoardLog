@@ -1,6 +1,7 @@
 import type { SeedGame } from '../types';
 import { SEED_GAMES } from '../data/seedGames';
 import { compressImage } from '../utils/imageCompressor';
+import { scanAvailableFromResponse } from '../utils/scanAvailability';
 import { findSeedMatch, type SeedMatch } from '../utils/titleMatch';
 
 export const MAX_SCAN_IMAGES = 4;
@@ -44,6 +45,26 @@ function isDetection(value: unknown): value is ScanDetection {
     (orientation === 'horizontal' || orientation === 'vertical' || orientation === 'rotated') &&
     typeof confidence === 'number'
   );
+}
+
+/**
+ * Asks the server whether a scan key is configured. A missing route, a 503, or a network
+ * error all mean "off", so the form can explain that instead of opening a broken scan.
+ * No image is sent and Gemini is not called.
+ */
+export async function fetchScanAvailable(): Promise<boolean> {
+  try {
+    const response = await fetch('/api/scan-games', { method: 'GET' });
+    let body: unknown = null;
+    try {
+      body = await response.json();
+    } catch {
+      body = null;
+    }
+    return scanAvailableFromResponse(response.status, body);
+  } catch {
+    return false;
+  }
 }
 
 export async function scanGamePhotos(files: File[], seeds: SeedGame[] = SEED_GAMES): Promise<ScanCandidate[]> {

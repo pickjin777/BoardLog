@@ -7,6 +7,7 @@ import type { UserGame } from '../types';
 import { useToast } from '../context/ToastContext';
 import { track } from '../services/analytics';
 import { applyImageFallback } from '../utils/imageFallback';
+import { gameMatchesShareFilter, type SharePlayerPreset, type ShareWeightPreset } from '../utils/shareGameFilter';
 
 interface KakaoShareModalProps {
   isOpen: boolean;
@@ -15,8 +16,8 @@ interface KakaoShareModalProps {
   onClose: () => void;
 }
 
-type PlayerPreset = 'all' | 'under4' | 'twoPlayers' | 'party5Plus';
-type WeightPreset = 'all' | 'easy' | 'medium' | 'heavy';
+type PlayerPreset = SharePlayerPreset;
+type WeightPreset = ShareWeightPreset;
 
 export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games, ownerName, onClose }) => {
   const { showToast } = useToast();
@@ -74,41 +75,14 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
 
   // Filtered games based on preset filters (used for quick bulk selection)
   const filteredPresetGames = useMemo(() => {
-    return games.filter((g) => {
-      // 1. Player Count
-      if (playerPreset === 'under4') {
-        // Can be played with 4 or fewer (minPlayers <= 4)
-        if (g.minPlayers > 4) return false;
-      } else if (playerPreset === 'twoPlayers') {
-        if (g.minPlayers > 2 || g.maxPlayers < 2) return false;
-      } else if (playerPreset === 'party5Plus') {
-        if (g.maxPlayers < 5) return false;
-      }
-
-      // 2. Genre
-      if (selectedGenre !== '전체') {
-        if (!g.genre.includes(selectedGenre)) return false;
-      }
-
-      // 3. Weight / Difficulty
-      if (weightPreset === 'easy') {
-        if ((g.weight || 2.0) > 2.2) return false;
-      } else if (weightPreset === 'medium') {
-        if ((g.weight || 2.0) < 2.0 || (g.weight || 2.0) > 3.2) return false;
-      } else if (weightPreset === 'heavy') {
-        if ((g.weight || 2.0) < 3.2) return false;
-      }
-
-      // 4. Search Query
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        const matchesTitle = g.title.toLowerCase().includes(q) || g.titleEn?.toLowerCase().includes(q);
-        const matchesGenre = g.genre.some((gr) => gr.toLowerCase().includes(q));
-        if (!matchesTitle && !matchesGenre) return false;
-      }
-
-      return true;
-    });
+    return games.filter((g) =>
+      gameMatchesShareFilter(g, {
+        player: playerPreset,
+        genre: selectedGenre,
+        weight: weightPreset,
+        search: searchQuery
+      })
+    );
   }, [games, playerPreset, selectedGenre, weightPreset, searchQuery]);
 
   // Games that are actually included in the share output
@@ -135,17 +109,19 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
   // Quick Preset Click Handler
   const applyPresetFilter = (type: PlayerPreset, genre?: string) => {
     setShareMode('selective');
+    const nextGenre = genre !== undefined ? genre : selectedGenre;
     if (type) setPlayerPreset(type);
     if (genre !== undefined) setSelectedGenre(genre);
 
-    // Auto-check all games matching this preset
-    const matching = games.filter((g) => {
-      if (type === 'under4' && g.minPlayers > 4) return false;
-      if (type === 'twoPlayers' && (g.minPlayers > 2 || g.maxPlayers < 2)) return false;
-      if (type === 'party5Plus' && g.maxPlayers < 5) return false;
-      if (genre && genre !== '전체' && !g.genre.includes(genre)) return false;
-      return true;
-    });
+    // Same rule as the checklist, including the weight and search already on screen.
+    const matching = games.filter((g) =>
+      gameMatchesShareFilter(g, {
+        player: type,
+        genre: nextGenre,
+        weight: weightPreset,
+        search: searchQuery
+      })
+    );
 
     const newSet = new Set<string>();
     matching.forEach((g) => {

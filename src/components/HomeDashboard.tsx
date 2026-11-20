@@ -52,38 +52,38 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   const playsToNextLevel = PLAYS_PER_LEVEL - playsIntoLevel;
 
   return (
-    <div className="space-y-6 pb-20">
+    <div className="space-y-3 pb-4">
       {/* Top Banner / Quick Action CTA - Editorial Gradient */}
-      <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#4834D4] via-[#5742df] to-[#686DE0] p-6 text-white shadow-[0_20px_40px_rgba(72,52,212,0.25)] border border-white/10">
+      <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#4834D4] via-[#5742df] to-[#686DE0] p-4 text-white shadow-[0_20px_40px_rgba(72,52,212,0.25)] border border-white/10">
         <div className="relative z-10">
-          <div className="flex items-center gap-1.5 text-white/80 text-[11px] font-bold mb-2 tracking-wide uppercase">
+          <div className="flex items-center gap-1.5 text-white/80 text-[11px] font-bold mb-1.5 tracking-wide uppercase">
             <Sparkles className="w-3.5 h-3.5 text-amber-300" />
             <span>Editorial Board Game Log</span>
           </div>
-          <h2 className="text-2xl font-black italic tracking-tight mb-1.5 leading-snug">
+          <h2 className="text-xl font-black italic tracking-tight mb-1 leading-snug">
             오늘 플레이한 게임을 기록하세요
           </h2>
-          <p className="text-xs text-white/80 mb-5 max-w-xs leading-relaxed font-normal">
-            승패, 순위, 점수, 현장 사진을 3터치 이내로 빠르게 아카이빙합니다.
+          <p className="text-[11px] text-white/80 mb-3 leading-relaxed font-normal">
+            승패와 함께한 사람을 이 기기에 남겨 두세요.
           </p>
 
-          <div className="flex items-center gap-2.5 flex-wrap">
+          <div className="grid grid-cols-2 gap-2">
             <button
               id="dashboard-add-play-cta"
               type="button"
               onClick={onOpenAddPlay}
-              className="inline-flex items-center gap-2 px-4.5 py-2.5 bg-white hover:bg-[#F8F9FA] text-[#4834D4] rounded-full text-xs font-bold shadow-[0_4px_12px_rgba(0,0,0,0.1)] active:scale-95 transition-all"
+              className="inline-flex items-center justify-center gap-1 px-2 py-2 bg-white hover:bg-[#F8F9FA] text-[#4834D4] rounded-full text-[11px] font-bold whitespace-nowrap shadow-[0_4px_12px_rgba(0,0,0,0.1)] active:scale-95 transition-all"
             >
-              <Plus className="w-4 h-4 stroke-[2.5]" />
+              <Plus className="w-3.5 h-3.5 stroke-[2.5] shrink-0" />
               <span>새 플레이 기록</span>
             </button>
             <button
               id="dashboard-add-game-cta"
               type="button"
               onClick={onOpenAddGame}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-white/15 hover:bg-white/25 text-white rounded-full text-xs font-semibold backdrop-blur-xs transition-colors border border-white/20"
+              className="inline-flex items-center justify-center gap-1 px-2 py-2 bg-white/15 hover:bg-white/25 text-white rounded-full text-[11px] font-semibold whitespace-nowrap backdrop-blur-xs transition-colors border border-white/20"
             >
-              <Layers className="w-3.5 h-3.5" />
+              <Layers className="w-3.5 h-3.5 shrink-0" />
               <span>게임 등록</span>
             </button>
             {onOpenKakaoShare && (
@@ -91,9 +91,9 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                 id="dashboard-open-kakao-cta"
                 type="button"
                 onClick={onOpenKakaoShare}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-[#FEE500] hover:bg-[#F5DC00] text-[#191919] rounded-full text-xs font-black transition-transform active:scale-95 shadow-xs"
+                className="inline-flex items-center justify-center gap-1 px-2 py-2 bg-[#FEE500] hover:bg-[#F5DC00] text-[#191919] rounded-full text-[11px] font-black whitespace-nowrap transition-transform active:scale-95 shadow-xs"
               >
-                <MessageCircle className="w-3.5 h-3.5 fill-[#191919]" />
+                <MessageCircle className="w-3.5 h-3.5 fill-[#191919] shrink-0" />
                 <span>카톡 목록 공유</span>
               </button>
             )}
@@ -102,10 +102,10 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                 id="dashboard-open-catalog-cta"
                 type="button"
                 onClick={onOpenCatalog}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-white/15 hover:bg-white/25 text-white rounded-full text-xs font-semibold backdrop-blur-xs transition-colors border border-white/20"
+                className="inline-flex items-center justify-center gap-1 px-2 py-2 bg-white/15 hover:bg-white/25 text-white rounded-full text-[11px] font-semibold whitespace-nowrap backdrop-blur-xs transition-colors border border-white/20"
               >
-                <Download className="w-3.5 h-3.5" />
-                <span>PDF 도록 / 인쇄</span>
+                <Download className="w-3.5 h-3.5 shrink-0" />
+                <span>PDF 도록</span>
               </button>
             )}
           </div>
@@ -160,26 +160,29 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
 
       {/* Summary KPI Grid */}
       <div className="grid grid-cols-4 gap-2.5">
-        <div className="p-3.5 bg-white rounded-[24px] border border-[#E9ECEF] shadow-sm text-center">
-          <span className="text-[10px] text-[#A8ABAF] font-bold block mb-0.5">보유 게임</span>
+        <div
+          id="home-kpi-games"
+          className="p-2.5 bg-white rounded-[24px] border border-[#E9ECEF] shadow-sm text-center"
+        >
+          <span className="text-[10px] text-[#A8ABAF] font-bold block mb-0.5 whitespace-nowrap">보유 게임</span>
           <span className="text-xl font-black italic text-[#1E272E]">{totalGames}</span>
           <span className="text-[10px] text-[#636E72] font-medium block">개</span>
         </div>
 
         <div className="p-3.5 bg-white rounded-[24px] border border-[#E9ECEF] shadow-sm text-center">
-          <span className="text-[10px] text-[#A8ABAF] font-bold block mb-0.5">총 플레이</span>
+          <span className="text-[10px] text-[#A8ABAF] font-bold block mb-0.5 whitespace-nowrap">총 플레이</span>
           <span className="text-xl font-black italic text-[#4834D4]">{totalPlays}</span>
           <span className="text-[10px] text-[#636E72] font-medium block">회</span>
         </div>
 
         <div className="p-3.5 bg-white rounded-[24px] border border-[#E9ECEF] shadow-sm text-center">
-          <span className="text-[10px] text-[#A8ABAF] font-bold block mb-0.5">승률</span>
+          <span className="text-[10px] text-[#A8ABAF] font-bold block mb-0.5 whitespace-nowrap">승률</span>
           <span className="text-xl font-black italic text-[#27AE60]">{winRate}%</span>
           <span className="text-[10px] text-[#636E72] font-medium block">{winCount}승</span>
         </div>
 
         <div className="p-3.5 bg-white rounded-[24px] border border-[#E9ECEF] shadow-sm text-center">
-          <span className="text-[10px] text-[#A8ABAF] font-bold block mb-0.5">총 시간</span>
+          <span className="text-[10px] text-[#A8ABAF] font-bold block mb-0.5 whitespace-nowrap">총 시간</span>
           <span className="text-xs font-black italic text-[#1E272E] block mt-1.5">{formatDuration(totalMinutes)}</span>
         </div>
       </div>
@@ -211,11 +214,15 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
             ))}
           </div>
         ) : (
-          <div className="p-8 bg-white rounded-[28px] border border-dashed border-[#E9ECEF] text-center shadow-sm">
+          <div
+            id="home-empty-hint"
+            className="p-4 bg-white rounded-[28px] border border-dashed border-[#E9ECEF] text-center shadow-sm"
+          >
             <p className="text-xs text-[#636E72] mb-3">
               아직 기록이 없어요. 게임이 끝나면 누가 이겼는지만 남겨도 충분해요.
             </p>
             <button
+              id="home-empty-add-play-btn"
               type="button"
               onClick={onOpenAddPlay}
               className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#4834D4] text-white text-xs font-bold rounded-full shadow-[0_4px_14px_rgba(72,52,212,0.3)] transition-colors"
