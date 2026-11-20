@@ -14,7 +14,7 @@ export const GameListItem: React.FC<GameListItemProps> = ({ game, onClick, onDel
   return (
     <div
       id={`game-list-item-${game.id}`}
-      className="group relative bg-white rounded-2xl border border-[#E9ECEF] p-3.5 shadow-sm hover:border-[#4834D4]/30 hover:shadow-md transition-all flex items-center gap-3.5"
+      className="group relative bg-white rounded-2xl border border-[#E9ECEF] p-4 shadow-sm hover:border-[#4834D4]/30 transition-colors flex items-center gap-4"
     >
       <button
         type="button"
@@ -22,7 +22,7 @@ export const GameListItem: React.FC<GameListItemProps> = ({ game, onClick, onDel
         aria-label={`${game.title} 열기`}
         className="absolute inset-0 z-0 rounded-2xl"
       />
-      <div className="relative z-10 flex min-w-0 flex-1 items-center gap-3.5 pointer-events-none">
+      <div className="relative z-10 flex min-w-0 flex-1 items-center gap-4 pointer-events-none">
         {/* Thumbnail */}
         <div className="relative w-16 h-16 rounded-xl bg-[#F8F9FA] overflow-hidden shrink-0 border border-[#E9ECEF]">
           <img
@@ -32,7 +32,7 @@ export const GameListItem: React.FC<GameListItemProps> = ({ game, onClick, onDel
             }
             alt={game.title}
             referrerPolicy="no-referrer"
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+            className="w-full h-full object-cover transition-transform"
             onError={applyImageFallback}
           />
         </div>
@@ -73,9 +73,7 @@ export const GameListItem: React.FC<GameListItemProps> = ({ game, onClick, onDel
             )}
           </div>
 
-          {game.storageLocation && (
-            <p className="text-[9px] text-[#636E72] truncate mt-0.5">📍 {game.storageLocation}</p>
-          )}
+          {game.storageLocation && <p className="mt-1 truncate text-xs text-[#636E72]">{game.storageLocation}</p>}
         </div>
 
         {/* Right stats & Actions */}

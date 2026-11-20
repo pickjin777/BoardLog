@@ -9,7 +9,7 @@ export const LocalStorageNotice: React.FC<LocalStorageNoticeProps> = ({ onBackup
   return (
     <div
       id="local-storage-notice"
-      className="mb-3 flex items-center gap-2.5 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2.5"
+      className="mb-3 flex items-center gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2.5"
     >
       <p className="min-w-0 flex-1 text-[11px] leading-relaxed text-amber-950">
         기록은 <strong>이 기기의 브라우저에만</strong> 저장돼요. 폰을 바꾸거나 브라우저 데이터를 지우면 사라질 수

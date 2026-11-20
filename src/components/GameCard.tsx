@@ -35,17 +35,17 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onClick, onDelete }) =
   return (
     <div
       id={`game-card-${game.id}`}
-      className="group relative bg-white rounded-[28px] border border-[#E9ECEF] shadow-sm hover:shadow-md hover:border-[#4834D4]/30 transition-all flex flex-col"
+      className="group relative bg-white rounded-2xl border border-[#E9ECEF] shadow-sm hover:border-[#4834D4]/30 transition-colors flex flex-col"
     >
       <button
         type="button"
         onClick={onClick}
         aria-label={`${game.title} 열기`}
-        className="absolute inset-0 z-0 rounded-[28px]"
+        className="absolute inset-0 z-0 rounded-2xl"
       />
       <div className="relative z-10 flex flex-1 flex-col pointer-events-none">
         {/* Top Image & Floating Badges */}
-        <div className="relative w-full aspect-4/3 bg-[#F8F9FA] overflow-hidden rounded-t-[28px]">
+        <div className="relative w-full aspect-4/3 bg-[#F8F9FA] overflow-hidden rounded-t-2xl">
           <img
             src={
               game.imageUrl ||
@@ -53,7 +53,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onClick, onDelete }) =
             }
             alt={game.title}
             referrerPolicy="no-referrer"
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-full object-cover transition-transform duration-300"
             onError={applyImageFallback}
           />
 
@@ -70,8 +70,8 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onClick, onDelete }) =
 
           {/* Play count badge & Action overlay */}
           <div className="absolute top-2.5 right-2.5 flex items-center gap-1">
-            <div className="bg-black/60 backdrop-blur-xs text-white px-2 py-0.5 rounded-full text-[10px] font-semibold flex items-center gap-1">
-              <CheckSquare className="w-3 h-3 text-amber-300" />
+            <div className="bg-black/60 text-white px-2 py-0.5 rounded-full text-[10px] font-semibold flex items-center gap-1">
+              <CheckSquare className="h-4 w-4" strokeWidth={1.5} />
               <span>{game.playCount || 0}회</span>
             </div>
 
@@ -81,7 +81,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onClick, onDelete }) =
                 aria-label="게임 삭제"
                 title="게임 삭제"
                 onClick={onDelete}
-                className="pointer-events-auto relative z-20 w-6 h-6 rounded-full bg-black/60 hover:bg-[#EB4D4B] text-white flex items-center justify-center backdrop-blur-xs transition-colors shadow-xs"
+                className="pointer-events-auto relative z-20 w-6 h-6 rounded-full bg-black/60 hover:bg-[#EB4D4B] text-white flex items-center justify-center transition-colors shadow-xs"
               >
                 <Trash2 className="w-3 h-3" />
               </button>
@@ -90,14 +90,14 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onClick, onDelete }) =
 
           {/* Condition pill */}
           {game.condition && (
-            <div className="absolute bottom-2.5 left-2.5 bg-white/90 backdrop-blur-xs text-[#2D3436] px-2 py-0.5 rounded-full text-[9px] font-bold border border-[#E9ECEF]">
+            <div className="absolute bottom-2.5 left-2.5 bg-white/90 text-[#2D3436] px-2 py-0.5 rounded-full text-[9px] font-bold border border-[#E9ECEF]">
               상태: {game.condition}
             </div>
           )}
         </div>
 
         {/* Info Container */}
-        <div className="p-3.5 flex-1 flex flex-col justify-between">
+        <div className="p-4 flex-1 flex flex-col justify-between">
           <div>
             <div className="flex items-baseline gap-1.5 mb-1">
               <h3 className="text-sm font-black text-[#1E272E] line-clamp-1 group-hover:text-[#4834D4] transition-colors">
@@ -138,16 +138,16 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onClick, onDelete }) =
             </div>
 
             {game.weight > 0 && (
-              <div className="flex items-center gap-0.5 text-[#4834D4] font-bold">
-                <Flame className="w-3.5 h-3.5" />
-                <span>{game.weight.toFixed(1)}</span>
+              <div className="flex items-center gap-1 text-[#636E72]">
+                <Flame className="h-4 w-4" strokeWidth={1.5} />
+                <span className="tabular-nums">{game.weight.toFixed(1)}</span>
               </div>
             )}
           </div>
 
           {game.storageLocation && (
             <div className="mt-2 text-[10px] text-[#636E72] flex items-center gap-1 truncate">
-              <MapPin className="w-2.5 h-2.5 shrink-0" />
+              <MapPin className="h-4 w-4 shrink-0" strokeWidth={1.5} />
               <span className="truncate">{game.storageLocation}</span>
             </div>
           )}

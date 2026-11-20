@@ -75,16 +75,17 @@ export const PlayDetailModal: React.FC<PlayDetailModalProps> = ({ play, isOpen, 
     <AnimatePresence>
       <div
         id="play-detail-modal-overlay"
-        className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40 backdrop-blur-xs overflow-y-auto"
+        className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40 overflow-y-auto"
       >
         <motion.div
-          initial={{ opacity: 0, scale: 0.96, y: 15 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.96, y: 15 }}
-          className="w-full max-w-lg md:max-w-2xl bg-white rounded-[32px] shadow-2xl border border-[#E9ECEF] overflow-hidden my-auto max-h-[92vh] flex flex-col"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+          exit={{ opacity: 0, y: 8 }}
+          className="w-full max-w-lg md:max-w-2xl bg-white rounded-2xl shadow-2xl border border-[#E9ECEF] overflow-hidden my-auto max-h-[92vh] flex flex-col"
         >
           {/* Header */}
-          <div className="p-4.5 sm:p-5 border-b border-[#E9ECEF] bg-white">
+          <div className="p-4 sm:p-5 border-b border-[#E9ECEF] bg-white">
             <div className="grid grid-cols-[3rem_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-0.5">
               <img
                 src={
@@ -105,7 +106,7 @@ export const PlayDetailModal: React.FC<PlayDetailModalProps> = ({ play, isOpen, 
                       : 'bg-[#F1F3F5] text-[#636E72] border-[#E9ECEF]'
                   }`}
                 >
-                  {play.myResult === '승리' ? '👑 내 승리' : play.myResult}
+                  {play.myResult === '승리' ? '내 승리' : play.myResult}
                 </span>
               </div>
               <div className="flex items-center gap-1.5">
@@ -150,9 +151,9 @@ export const PlayDetailModal: React.FC<PlayDetailModalProps> = ({ play, isOpen, 
           </div>
 
           {/* Body Scroll Area */}
-          <div className="p-4.5 sm:p-6 overflow-y-auto flex-1 space-y-5">
+          <div className="p-4 sm:p-6 overflow-y-auto flex-1 space-y-5">
             {/* Meta bar */}
-            <div className="grid grid-cols-3 gap-2 p-3.5 bg-[#F8F9FA] rounded-2xl border border-[#E9ECEF] text-center text-xs">
+            <div className="grid grid-cols-3 gap-2 p-4 bg-[#F8F9FA] rounded-2xl border border-[#E9ECEF] text-center text-xs">
               <div>
                 <span className="text-[10px] text-[#636E72] block mb-0.5 font-bold">장소</span>
                 <span className="font-bold text-[#1E272E] flex items-center justify-center gap-1">
@@ -196,11 +197,11 @@ export const PlayDetailModal: React.FC<PlayDetailModalProps> = ({ play, isOpen, 
                 {play.participants.map((p, idx) => (
                   <div
                     key={p.id || idx}
-                    className={`p-3.5 flex items-center justify-between text-xs ${
+                    className={`p-4 flex items-center justify-between text-xs ${
                       p.isWinner ? 'bg-[#4834D4]/5 font-bold' : ''
                     }`}
                   >
-                    <div className="flex items-center gap-2.5">
+                    <div className="flex items-center gap-2">
                       <span
                         className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
                           p.rank === 1 || p.isWinner
@@ -244,7 +245,7 @@ export const PlayDetailModal: React.FC<PlayDetailModalProps> = ({ play, isOpen, 
                   <span>현장 사진 ({play.photos.length}장)</span>
                 </h3>
 
-                <div className="grid grid-cols-3 gap-2.5">
+                <div className="grid grid-cols-3 gap-2">
                   {play.photos.map((photo, pIdx) => (
                     <button
                       key={photo.id || pIdx}
@@ -261,10 +262,10 @@ export const PlayDetailModal: React.FC<PlayDetailModalProps> = ({ play, isOpen, 
                         alt=""
                         referrerPolicy="no-referrer"
                         onError={applyImageFallback}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        className="w-full h-full object-cover transition-transform"
                       />
                       {photo.caption && (
-                        <div className="absolute inset-x-0 bottom-0 bg-black/60 backdrop-blur-xs p-1.5 text-[9px] text-white truncate">
+                        <div className="absolute inset-x-0 bottom-0 bg-black/60 p-1.5 text-[9px] text-white truncate">
                           {photo.caption}
                         </div>
                       )}
@@ -289,7 +290,7 @@ export const PlayDetailModal: React.FC<PlayDetailModalProps> = ({ play, isOpen, 
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 bg-[#4834D4] hover:bg-[#3c2ab9] text-white text-xs font-bold rounded-full shadow-[0_4px_12px_rgba(72,52,212,0.3)] transition-colors"
+              className="px-5 py-2.5 bg-[#4834D4] hover:bg-[#3c2ab9] text-white text-xs font-bold rounded-full transition-colors"
             >
               확인
             </button>

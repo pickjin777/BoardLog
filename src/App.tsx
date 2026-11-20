@@ -323,7 +323,7 @@ const MainApp: React.FC = () => {
       // Refresh games to update playCount
       const updatedGames = await storage.getUserGames(user.uid);
       setGames(updatedGames);
-      showToast('새 플레이 기록이 저장되었습니다! 🎲', 'success');
+      showToast('플레이 기록을 저장했습니다', 'success');
       track('share_sheet_opened');
       setSharingPlay(newPlay);
     }
@@ -443,7 +443,7 @@ const MainApp: React.FC = () => {
                 {/* Title stays full width. At 320px a side-by-side row crushed it into "내 보드게 / 임". */}
                 <div className="space-y-3">
                   <div>
-                    <h2 id="games-tab-title" className="text-xl font-black italic text-[#1E272E]">
+                    <h2 id="games-tab-title" className="text-xl font-black text-[#1E272E]">
                       내 보드게임 컬렉션
                     </h2>
                     <p className="text-xs text-[#636E72]">총 {games.length}개의 게임</p>
@@ -458,7 +458,7 @@ const MainApp: React.FC = () => {
                         setEditingGame(null);
                         setIsGameFormOpen(true);
                       }}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#4834D4] hover:bg-[#3c2ab9] text-white rounded-2xl text-xs font-bold shadow-[0_4px_12px_rgba(72,52,212,0.25)] transition-all active:scale-95"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#4834D4] hover:bg-[#3c2ab9] text-white rounded-2xl text-xs font-bold transition-colors"
                       title="새 보드게임 추가하기"
                     >
                       <Plus className="w-3.5 h-3.5" />
@@ -470,7 +470,7 @@ const MainApp: React.FC = () => {
                       id="games-kakao-share-btn"
                       type="button"
                       onClick={() => setIsKakaoShareOpen(true)}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#FEE500] hover:bg-[#F5DC00] active:bg-[#E8CE00] text-[#191919] rounded-2xl text-xs font-black shadow-xs transition-all active:scale-95 border border-[#F5DC00]"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#FEE500] hover:bg-[#F5DC00] active:bg-[#E8CE00] text-[#191919] rounded-2xl text-xs font-black shadow-xs transition-colors border border-[#F5DC00]"
                       title="소장 보드게임 목록 카카오톡 공유 (전체 / 4인이하 등 조건 선택)"
                     >
                       <MessageCircle className="w-3.5 h-3.5 fill-[#191919]" />
@@ -483,7 +483,7 @@ const MainApp: React.FC = () => {
                       id="games-print-catalog-btn"
                       type="button"
                       onClick={() => setIsCatalogModalOpen(true)}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-[#F8F9FA] text-[#1E272E] rounded-2xl text-xs font-bold border border-[#E9ECEF] shadow-sm transition-all active:scale-95"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-[#F8F9FA] text-[#1E272E] rounded-2xl text-xs font-bold border border-[#E9ECEF] shadow-sm transition-colors"
                       title="소장 도록 PDF 저장 및 인쇄"
                     >
                       <Download className="w-3.5 h-3.5 text-[#4834D4]" />
@@ -534,10 +534,10 @@ const MainApp: React.FC = () => {
                     id="games-search-input"
                     type="text"
                     aria-label="게임 검색"
-                    placeholder="게임명, 영문명, 장르, 보관장소 검색..."
+                    placeholder="게임, 장르, 보관 장소"
                     value={gameSearch}
                     onChange={(e) => setGameSearch(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E9ECEF] rounded-full text-xs text-[#1E272E] focus:outline-hidden focus:ring-2 focus:ring-[#4834D4]/20 focus:border-[#4834D4] shadow-sm transition-all"
+                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E9ECEF] rounded-full text-xs text-[#1E272E] focus:outline-hidden focus:ring-2 focus:ring-[#4834D4]/20 focus:border-[#4834D4] shadow-sm transition-colors"
                   />
                 </div>
 
@@ -549,7 +549,7 @@ const MainApp: React.FC = () => {
                       type="button"
                       onClick={() => setSelectedOwnership(tab)}
                       aria-pressed={selectedOwnership === tab}
-                      className={`shrink-0 px-3.5 py-1.5 rounded-full font-bold whitespace-nowrap transition-all ${
+                      className={`shrink-0 px-4 py-1.5 rounded-full font-bold whitespace-nowrap transition-colors ${
                         selectedOwnership === tab
                           ? 'bg-[#4834D4] text-white shadow-xs'
                           : 'bg-white text-[#636E72] border border-[#E9ECEF] hover:bg-[#F8F9FA]'
@@ -563,7 +563,7 @@ const MainApp: React.FC = () => {
                 {/* Game List / Grid */}
                 {filteredGames.length > 0 ? (
                   gameViewMode === 'grid' ? (
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                       {filteredGames.map((game) => (
                         <GameCard
                           key={game.id}
@@ -577,7 +577,7 @@ const MainApp: React.FC = () => {
                       ))}
                     </div>
                   ) : (
-                    <div className="space-y-2.5">
+                    <div className="space-y-2">
                       {filteredGames.map((game) => (
                         <GameListItem
                           key={game.id}
@@ -593,16 +593,16 @@ const MainApp: React.FC = () => {
                   )
                 ) : games.length === 0 ? (
                   <EmptyState
-                    title="등록된 보드게임이 없습니다"
-                    description="자주 즐기는 보드게임을 등록하고 플레이 기록을 남겨보세요."
-                    actionText="인기 게임 검색해서 추가하기"
+                    title="등록된 게임이 없습니다"
+                    description="게임을 등록하면 플레이를 이 기록에 묶을 수 있습니다."
+                    actionText="게임 추가"
                     onAction={() => {
                       setEditingGame(null);
                       setIsGameFormOpen(true);
                     }}
                   />
                 ) : (
-                  <div className="p-8 bg-white rounded-[28px] border border-[#E9ECEF] text-center space-y-3 shadow-sm">
+                  <div className="p-8 bg-white rounded-2xl border border-[#E9ECEF] text-center space-y-3 shadow-sm">
                     <p className="text-xs text-[#636E72]">'{gameSearch}' 검색 조건에 맞는 게임이 없습니다.</p>
                     <button
                       type="button"
@@ -610,7 +610,7 @@ const MainApp: React.FC = () => {
                         setEditingGame(null);
                         setIsGameFormOpen(true);
                       }}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#4834D4] hover:bg-[#3c2ab9] text-white text-xs font-bold rounded-full shadow-[0_4px_14px_rgba(72,52,212,0.3)] transition-colors"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#4834D4] hover:bg-[#3c2ab9] text-white text-xs font-bold rounded-full transition-colors"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       <span>'{gameSearch}' 직접 등록하기</span>
@@ -626,7 +626,7 @@ const MainApp: React.FC = () => {
                 {/* Header */}
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="min-w-0">
-                    <h2 className="text-xl font-black italic text-[#1E272E]">플레이 기록</h2>
+                    <h2 className="text-xl font-black text-[#1E272E]">플레이 기록</h2>
                     <p className="text-xs text-[#636E72]">총 {plays.length}회의 플레이 기록</p>
                   </div>
 
@@ -638,7 +638,7 @@ const MainApp: React.FC = () => {
                       setPreselectedGameForPlay(null);
                       setIsPlayFormOpen(true);
                     }}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#4834D4] hover:bg-[#3c2ab9] text-white rounded-full text-xs font-bold shadow-[0_4px_14px_rgba(72,52,212,0.3)] transition-colors"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#4834D4] hover:bg-[#3c2ab9] text-white rounded-full text-xs font-bold transition-colors"
                   >
                     <Plus className="w-4 h-4" />
                     <span>새 기록</span>
@@ -690,10 +690,10 @@ const MainApp: React.FC = () => {
                     id="plays-search-input"
                     type="text"
                     aria-label="플레이 기록 검색"
-                    placeholder="게임명, 참여자 이름, 장소 검색..."
+                    placeholder="게임, 참여자, 장소"
                     value={playSearch}
                     onChange={(e) => setPlaySearch(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E9ECEF] rounded-full text-xs text-[#1E272E] focus:outline-hidden focus:ring-2 focus:ring-[#4834D4]/20 focus:border-[#4834D4] shadow-sm transition-all"
+                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E9ECEF] rounded-full text-xs text-[#1E272E] focus:outline-hidden focus:ring-2 focus:ring-[#4834D4]/20 focus:border-[#4834D4] shadow-sm transition-colors"
                   />
                 </div>
 
@@ -705,28 +705,28 @@ const MainApp: React.FC = () => {
                       type="button"
                       onClick={() => setSelectedPlayResult(tab)}
                       aria-pressed={selectedPlayResult === tab}
-                      className={`shrink-0 px-3.5 py-1.5 rounded-full font-bold whitespace-nowrap transition-all ${
+                      className={`shrink-0 px-4 py-1.5 rounded-full font-bold whitespace-nowrap transition-colors ${
                         selectedPlayResult === tab
                           ? 'bg-[#4834D4] text-white shadow-xs'
                           : 'bg-white text-[#636E72] border border-[#E9ECEF] hover:bg-[#F8F9FA]'
                       }`}
                     >
-                      {tab === '승리' ? '👑 승리' : tab}
+                      {tab}
                     </button>
                   ))}
                 </div>
 
                 {/* Plays List */}
                 {filteredPlays.length > 0 ? (
-                  <div id="memory-card-list" className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                  <div id="memory-card-list" className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {filteredPlays.map((play) => (
                       <PlayCard key={play.id} play={play} onClick={() => setViewingPlay(play)} />
                     ))}
                   </div>
                 ) : plays.length === 0 ? (
                   <EmptyState
-                    title="아직 기록된 플레이가 없습니다"
-                    description="오늘 진행한 보드게임의 참여자, 점수, 순위, 현장 사진을 기록해 보세요."
+                    title="아직 플레이 기록이 없습니다"
+                    description="참여자와 승자만 적어도 한 판이 남습니다."
                     actionText="첫 플레이 기록 남기기"
                     onAction={() => {
                       setEditingPlay(null);
@@ -737,7 +737,7 @@ const MainApp: React.FC = () => {
                 ) : (
                   <div
                     id="plays-filter-empty"
-                    className="p-8 bg-white rounded-[28px] border border-[#E9ECEF] text-center text-sm text-[#F6EBD4] shadow-sm"
+                    className="p-8 bg-white rounded-2xl border border-[#E9ECEF] text-center text-sm text-[#F6EBD4] shadow-sm"
                   >
                     {selectedPlayDate
                       ? `${dayHeading(selectedPlayDate)}의 조건에 맞는 기록이 없습니다.`

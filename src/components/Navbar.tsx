@@ -11,16 +11,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth }) => {
   const { user } = useAuth();
 
   return (
-    <header id="top-app-header" className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-[#E9ECEF]">
+    <header id="top-app-header" className="sticky top-0 z-30 bg-white/90 border-b border-[#E9ECEF]">
       <div className="mx-auto flex min-h-15 max-w-xl flex-wrap items-center justify-between gap-x-2 gap-y-1 px-4 py-2 md:max-w-3xl md:px-6 lg:max-w-6xl">
         {/* Brand Logo & Title */}
-        <div className="flex min-w-0 items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-[#4834D4] shadow-[0_4px_12px_rgba(72,52,212,0.3)]">
+        <div className="flex min-w-0 items-center gap-2">
+          <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-[#4834D4]">
             <TreasureChest className="h-8 w-8" />
           </div>
           <div>
             <div className="flex items-center gap-1.5">
-              <h1 className="text-lg font-black tracking-tight text-[#1E272E]">보드로그</h1>
+              <h1 className="text-lg font-black  text-[#1E272E]">보드로그</h1>
               <span className="hidden rounded-full border border-[#E9ECEF] bg-[#F1F3F5] px-2 py-0.5 text-[10px] font-bold text-[#4834D4] sm:inline">
                 Board Log
               </span>

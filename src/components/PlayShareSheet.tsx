@@ -66,15 +66,16 @@ export const PlayShareSheet: React.FC<PlayShareSheetProps> = ({ play, onClose })
           onClick={onClose}
         >
           <motion.div
-            className="w-full max-w-md rounded-[28px] bg-white p-5 shadow-xl"
-            initial={{ y: 40 }}
+            className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl"
+            initial={{ y: 12 }}
             animate={{ y: 0 }}
-            exit={{ y: 40 }}
+            exit={{ y: 12 }}
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
             onClick={(e) => e.stopPropagation()}
           >
             <PlayCard play={play} variant="sheet" />
             <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-sm font-black italic text-[#1E272E]">같이 한 사람들에게 결과 공유</h3>
+              <h3 className="text-sm font-medium text-[#F6EBD4]">결과 공유</h3>
               <button
                 type="button"
                 onClick={onClose}
@@ -98,7 +99,7 @@ export const PlayShareSheet: React.FC<PlayShareSheetProps> = ({ play, onClose })
               />
             </label>
 
-            <pre className="mb-4 max-h-56 overflow-y-auto whitespace-pre-wrap rounded-2xl border border-[#E9ECEF] bg-[#F8F9FA] p-3.5 font-sans text-xs leading-relaxed text-[#2D3436]">
+            <pre className="mb-4 max-h-56 overflow-y-auto whitespace-pre-wrap rounded-2xl border border-[#E9ECEF] bg-[#F8F9FA] p-4 font-sans text-xs leading-relaxed text-[#2D3436]">
               {text}
             </pre>
 
@@ -109,7 +110,7 @@ export const PlayShareSheet: React.FC<PlayShareSheetProps> = ({ play, onClose })
                   type="button"
                   onClick={share}
                   disabled={!nameReady}
-                  className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-[#FEE500] py-2.5 text-xs font-black text-[#191919] transition-transform active:scale-95 disabled:opacity-40"
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-[#FEE500] py-2.5 text-xs font-black text-[#191919] transition-transform disabled:opacity-40"
                 >
                   <Share2 className="h-3.5 w-3.5" />
                   카톡 등으로 공유
@@ -120,7 +121,7 @@ export const PlayShareSheet: React.FC<PlayShareSheetProps> = ({ play, onClose })
                 type="button"
                 onClick={copyText}
                 disabled={!nameReady}
-                className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-2.5 text-xs font-bold transition-transform active:scale-95 disabled:opacity-40 ${
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-2.5 text-xs font-bold transition-transform disabled:opacity-40 ${
                   canNativeShare ? 'bg-[#F1F3F5] text-[#2D3436]' : 'bg-[#FEE500] text-[#191919]'
                 }`}
               >

@@ -43,17 +43,17 @@ export const SharedPlayModal: React.FC<SharedPlayModalProps> = ({ shared, onClos
           exit={{ opacity: 0 }}
         >
           <motion.div
-            className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-[28px] bg-white p-5 shadow-xl"
-            initial={{ y: 40 }}
+            className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-5 shadow-xl"
+            initial={{ y: 12 }}
             animate={{ y: 0 }}
-            exit={{ y: 40 }}
+            exit={{ y: 12 }}
           >
             <div className="mb-4 flex items-start justify-between gap-3">
               <div>
                 <p className="text-[11px] font-bold text-[#4834D4]">
                   {shared.sharedBy ? `${shared.sharedBy}님이 공유한 기록` : '공유받은 기록'}
                 </p>
-                <h3 className="mt-0.5 text-lg font-black italic text-[#1E272E]">{shared.gameTitle}</h3>
+                <h3 className="mt-0.5 text-lg font-black text-[#1E272E]">{shared.gameTitle}</h3>
                 <p className="mt-0.5 text-xs text-[#636E72]">
                   {[
                     shared.date,
@@ -87,7 +87,7 @@ export const SharedPlayModal: React.FC<SharedPlayModalProps> = ({ shared, onClos
                     role="radio"
                     aria-checked={selected}
                     onClick={() => setMyIndex(i)}
-                    className={`flex w-full items-center gap-2.5 rounded-2xl border px-3 py-2.5 text-left text-xs transition-colors ${
+                    className={`flex w-full items-center gap-2 rounded-2xl border px-3 py-2.5 text-left text-xs transition-colors ${
                       selected ? 'border-[#4834D4] bg-[#4834D4]/5' : 'border-[#E9ECEF] bg-[#F8F9FA] hover:bg-[#F1F3F5]'
                     }`}
                   >
@@ -121,7 +121,7 @@ export const SharedPlayModal: React.FC<SharedPlayModalProps> = ({ shared, onClos
               type="button"
               onClick={handleAdd}
               disabled={myIndex === null || isSaving}
-              className="mt-4 w-full rounded-full bg-[#4834D4] py-3 text-xs font-bold text-white shadow-[0_4px_12px_rgba(72,52,212,0.3)] transition-colors hover:bg-[#3c2ab9] disabled:opacity-40"
+              className="mt-4 w-full rounded-full bg-[#4834D4] py-3 text-xs font-bold text-white transition-colors hover:bg-[#3c2ab9] disabled:opacity-40"
             >
               {isSaving ? '저장 중...' : '내 기록에 추가'}
             </button>
