@@ -1,5 +1,5 @@
 import type React from 'react';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { lazy, Suspense, useState, useEffect, useCallback, useRef } from 'react';
 import { Search, Plus, LayoutGrid, List, Download, MessageCircle } from 'lucide-react';
 import type { UserGame, PlayRecord, GameOwnershipStatus, MyGameResult, TabType } from './types';
 import { ToastProvider, useToast } from './context/ToastContext';
@@ -30,6 +30,9 @@ import { ConfirmModal } from './components/ConfirmModal';
 import { LocalStorageNotice } from './components/LocalStorageNotice';
 import { LoadingState, EmptyState, ErrorState } from './components/StateViews';
 import { TreasureReveal, type TreasureMoment } from './components/TreasureReveal';
+import { dayHeading } from './utils/memoryCard';
+
+const PlayCalendar = lazy(() => import('./components/PlayCalendar').then((mod) => ({ default: mod.PlayCalendar })));
 
 const OWNERSHIP_TABS: (GameOwnershipStatus | '전체')[] = [
   '전체',
@@ -65,6 +68,7 @@ const MainApp: React.FC = () => {
   // Search & Filter States for Plays tab
   const [playSearch, setPlaySearch] = useState('');
   const [selectedPlayResult, setSelectedPlayResult] = useState<MyGameResult | '전체'>('전체');
+  const [selectedPlayDate, setSelectedPlayDate] = useState<string | null>(null);
 
   // Modals Management
   const [isAuthOpen, setIsAuthOpen] = useState(false);
@@ -296,6 +300,7 @@ const MainApp: React.FC = () => {
   // --- Handlers: Play Record CRUD ---
   const handleSavePlay = async (playData: Omit<PlayRecord, 'id' | 'createdAt' | 'updatedAt'>) => {
     if (!user) return;
+    setSelectedPlayDate(null);
     if (editingPlay) {
       // Update
       const updated = await storage.updatePlayRecord(user.uid, editingPlay.id, playData);
@@ -379,8 +384,9 @@ const MainApp: React.FC = () => {
       p.participants.some((part) => part.name.toLowerCase().includes(playSearch.toLowerCase()));
 
     const matchesResult = selectedPlayResult === '전체' || p.myResult === selectedPlayResult;
+    const matchesDate = selectedPlayDate === null || p.date === selectedPlayDate;
 
-    return matchesSearch && matchesResult;
+    return matchesSearch && matchesResult && matchesDate;
   });
 
   return (
@@ -392,7 +398,7 @@ const MainApp: React.FC = () => {
       {/* Phone stays a single column. Tablet and desktop use the extra width. */}
       <main
         id="app-shell-main"
-        className="flex-1 w-full max-w-xl md:max-w-3xl lg:max-w-6xl mx-auto px-4 md:px-6 pt-4 lg:pb-12"
+        className="flex-1 w-full min-w-0 max-w-xl md:max-w-3xl lg:max-w-6xl mx-auto px-4 md:px-6 pt-4 lg:pb-12"
       >
         <LocalStorageNotice
           onBackup={() => {
@@ -618,8 +624,8 @@ const MainApp: React.FC = () => {
             {activeTab === 'plays' && (
               <div className="space-y-4 pb-20">
                 {/* Header */}
-                <div className="flex items-center justify-between">
-                  <div>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="min-w-0">
                     <h2 className="text-xl font-black italic text-[#1E272E]">플레이 기록</h2>
                     <p className="text-xs text-[#636E72]">총 {plays.length}회의 플레이 기록</p>
                   </div>
@@ -638,6 +644,41 @@ const MainApp: React.FC = () => {
                     <span>새 기록</span>
                   </button>
                 </div>
+
+                {plays.length > 0 && (
+                  <Suspense
+                    fallback={
+                      <div
+                        role="status"
+                        className="rounded-3xl border border-[#C6A36A] bg-[#1C1812] px-4 py-6 text-sm text-[#F6EBD4]"
+                      >
+                        달력을 불러오는 중
+                      </div>
+                    }
+                  >
+                    <PlayCalendar
+                      plays={plays}
+                      selectedDate={selectedPlayDate}
+                      onSelectDate={(dateKey) =>
+                        setSelectedPlayDate((current) => (current === dateKey ? null : dateKey))
+                      }
+                    />
+                  </Suspense>
+                )}
+
+                {selectedPlayDate && (
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-sm font-bold text-[#F6EBD4]">{dayHeading(selectedPlayDate)}의 추억 카드</p>
+                    <button
+                      id="plays-show-all-btn"
+                      type="button"
+                      onClick={() => setSelectedPlayDate(null)}
+                      className="rounded-full bg-[#4834D4] px-4 text-sm font-bold text-white"
+                    >
+                      전체 기록
+                    </button>
+                  </div>
+                )}
 
                 {/* Search Bar */}
                 <div className="relative">
@@ -677,7 +718,7 @@ const MainApp: React.FC = () => {
 
                 {/* Plays List */}
                 {filteredPlays.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                  <div id="memory-card-list" className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                     {filteredPlays.map((play) => (
                       <PlayCard key={play.id} play={play} onClick={() => setViewingPlay(play)} />
                     ))}
@@ -694,8 +735,13 @@ const MainApp: React.FC = () => {
                     }}
                   />
                 ) : (
-                  <div className="p-8 bg-white rounded-[28px] border border-[#E9ECEF] text-center text-xs text-[#636E72] shadow-sm">
-                    '{playSearch}' 조건에 해당하는 플레이 기록이 없습니다.
+                  <div
+                    id="plays-filter-empty"
+                    className="p-8 bg-white rounded-[28px] border border-[#E9ECEF] text-center text-sm text-[#F6EBD4] shadow-sm"
+                  >
+                    {selectedPlayDate
+                      ? `${dayHeading(selectedPlayDate)}의 조건에 맞는 기록이 없습니다.`
+                      : `'${playSearch}' 조건에 해당하는 플레이 기록이 없습니다.`}
                   </div>
                 )}
               </div>

@@ -375,3 +375,41 @@ textarea {
   }
 }
 
+/* Seven columns share the row. Day buttons may be narrower than 48px at 320 so Saturday stays on screen. */
+#play-calendar {
+  width: auto;
+  max-width: none;
+  margin-inline: -16px;
+  overflow: visible;
+}
+
+#play-calendar .calendar-day {
+  min-width: 0;
+  width: 100%;
+  min-height: 48px;
+  height: 52px;
+  padding: 0;
+}
+
+#play-calendar .calendar-day:focus-visible {
+  outline-offset: -2px !important;
+}
+
+.play-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px;
+  width: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .memory-card,
+  .memory-card *,
+  .play-calendar,
+  .play-calendar * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
