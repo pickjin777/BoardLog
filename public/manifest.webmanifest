@@ -3,6 +3,7 @@
   "short_name": "보드로그",
   "description": "보드게임 소장 목록과 플레이 기록을 관리하는 보드로그",
   "lang": "ko",
+  "id": "/",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
