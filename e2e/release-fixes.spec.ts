@@ -512,3 +512,47 @@ test('tablet widens the page and desktop puts navigation on the side', async ({ 
   });
   check('PC 게임은 한 줄에 네 장', rows === 1, String(rows));
 });
+
+test('pdf and kakao image load their libraries only when saving', async ({ page }) => {
+  const heavy: string[] = [];
+  page.on('request', (request) => {
+    if (/jspdf|html2canvas/.test(request.url())) heavy.push(request.url());
+  });
+  page.on('dialog', (dialog) => {
+    void dialog.dismiss();
+  });
+  await page.setViewportSize({ width: 420, height: 900 });
+  await page.goto('/', { waitUntil: 'networkidle' });
+  check('첫 화면은 PDF·캡처 라이브러리를 받지 않음', heavy.length === 0, heavy.join(' '));
+
+  const uid = await requireUid(page);
+  await putRows(page, [
+    { store: 'games', row: gameRow({ id: 'export_game', userId: uid, title: '내보내기용', imageUrl: '' }) }
+  ]);
+  await page.reload({ waitUntil: 'networkidle' });
+  check('새로고침 후에도 PDF·캡처 라이브러리를 받지 않음', heavy.length === 0, heavy.join(' '));
+
+  await page.locator('#nav-tab-games').click();
+  await page.locator('#games-print-catalog-btn').click();
+  await page.locator('#printable-catalog-document').waitFor();
+  await page.evaluate(() => {
+    window.print = () => undefined;
+  });
+  const pdfDone = page.getByText(/PDF 저장이 완료되었습니다|인쇄 창으로 전환합니다/);
+  await page.locator('#catalog-print-btn').click();
+  await pdfDone.waitFor();
+  check(
+    'PDF를 누른 뒤에 라이브러리를 받음',
+    heavy.some((url) => url.includes('jspdf')) && heavy.some((url) => url.includes('html2canvas')),
+    heavy.join(' ')
+  );
+
+  await page.locator('#game-catalog-modal-overlay button[aria-label="닫기"]').click();
+  await page.locator('#games-kakao-share-btn').click();
+  await page.locator('#kakao-share-modal-overlay').waitFor();
+  await page.getByRole('button', { name: '전체 선택' }).click();
+  await page.getByRole('button', { name: '2. 카카오톡 미리보기' }).click();
+  const imageDone = page.getByText(/이미지 카드가 저장되었습니다|이미지 카드 생성에 실패했습니다/);
+  await page.locator('button[title="이미지 카드로 저장"]').click();
+  await imageDone.waitFor();
+});

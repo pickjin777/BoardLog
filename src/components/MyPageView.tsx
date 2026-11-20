@@ -16,7 +16,7 @@ interface MyPageViewProps {
 }
 
 export const MyPageView: React.FC<MyPageViewProps> = ({ onOpenAuth, onOpenCatalog, onDataImported }) => {
-  const { user, signOut, updateNickname } = useAuth();
+  const { user, signOut, updateNickname, deleteAccount } = useAuth();
   const { showToast } = useToast();
 
   const [isEditingNick, setIsEditingNick] = useState(false);
@@ -25,6 +25,8 @@ export const MyPageView: React.FC<MyPageViewProps> = ({ onOpenAuth, onOpenCatalo
   const [isImporting, setIsImporting] = useState(false);
   const [pendingImport, setPendingImport] = useState<ImportPlan | null>(null);
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleBackupChosen = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -81,6 +83,20 @@ export const MyPageView: React.FC<MyPageViewProps> = ({ onOpenAuth, onOpenCatalo
         .join(' ')
     : '';
 
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+    setIsDeleting(true);
+    try {
+      await deleteAccount();
+      setIsDeleteOpen(false);
+      showToast('이 계정의 기록과 로그인 정보를 이 기기에서 지웠습니다.', 'info');
+      onDataImported?.();
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : '삭제 중 오류가 발생했습니다.', 'error');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
   const handleSaveNickname = async () => {
     if (!nickInput.trim()) return;
     try {
@@ -257,6 +273,32 @@ export const MyPageView: React.FC<MyPageViewProps> = ({ onOpenAuth, onOpenCatalo
         onConfirm={handleConfirmImport}
         onCancel={() => setPendingImport(null)}
       />
+      <ConfirmModal
+        isOpen={isDeleteOpen}
+        title="계정과 기록을 삭제할까요?"
+        message="이 계정의 게임, 플레이, 로그인 정보를 이 기기에서 지웁니다. 다른 계정은 남습니다. 서버에는 계정이 없습니다. 지운 뒤에는 되돌릴 수 없습니다."
+        confirmText={isDeleting ? '삭제 중...' : '삭제하기'}
+        onConfirm={handleDeleteAccount}
+        onCancel={() => {
+          if (!isDeleting) setIsDeleteOpen(false);
+        }}
+      />
+
+      <button
+        id="mypage-delete-account-btn"
+        type="button"
+        onClick={() => setIsDeleteOpen(true)}
+        className="w-full py-3 bg-white border border-[#EB4D4B]/40 hover:bg-[#FEEBEC] text-[#EB4D4B] rounded-2xl text-xs font-bold transition-colors shadow-sm"
+      >
+        계정과 이 기기의 기록 삭제
+      </button>
+      <a
+        id="mypage-account-deletion-link"
+        href="/account-deletion/"
+        className="block text-center text-[11px] font-bold text-[#636E72] underline underline-offset-2"
+      >
+        계정 삭제 안내 페이지
+      </a>
 
       <button
         id="mypage-privacy-btn"

@@ -152,11 +152,32 @@ interface IncomingImage {
 interface HandlerRequest {
   method?: string;
   body?: unknown;
+  headers?: { origin?: string | string[] };
 }
 
 interface HandlerResponse {
   status(code: number): HandlerResponse;
+  setHeader(name: string, value: string): void;
   json(payload: unknown): void;
+  end(): void;
+}
+
+const NATIVE_SHELL_ORIGINS = new Set(['https://localhost', 'http://localhost', 'capacitor://localhost']);
+
+/** The bundled shell is a different origin from the Vercel function. Other sites stay blocked. */
+export function nativeShellAllowOrigin(origin: string | string[] | undefined): string | null {
+  const value = Array.isArray(origin) ? origin[0] : origin;
+  if (!value || !NATIVE_SHELL_ORIGINS.has(value)) return null;
+  return value;
+}
+
+function applyNativeShellCors(req: HandlerRequest, res: HandlerResponse): void {
+  const allow = nativeShellAllowOrigin(req.headers?.origin);
+  if (!allow) return;
+  res.setHeader('Access-Control-Allow-Origin', allow);
+  res.setHeader('Vary', 'Origin');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 }
 
 function readImages(body: unknown): IncomingImage[] | string {
@@ -190,6 +211,16 @@ export function isScanConfigured(apiKey: string | undefined): apiKey is string {
 }
 
 export default async function handler(req: HandlerRequest, res: HandlerResponse): Promise<void> {
+  applyNativeShellCors(req, res);
+  if (req.method === 'OPTIONS') {
+    if (nativeShellAllowOrigin(req.headers?.origin)) {
+      res.status(204).end();
+      return;
+    }
+    res.status(405).json({ error: '허용되지 않은 요청입니다.' });
+    return;
+  }
+
   // A probe the client can call without sending a photo or reaching Gemini.
   // When a key is added, the next check turns the button back on by itself.
   if (req.method === 'GET') {

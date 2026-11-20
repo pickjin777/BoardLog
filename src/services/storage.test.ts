@@ -186,6 +186,29 @@ describe('storage: account isolation on the shared IndexedDB stores (invariant 2
     expect((await storage.getUserGames(b)).map((g) => g.id)).toEqual([`sample-game-1-${b}`]);
     expect((await storage.getUserPlays(b)).map((p) => p.id)).toEqual([`sample-play-1-${b}`]);
   });
+
+  it('deletes one signed-up account and leaves the other account on the device', async () => {
+    const emailA = `a${++seq}@example.com`;
+    const emailB = `b${seq}@example.com`;
+    const userA = await storage.signUp(emailA, 'secret12', '에이');
+    await storage.signOut();
+    const userB = await storage.signUp(emailB, 'secret12', '비');
+    const aGame = await storage.addUserGame(userA.uid, game('카탄'));
+    const bGame = await storage.addUserGame(userB.uid, game('아그리콜라'));
+    await storage.addPlayRecord(userA.uid, play('카탄', aGame.id));
+    await storage.addPlayRecord(userB.uid, play('아그리콜라', bGame.id));
+    await storage.setActiveSession(userA);
+
+    await storage.deleteAccount(userA.uid);
+
+    expect(await storage.getUserGames(userA.uid)).toEqual([]);
+    expect(await storage.getUserPlays(userA.uid)).toEqual([]);
+    expect(await storage.getActiveSession()).toBeNull();
+    expect((await storage.getUserGames(userB.uid)).map((g) => g.id)).toEqual([bGame.id]);
+    expect((await storage.getUserPlays(userB.uid)).map((p) => p.gameId)).toEqual([bGame.id]);
+    await expect(storage.signIn(emailA, 'secret12')).rejects.toThrow('등록되지 않은');
+    expect((await storage.signIn(emailB, 'secret12')).uid).toBe(userB.uid);
+  });
 });
 
 describe('storage: restore never reuses or takes over ids (invariant 3)', () => {

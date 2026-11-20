@@ -1,6 +1,9 @@
 import type { SeedGame } from '../types';
+import { PRODUCTION_ORIGIN } from '../config/appIdentity';
 import { SEED_GAMES } from '../data/seedGames';
+import { resolveApiUrl } from '../utils/apiOrigin';
 import { compressImage } from '../utils/imageCompressor';
+import { isNativeShell } from '../utils/nativeShell';
 import { scanAvailableFromResponse } from '../utils/scanAvailability';
 import { findSeedMatch, type SeedMatch } from '../utils/titleMatch';
 
@@ -52,9 +55,13 @@ function isDetection(value: unknown): value is ScanDetection {
  * error all mean "off", so the form can explain that instead of opening a broken scan.
  * No image is sent and Gemini is not called.
  */
+function scanApiUrl(): string {
+  return resolveApiUrl('/api/scan-games', isNativeShell(), PRODUCTION_ORIGIN);
+}
+
 export async function fetchScanAvailable(): Promise<boolean> {
   try {
-    const response = await fetch('/api/scan-games', { method: 'GET' });
+    const response = await fetch(scanApiUrl(), { method: 'GET' });
     let body: unknown = null;
     try {
       body = await response.json();
@@ -76,7 +83,7 @@ export async function scanGamePhotos(files: File[], seeds: SeedGame[] = SEED_GAM
   const compressed = await Promise.all(files.map((file) => compressImage(file)));
   const images = compressed.map((result) => toInlineImage(result.dataUrl));
 
-  const response = await fetch('/api/scan-games', {
+  const response = await fetch(scanApiUrl(), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ images })

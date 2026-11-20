@@ -90,7 +90,7 @@
 |---|---|
 | `typecheck` | 신규: `tsc --noEmit` (M0 PR1 완료) |
 | `lint` | `npm run typecheck && biome check --error-on-warnings .` (M0 PR3 완료) |
-| `check:secrets` | 신규: 빌드 결과물 비밀값 검사(D-037, M0 PR1 완료) |
+| `check:secrets` | 빌드 결과물과 `android/`의 비밀값·서명키 검사, 앱 ID·샘플 광고 ID·`#4834D4` 스플래시 검사(D-037, D-046) |
 | `format` | 신규: `biome format --write .` (M0 PR3 완료) |
 | `test:e2e` | 신규: `npm run build && playwright test` (M0 PR5 완료) |
 | `test` | 신규: `vitest run --coverage`. 순수 함수 분기 100%는 `sharedPlay`, `backupImport`만 차단(D-030, M0 PR4 완료) |

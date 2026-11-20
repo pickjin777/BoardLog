@@ -438,6 +438,47 @@ class BoardLogStorage {
     await this.setActiveSession(null);
   }
 
+  /**
+   * Removes one device account and only that account's games and plays.
+   * There is no server user record to delete.
+   */
+  async deleteAccount(uid: string): Promise<void> {
+    const backend = await this.resolveBackend(uid);
+    const games = await this.getUserGames(uid);
+    const plays = await this.getUserPlays(uid);
+    if (backend === 'idb') {
+      const removed = await this.idbWriteTx([STORE_GAMES, STORE_PLAYS], (tx) => {
+        for (const game of games) tx.objectStore(STORE_GAMES).delete(game.id);
+        for (const play of plays) tx.objectStore(STORE_PLAYS).delete(play.id);
+      });
+      if (!removed) {
+        throw new Error('이 기기의 기록을 지우지 못했습니다.');
+      }
+    }
+
+    localStorage.removeItem(gamesKey(uid));
+    localStorage.removeItem(playsKey(uid));
+
+    const users = this.lsGet<Record<string, StoredUser>>(LS_ALL_USERS, {});
+    let removedUser = false;
+    for (const [email, record] of Object.entries(users)) {
+      if (record.profile.uid === uid) {
+        delete users[email];
+        removedUser = true;
+      }
+    }
+    if (removedUser) this.lsSet(LS_ALL_USERS, users);
+
+    if (this.lsGet<string | null>(LS_GUEST_UID, null) === uid) {
+      localStorage.removeItem(LS_GUEST_UID);
+    }
+    const active = await this.getActiveSession();
+    if (active?.uid === uid) {
+      await this.setActiveSession(null);
+    }
+    this.backends.delete(uid);
+  }
+
   async updateProfile(uid: string, updates: Partial<UserProfile>): Promise<UserProfile> {
     const current = await this.getActiveSession();
     if (!current || current.uid !== uid) {

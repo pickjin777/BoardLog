@@ -15,8 +15,6 @@ import {
   Search,
   Loader2
 } from 'lucide-react';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 import type { UserGame, GameOwnershipStatus } from '../types';
 import { formatDate } from '../utils/formatters';
 import { applyImageFallback } from '../utils/imageFallback';
@@ -126,7 +124,11 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
     showToast('PDF 파일을 생성하고 있습니다. 잠시만 기다려주세요...', 'info');
 
     try {
-      // High quality canvas capture
+      // Loaded here so the PDF libraries stay out of the first screen.
+      // Vite may hand back either the module or the default export itself.
+      const [jspdfLoaded, html2canvasLoaded] = await Promise.all([import('jspdf'), import('html2canvas')]);
+      const jsPDF = jspdfLoaded.default ?? jspdfLoaded;
+      const html2canvas = html2canvasLoaded.default ?? html2canvasLoaded;
       const canvas = await html2canvas(targetElement, {
         scale: 2,
         useCORS: true,

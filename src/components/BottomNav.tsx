@@ -17,7 +17,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ currentTab, onTabChange, o
   return (
     <nav
       id="bottom-navigation-bar"
-      className="fixed bottom-0 left-0 right-0 z-40 border-t border-[#E9ECEF] bg-white/95 pb-[env(safe-area-inset-bottom)] shadow-lg backdrop-blur-md lg:bottom-0 lg:right-auto lg:top-0 lg:w-60 lg:border-r lg:border-t-0 lg:pb-0 lg:shadow-none"
+      className="fixed bottom-0 left-0 right-0 z-40 border-t border-[#E9ECEF] bg-white/95 shadow-lg backdrop-blur-md lg:bottom-0 lg:right-auto lg:top-0 lg:w-60 lg:border-r lg:border-t-0 lg:shadow-none"
     >
       <div className="relative mx-auto flex h-16 max-w-xl items-center justify-between px-4 md:max-w-3xl lg:h-full lg:max-w-none lg:flex-col lg:items-stretch lg:justify-start lg:gap-1 lg:px-3 lg:py-5">
         <button

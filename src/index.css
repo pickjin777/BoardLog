@@ -9,6 +9,36 @@
 }
 
 /*
+ * viewport-fit=cover lets the page draw under the status bar and the home indicator.
+ * On the web and on a current Android WebView, env() is the inset. Capacitor's
+ * SystemBars plugin also sets --safe-area-inset-* ; older WebViews get native
+ * padding instead, and both values stay 0 so this does not add a second gap.
+ */
+#top-app-header {
+  padding-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+}
+
+#bottom-navigation-bar {
+  padding-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+}
+
+#scan-modal-sheet {
+  padding-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+}
+
+@media (max-width: 1023px) {
+  #app-shell-main {
+    padding-bottom: calc(8rem + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)));
+  }
+}
+
+@media (min-width: 1024px) {
+  #bottom-navigation-bar {
+    padding-bottom: 0;
+  }
+}
+
+/*
  * Tailwind marks focused fields outline-style:none, and Chrome's own ring is easy to miss on
  * this gray page. !important keeps a 2px brand ring on keyboard focus.
  */
