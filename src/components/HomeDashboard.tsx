@@ -54,16 +54,16 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   return (
     <div className="space-y-3 pb-4">
       {/* Top Banner / Quick Action CTA - Editorial Gradient */}
-      <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#4834D4] via-[#5742df] to-[#686DE0] p-4 text-white shadow-[0_20px_40px_rgba(72,52,212,0.25)] border border-white/10">
+      <div className="treasure-hero relative overflow-hidden rounded-[32px] p-4 text-[#F6EBD4] shadow-[0_20px_40px_rgba(0,0,0,0.35)]">
         <div className="relative z-10">
-          <div className="flex items-center gap-1.5 text-white/80 text-[11px] font-bold mb-1.5 tracking-wide uppercase">
+          <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold tracking-wide text-[#F3D48A]">
             <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-            <span>Editorial Board Game Log</span>
+            <span>오늘의 상자</span>
           </div>
-          <h2 className="text-xl font-black italic tracking-tight mb-1 leading-snug">
+          <h2 className="mb-1 text-xl font-black italic leading-snug tracking-tight">
             오늘 플레이한 게임을 기록하세요
           </h2>
-          <p className="text-[11px] text-white/80 mb-3 leading-relaxed font-normal">
+          <p className="mb-3 text-[11px] font-normal leading-relaxed text-[#E4D3B4]">
             승패와 함께한 사람을 이 기기에 남겨 두세요.
           </p>
 
@@ -72,7 +72,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
               id="dashboard-add-play-cta"
               type="button"
               onClick={onOpenAddPlay}
-              className="inline-flex items-center justify-center gap-1 px-2 py-2 bg-white hover:bg-[#F8F9FA] text-[#4834D4] rounded-full text-[11px] font-bold whitespace-nowrap shadow-[0_4px_12px_rgba(0,0,0,0.1)] active:scale-95 transition-all"
+              className="inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-full bg-[#E2B657] px-2 py-2 text-[11px] font-bold text-[#1A1408] shadow-[0_4px_12px_rgba(0,0,0,0.28)] transition-all hover:bg-[#C9A24A] active:scale-95"
             >
               <Plus className="w-3.5 h-3.5 stroke-[2.5] shrink-0" />
               <span>새 플레이 기록</span>

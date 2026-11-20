@@ -393,7 +393,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                     onClick={() => setSortOption(opt.id)}
                     className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-all ${
                       sortOption === opt.id
-                        ? 'bg-[#1E272E] text-white'
+                        ? 'bg-[#E2B657] text-[#1A1408]'
                         : 'bg-white text-[#636E72] border border-[#E9ECEF] hover:bg-[#F1F3F5]'
                     }`}
                   >
@@ -729,7 +729,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                   return (
                     <div key={key} className="print-avoid-break space-y-2">
                       <div className="flex items-center gap-2 pb-1.5 border-b-2 border-[#1E272E]">
-                        <span className="w-8 h-8 rounded-xl bg-[#1E272E] text-white flex items-center justify-center font-black text-sm">
+                        <span className="w-8 h-8 rounded-xl bg-[#E2B657] text-[#1A1408] flex items-center justify-center font-black text-sm">
                           {key}
                         </span>
                         <h4 className="text-sm font-black text-[#1E272E]">

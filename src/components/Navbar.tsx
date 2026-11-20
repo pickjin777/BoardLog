@@ -1,6 +1,7 @@
 import type React from 'react';
 import { Database, UserCheck, LogIn } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { TreasureChest } from './TreasureChest';
 
 interface NavbarProps {
   onOpenAuth: () => void;
@@ -14,8 +15,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth }) => {
       <div className="max-w-xl md:max-w-3xl lg:max-w-6xl mx-auto px-4 md:px-6 h-15 flex items-center justify-between">
         {/* Brand Logo & Title */}
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-[#4834D4] flex items-center justify-center text-white font-black text-lg shadow-[0_4px_12px_rgba(72,52,212,0.3)]">
-            B
+          <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-[#4834D4] shadow-[0_4px_12px_rgba(72,52,212,0.3)]">
+            <TreasureChest className="h-8 w-8" />
           </div>
           <div>
             <div className="flex items-center gap-1.5">

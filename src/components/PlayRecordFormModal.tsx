@@ -997,7 +997,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                       myResult === res
                         ? res === '승리'
                           ? 'bg-[#4834D4] text-white border-[#4834D4] shadow-[0_2px_8px_rgba(72,52,212,0.3)]'
-                          : 'bg-[#1E272E] text-white border-[#1E272E] shadow-xs'
+                          : 'bg-[#E2B657] text-[#1A1408] border-[#C9A24A] shadow-xs'
                         : 'bg-[#F8F9FA] text-[#636E72] border-[#898B8D] hover:bg-[#F1F3F5]'
                     }`}
                   >

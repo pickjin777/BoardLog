@@ -329,7 +329,7 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
                 onClick={() => setActiveTab('settings')}
                 className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
                   activeTab === 'settings'
-                    ? 'bg-[#1E272E] text-white shadow-xs'
+                    ? 'bg-[#E2B657] text-[#1A1408] shadow-xs'
                     : 'bg-white text-[#636E72] hover:bg-[#E9ECEF] border border-[#E9ECEF]'
                 }`}
               >
@@ -465,7 +465,7 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
                         onClick={() => applyPresetFilter('all', '파티')}
                         className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1 ${
                           selectedGenre === '파티'
-                            ? 'bg-[#E67E22] text-white shadow-xs'
+                            ? 'bg-[#E67E22] text-[#1A1408] shadow-xs'
                             : 'bg-white text-[#2D3436] border border-[#E9ECEF] hover:bg-[#F1F3F5]'
                         }`}
                       >

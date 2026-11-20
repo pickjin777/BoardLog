@@ -1,10 +1,16 @@
 @import "tailwindcss";
 
 @layer base {
+  html {
+    color-scheme: dark;
+  }
+
   body {
-    background-color: #F1F3F5;
-    color: #2D3436;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: #100e0b;
+    color: #f6ebd4;
+    font-family:
+      -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic",
+      sans-serif;
   }
 }
 
@@ -42,14 +48,18 @@
  * Tailwind marks focused fields outline-style:none, and Chrome's own ring is easy to miss on
  * this gray page. !important keeps a 2px brand ring on keyboard focus.
  */
+/*
+ * #4834D4 on the vault is about 2.3:1, under the 3:1 focus indicator.
+ * #E4DCFF is the same amethyst, light enough to clear the dark surfaces.
+ */
 :where(button, a, input, select, textarea, [tabindex]):focus-visible {
-  outline: 2px solid #4834d4 !important;
+  outline: 2px solid #e4dcff !important;
   outline-offset: 2px !important;
 }
 
-/* Placeholder gray was below AA. Opacity must stay 1 or the browser fades it again. */
+/* Placeholder must stay at opacity 1 or the browser fades it under AA again. */
 ::placeholder {
-  color: #636e72;
+  color: #e4d3b4;
   opacity: 1;
 }
 
@@ -129,4 +139,226 @@
     color: #111827 !important;
     font-weight: bold !important;
   }
+
+  /* The screen theme is dark. A printed catalog stays ink on paper. */
+  .printable-catalog-root,
+  .printable-catalog-root * {
+    background: #ffffff !important;
+    background-image: none !important;
+    color: #111827 !important;
+    box-shadow: none !important;
+  }
 }
+
+/* Vault theme. Component utilities keep their names; these unlayered rules repaint them.
+   Normative values live in docs/design/DESIGN.md. Kakao yellow and photo scrims stay. */
+.accent-\[\#4834D4\] { accent-color: #E4DCFF; }
+.active\:bg-\[\#DFE4EA\]:active { background-color: #3A3228; }
+.bg-\[\#1B7A43\]\/10 { background-color: #9BE7B833; }
+.bg-\[\#4834D4\]\/10 { background-color: #E4DCFF2E; }
+.bg-\[\#4834D4\]\/5 { background-color: #E4DCFF2E; }
+.bg-\[\#636E72\] { background-color: #5C5144; }
+.bg-\[\#E67E22\]\/10 { background-color: #FFC58A33; }
+.bg-\[\#E8F3ED\] { background-color: #163028; }
+.bg-\[\#E9ECEF\] { background-color: #3A3228; }
+.bg-\[\#EB4D4B\] { background-color: #C4453C; }
+.bg-\[\#EB4D4B\]\/10 { background-color: #3A221F; }
+.bg-\[\#EBFAEF\] { background-color: #163028; }
+.bg-\[\#F1F2F6\] { background-color: #2A241C; }
+.bg-\[\#F1F3F5\] { background-color: #2A241C; }
+.bg-\[\#F8F9FA\] { background-color: #2A241C; }
+.bg-\[\#FBF3E2\] { background-color: #3A2E16; }
+.bg-\[\#FDECEA\] { background-color: #3A221F; }
+.bg-\[\#FEEBEC\] { background-color: #3A221F; }
+.bg-\[\#FFF3CD\] { background-color: #3A2E16; }
+.bg-amber-100 { background-color: #3A2E16; }
+.bg-amber-50 { background-color: #3A2E16; }
+.bg-sky-50 { background-color: #1A2834; }
+.bg-stone-100 { background-color: #2A241C; }
+.bg-stone-200 { background-color: #2A241C; }
+.bg-white { background-color: #1C1812; background-image: linear-gradient(180deg, rgba(243, 212, 138, 0.08), transparent 46%); }
+.bg-white\/60 { background-color: #1C181299; }
+.bg-white\/70 { background-color: #1C1812B3; }
+.bg-white\/90 { background-color: #1C1812E6; }
+.bg-white\/95 { background-color: #1C1812F2; }
+.border-\[\#1B7A43\]\/20 { border-color: #9BE7B8; }
+.border-\[\#1B7A43\]\/30 { border-color: #9BE7B8; }
+.border-\[\#1E272E\] { border-color: #C9A24A; }
+.border-\[\#1E272E\]\/10 { border-color: #5C4C38; }
+.border-\[\#4834D4\] { border-color: #E4DCFF; }
+.border-\[\#4834D4\]\/20 { border-color: #E4DCFF; }
+.border-\[\#4834D4\]\/30 { border-color: #E4DCFF; }
+.border-\[\#4834D4\]\/40 { border-color: #E4DCFF; }
+.border-\[\#636E72\] { border-color: #E4D3B4; }
+.border-\[\#898B8D\] { border-color: #C6A36A; }
+.border-\[\#CBD5E1\] { border-color: #C6A36A; }
+.border-\[\#CED4DA\] { border-color: #C6A36A; }
+.border-\[\#CED6E0\] { border-color: #C6A36A; }
+.border-\[\#E9ECEF\] { border-color: #5C4C38; }
+.border-\[\#E9ECEF\]\/70 { border-color: #5C4C38; }
+.border-\[\#EB4D4B\]\/20 { border-color: #FFC2BC; }
+.border-\[\#EB4D4B\]\/30 { border-color: #FFC2BC; }
+.border-\[\#EB4D4B\]\/40 { border-color: #FFC2BC; }
+.border-\[\#F5C6C2\] { border-color: #FFC2BC; }
+.border-\[\#FFEBAA\] { border-color: #C6A36A; }
+.border-amber-200 { border-color: #C6A36A; }
+.border-amber-300 { border-color: #C6A36A; }
+.border-sky-300 { border-color: #8EB7E0; }
+.divide-\[\#898B8D\] > :not(:last-child) { border-color: #C6A36A; }
+.divide-\[\#E9ECEF\] > :not(:last-child) { border-color: #5C4C38; }
+.fill-\[\#B8860B\] { fill: #F3D48A; }
+.focus\:bg-white:focus { background-color: #1C1812; }
+.focus\:border-\[\#4834D4\]:focus { border-color: #E4DCFF; }
+.focus\:ring-\[\#4834D4\]\/10:focus { --tw-ring-color: #E4DCFF55; }
+.focus\:ring-\[\#4834D4\]\/20:focus { --tw-ring-color: #E4DCFF66; }
+@media (hover: hover) { .group-hover\:text-\[\#4834D4\]:is(:where(.group):hover *) { color: #E4DCFF; } }
+@media (hover: hover) { .hover\:bg-\[\#4834D4\]\/20:hover { background-color: #E4DCFF2E; } }
+@media (hover: hover) { .hover\:bg-\[\#4834D4\]\/5:hover { background-color: #E4DCFF2E; } }
+@media (hover: hover) { .hover\:bg-\[\#E9ECEF\]:hover { background-color: #3A3228; } }
+@media (hover: hover) { .hover\:bg-\[\#EB4D4B\]:hover { background-color: #C4453C; } }
+@media (hover: hover) { .hover\:bg-\[\#F1F3F5\]:hover { background-color: #2A241C; } }
+@media (hover: hover) { .hover\:bg-\[\#F8F9FA\]:hover { background-color: #2A241C; } }
+@media (hover: hover) { .hover\:bg-\[\#FCD7D7\]:hover { background-color: #3A221F; } }
+@media (hover: hover) { .hover\:bg-\[\#FEEBEC\]:hover { background-color: #3A221F; } }
+@media (hover: hover) { .hover\:bg-amber-100:hover { background-color: #3A2E16; } }
+@media (hover: hover) { .hover\:bg-white:hover { background-color: #1C1812; } }
+@media (hover: hover) { .hover\:border-\[\#4834D4\]:hover { border-color: #E4DCFF; } }
+@media (hover: hover) { .hover\:border-\[\#4834D4\]\/30:hover { border-color: #E4DCFF; } }
+@media (hover: hover) { .hover\:border-\[\#4834D4\]\/40:hover { border-color: #E4DCFF; } }
+@media (hover: hover) { .hover\:text-\[\#1E272E\]:hover { color: #F6EBD4; } }
+@media (hover: hover) { .hover\:text-\[\#2D3436\]:hover { color: #F6EBD4; } }
+@media (hover: hover) { .hover\:text-\[\#3c2ab9\]:hover { color: #E4DCFF; } }
+@media (hover: hover) { .hover\:text-\[\#4834D4\]:hover { color: #E4DCFF; } }
+@media (hover: hover) { .hover\:text-\[\#B8860B\]:hover { color: #F3D48A; } }
+@media (hover: hover) { .hover\:text-\[\#EB4D4B\]:hover { color: #FFC2BC; } }
+@media (min-width: 64rem) { .lg\:bg-\[\#4834D4\]\/10 { background-color: #E4DCFF2E; } }
+@media (min-width: 64rem) { @media (hover: hover) { .lg\:hover\:bg-\[\#F8F9FA\]:hover { background-color: #2A241C; } } }
+.placeholder-stone-400::placeholder { color: #E4D3B4; }
+.ring-\[\#4834D4\]\/20 { --tw-ring-color: #E4DCFF66; }
+.ring-white { --tw-ring-color: #1C1812; }
+.selection\:bg-\[\#4834D4\]\/20::selection, .selection\:bg-\[\#4834D4\]\/20 ::selection { background-color: #E4DCFF2E; }
+.selection\:text-\[\#4834D4\]::selection, .selection\:text-\[\#4834D4\] ::selection { color: #E4DCFF; }
+.text-\[\#1B6B43\] { color: #9BE7B8; }
+.text-\[\#1B7A43\] { color: #9BE7B8; }
+.text-\[\#1E272E\] { color: #F6EBD4; }
+.text-\[\#2D3436\] { color: #F6EBD4; }
+.text-\[\#4834D4\] { color: #E4DCFF; }
+.text-\[\#636E72\] { color: #E4D3B4; }
+.text-\[\#856404\] { color: #F3D48A; }
+.text-\[\#8A6516\] { color: #F3D48A; }
+.text-\[\#B8860B\] { color: #F3D48A; }
+.text-\[\#C0392B\] { color: #FFC2BC; }
+.text-\[\#E67E22\] { color: #FFC58A; }
+.text-\[\#EB4D4B\] { color: #FFC2BC; }
+.text-\[\#F5A623\] { color: #FFC58A; }
+.text-amber-300 { color: #F3D48A; }
+.text-amber-700 { color: #F8E2B0; }
+.text-amber-800 { color: #F8E2B0; }
+.text-amber-900 { color: #F8E2B0; }
+.text-amber-950 { color: #F8E2B0; }
+.text-sky-800 { color: #C5DEFF; }
+
+.treasure-shell {
+  background-color: #100e0b;
+  background-image:
+    radial-gradient(900px 420px at 50% -8%, rgba(72, 52, 212, 0.34), transparent 58%),
+    radial-gradient(520px 280px at 100% 0%, rgba(243, 212, 138, 0.14), transparent 52%),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><g fill-opacity='0.18'><circle cx='8' cy='14' r='0.7' fill='%23F3D48A'/><circle cx='46' cy='22' r='0.5' fill='%23E4DCFF'/><circle cx='88' cy='10' r='0.6' fill='%23F3D48A'/><circle cx='24' cy='70' r='0.5' fill='%23E4DCFF'/><circle cx='70' cy='84' r='0.7' fill='%23F3D48A'/><circle cx='104' cy='58' r='0.5' fill='%23F6EBD4'/></g></svg>");
+  background-attachment: fixed;
+}
+
+.treasure-hero {
+  background:
+    radial-gradient(420px 180px at 88% 120%, rgba(72, 52, 212, 0.72), transparent 60%),
+    radial-gradient(280px 160px at 12% 0%, rgba(243, 212, 138, 0.28), transparent 62%),
+    #16130f;
+  border: 1px solid rgba(198, 163, 106, 0.55);
+  box-shadow: inset 0 1px 0 rgba(243, 212, 138, 0.28);
+}
+
+.treasure-stage {
+  position: absolute;
+  top: 33%;
+  left: 50%;
+  display: flex;
+  width: min(16rem, 78vw);
+  transform: translate(-50%, -50%);
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.treasure-chest-svg {
+  width: min(10.5rem, 48vw);
+  height: auto;
+  overflow: visible;
+}
+
+.treasure-caption {
+  margin: 0;
+  padding: 0.35rem 0.85rem;
+  border: 1px solid #c6a36a;
+  border-radius: 999px;
+  background: rgb(16 14 11 / 88%);
+  color: #f3d48a;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  text-align: center;
+}
+
+.treasure-skip {
+  position: static;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid #c6a36a;
+  border-radius: 999px;
+  background: #1c1812;
+  color: #f6ebd4;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.treasure-lid {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+}
+
+.treasure-reveal.is-open .treasure-lid {
+  animation: treasure-lid-open 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.treasure-reveal.is-open .treasure-rays,
+.treasure-reveal.is-open .treasure-glow {
+  animation: treasure-light 1.15s ease-out forwards;
+}
+
+@keyframes treasure-lid-open {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(-36deg); }
+}
+
+@keyframes treasure-light {
+  0% { opacity: 0; }
+  35% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .treasure-reveal.is-open .treasure-lid,
+  .treasure-reveal.is-open .treasure-rays,
+  .treasure-reveal.is-open .treasure-glow {
+    animation: none;
+  }
+
+  .treasure-reveal.is-open .treasure-lid {
+    transform: rotate(-36deg);
+  }
+
+  .treasure-reveal.is-open .treasure-rays,
+  .treasure-reveal.is-open .treasure-glow {
+    opacity: 0.9;
+  }
+}
+
