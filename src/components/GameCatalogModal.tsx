@@ -404,7 +404,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
 
               {/* Toggles */}
               <div className="flex items-center gap-3 text-[11px] text-[#636E72]">
-                <label className="flex items-center gap-1 cursor-pointer select-none">
+                <label className="flex min-h-12 items-center gap-1.5 cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={showImages}
@@ -413,7 +413,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                   />
                   <span>사진 표시</span>
                 </label>
-                <label className="flex items-center gap-1 cursor-pointer select-none">
+                <label className="flex min-h-12 items-center gap-1.5 cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={showLocations}
@@ -422,7 +422,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                   />
                   <span>보관위치 강조</span>
                 </label>
-                <label className="flex items-center gap-1 cursor-pointer select-none">
+                <label className="flex min-h-12 items-center gap-1.5 cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={showStatsCover}
@@ -436,8 +436,11 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
           </div>
 
           {/* Printable Document Preview Area */}
-          <div
+          <section
             id="printable-catalog-document"
+            // biome-ignore lint/a11y/noNoninteractiveTabindex: axe requires a keyboard stop so this scroll region can move
+            tabIndex={0}
+            aria-label="도록 미리보기"
             className="printable-catalog-content p-5 sm:p-8 overflow-y-auto flex-1 bg-white space-y-6"
           >
             {/* Document Cover / Header Section */}
@@ -513,7 +516,12 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
             {/* 1. LIBRARY INDEX TABLE VIEW */}
             {viewMode === 'table' && processedGames.length > 0 && (
               <div className="space-y-3">
-                <div className="overflow-x-auto rounded-2xl border border-[#E9ECEF]">
+                <section
+                  // biome-ignore lint/a11y/noNoninteractiveTabindex: the wide table scrolls sideways and needs a keyboard stop
+                  tabIndex={0}
+                  aria-label="도록 표"
+                  className="overflow-x-auto rounded-2xl border border-[#E9ECEF]"
+                >
                   <table className="print-table w-full text-left text-xs text-[#1E272E] border-collapse">
                     <thead>
                       <tr className="bg-[#F8F9FA] border-b border-[#E9ECEF] text-[11px] font-black text-[#636E72]">
@@ -620,7 +628,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                       ))}
                     </tbody>
                   </table>
-                </div>
+                </section>
               </div>
             )}
 
@@ -779,7 +787,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                 출력 일시: {formatDate()} • 총 {processedGames.length}종 수록
               </div>
             </div>
-          </div>
+          </section>
 
           {/* Interactive Modal Bottom Bar (Hidden on Print) */}
           <div className="no-print p-4 border-t border-[#E9ECEF] bg-[#F8F9FA] flex flex-col sm:flex-row items-center justify-between gap-3">

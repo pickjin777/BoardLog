@@ -135,19 +135,21 @@ export const MyPageView: React.FC<MyPageViewProps> = ({ onOpenAuth, onOpenCatalo
     <div className="space-y-5 pb-20 lg:mx-auto lg:max-w-3xl">
       {/* Profile Card */}
       <div className="p-5 bg-white rounded-[28px] border border-[#E9ECEF] shadow-sm space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
             <div className="w-13 h-13 rounded-2xl bg-[#4834D4] text-white font-black text-lg flex items-center justify-center shadow-[0_4px_12px_rgba(72,52,212,0.3)]">
               {user?.nickname ? user.nickname.slice(0, 1).toUpperCase() : 'B'}
             </div>
-            <div>
+            <div className="min-w-0">
               {isEditingNick ? (
                 <div className="flex items-center gap-1.5">
                   <input
+                    id="mypage-nickname-input"
                     type="text"
+                    aria-label="닉네임"
                     value={nickInput}
                     onChange={(e) => setNickInput(e.target.value)}
-                    className="px-2.5 py-1 bg-[#F1F3F5] border border-[#E9ECEF] rounded-xl text-xs font-bold text-[#1E272E] focus:outline-hidden focus:border-[#4834D4]"
+                    className="min-w-0 px-2.5 py-1 bg-[#F1F3F5] border border-[#E9ECEF] rounded-xl text-xs font-bold text-[#1E272E] focus:outline-hidden focus:border-[#4834D4]"
                   />
                   <button
                     type="button"
@@ -158,8 +160,8 @@ export const MyPageView: React.FC<MyPageViewProps> = ({ onOpenAuth, onOpenCatalo
                   </button>
                 </div>
               ) : (
-                <div className="flex items-center gap-1.5">
-                  <h2 className="text-base font-black text-[#1E272E]">{user?.nickname || '사용자'}</h2>
+                <div className="flex min-w-0 items-center gap-1.5">
+                  <h2 className="min-w-0 text-base font-black text-[#1E272E]">{user?.nickname || '사용자'}</h2>
                   <button
                     type="button"
                     onClick={() => {
@@ -179,18 +181,21 @@ export const MyPageView: React.FC<MyPageViewProps> = ({ onOpenAuth, onOpenCatalo
           <button
             type="button"
             onClick={onOpenAuth}
-            className="px-3.5 py-1.5 bg-[#F1F3F5] hover:bg-[#E9ECEF] text-[#2D3436] rounded-full text-xs font-bold transition-colors"
+            className="shrink-0 px-3.5 py-1.5 bg-[#F1F3F5] hover:bg-[#E9ECEF] text-[#2D3436] rounded-full text-xs font-bold transition-colors"
           >
             {user?.isAnonymous ? '로그인 / 가입' : '계정 관리'}
           </button>
         </div>
 
         {/* Status Tag */}
-        <div className="p-3 bg-[#F8F9FA] rounded-2xl border border-[#E9ECEF] text-xs text-[#636E72] flex items-center justify-between">
-          <span className="text-[#636E72]">데이터 저장 상태</span>
-          <span className="font-bold text-[#1B7A43] flex items-center gap-1">
+        <div
+          id="mypage-storage-status"
+          className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-2xl border border-[#E9ECEF] bg-[#F8F9FA] p-3 text-xs text-[#636E72]"
+        >
+          <span>저장 위치</span>
+          <span className="flex items-center gap-1 font-bold text-[#1B7A43]">
             <CheckCircle2 className="w-3.5 h-3.5" />
-            사용자별 독립 격리 완료
+            <span>이 기기에만 저장됨</span>
           </span>
         </div>
       </div>
@@ -295,7 +300,7 @@ export const MyPageView: React.FC<MyPageViewProps> = ({ onOpenAuth, onOpenCatalo
       <a
         id="mypage-account-deletion-link"
         href="/account-deletion/"
-        className="block text-center text-[11px] font-bold text-[#636E72] underline underline-offset-2"
+        className="flex min-h-12 items-center justify-center text-center text-[11px] font-bold text-[#636E72] underline underline-offset-2"
       >
         계정 삭제 안내 페이지
       </a>

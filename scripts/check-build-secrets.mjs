@@ -16,10 +16,20 @@ const PATTERNS = [
   { name: 'Server env var name', re: /SUPABASE_SERVICE_ROLE_KEY|GEMINI_API_KEY/ }
 ];
 
-// A default bundle must not contain an ad request or a purchase call. Rebuild with the
-// matching flag set to the string true before those plugin modules are allowed in dist.
-const ADMOB_ON = process.env.VITE_ADMOB_ENABLED === 'true';
-const BILLING_ON = process.env.VITE_PLAY_BILLING_ENABLED === 'true';
+// Same rule as nativePackageEnabled in src/utils/omitNativeMonetization.ts (D-048).
+function nativePackageEnabled(gradleProperties) {
+  const matches = [...gradleProperties.matchAll(/^[ \t]*boardlog\.monetization[ \t]*=[ \t]*(.*)$/gm)];
+  if (matches.length === 0) return false;
+  return matches[matches.length - 1][1].trim() === 'true';
+}
+
+// A default bundle must not contain an ad request or a purchase call. The Android package
+// flag and the matching VITE_* flag both have to be the string true before those modules are allowed.
+const PACKAGE_ON = nativePackageEnabled(
+  existsSync('android/gradle.properties') ? readFileSync('android/gradle.properties', 'utf8') : ''
+);
+const ADMOB_ON = PACKAGE_ON && process.env.VITE_ADMOB_ENABLED === 'true';
+const BILLING_ON = PACKAGE_ON && process.env.VITE_PLAY_BILLING_ENABLED === 'true';
 
 const TEXT_FILE = /\.(js|mjs|css|html|json|map|webmanifest|txt|xml|gradle|properties|java|kt|kts|pro|pem)$/;
 const SKIP_DIRS = new Set(['node_modules', 'build', '.gradle', '.git']);

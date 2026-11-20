@@ -1,4 +1,4 @@
-import { test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import { check, gameRow, hasText, hidden, playRow, putRows, requireUid, visible } from './helpers';
 
 test('records-stay-on-device notice leads to JSON backup', async ({ page }) => {
@@ -11,6 +11,15 @@ test('records-stay-on-device notice leads to JSON backup', async ({ page }) => {
 
   await page.locator('#local-storage-backup-btn').click();
   await visible('JSON 백업 버튼으로 이동', page.locator('#export-json-btn'));
+
+  const covered = await page.evaluate(() => {
+    const notice = document.querySelector('#local-storage-notice')?.getBoundingClientRect();
+    const nav = document.querySelector('#bottom-navigation-bar')?.getBoundingClientRect();
+    if (!notice || !nav) return true;
+    const overlap = Math.min(notice.bottom, nav.bottom) - Math.max(notice.top, nav.top);
+    return overlap > 1 || notice.bottom > nav.top + 1;
+  });
+  check('390 기기 저장 안내가 하단 탭에 가리지 않음', !covered);
 });
 
 test('320px empty lists clear the center button, and controls have names', async ({ page }) => {
@@ -86,11 +95,14 @@ test('320px games title stays wide and the 390px empty hint clears the tab', asy
 
   const title = await page.locator('#games-tab-title').boundingBox();
   const add = await page.locator('#games-add-game-btn').boundingBox();
+  const titleLines = await page.locator('#games-tab-title').evaluate((el) => el.getClientRects().length);
+  const titleText = ((await page.locator('#games-tab-title').textContent()) ?? '').replace(/\s+/g, '');
   check(
     '320px에서 제목이 버튼 위에 넓게 있음',
     !!title && !!add && title.width > 200 && add.y >= title.y + title.height - 1,
     JSON.stringify({ title, add })
   );
+  check('320px에서 제목이 한 줄이고 글자가 안 깨짐', titleLines === 1 && titleText === '내보드게임컬렉션', titleText);
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.locator('#nav-tab-home').click();
@@ -110,7 +122,7 @@ test('photo scan stays off until the server says a key exists', async ({ page })
   await page.locator('#games-add-game-btn').click();
   await visible('키 없으면 준비 중 안내', page.locator('#game-form-scan-unavailable'));
   await hidden('키 없으면 스캔 버튼 없음', page.locator('#game-form-open-scan-btn'));
-  await hasText('시드 검색은 그대로', page.locator('#game-form-modal-overlay'), '시드 검색');
+  await hasText('시드 검색은 그대로', page.locator('#game-form-modal-overlay'), '빠른 검색');
   await page.locator('#game-form-close-btn').click();
 
   await page.route('**/api/scan-games', (route) => {
@@ -128,6 +140,131 @@ test('photo scan stays off until the server says a key exists', async ({ page })
   await page.locator('#games-add-game-btn').click();
   await visible('키가 생기면 스캔 버튼', page.locator('#game-form-open-scan-btn'));
   await hidden('준비 중 안내가 사라짐', page.locator('#game-form-scan-unavailable'));
+});
+
+test('without a scan key, a chosen photo falls back to manual entry and saves', async ({ page }) => {
+  const pageErrors: string[] = [];
+  page.on('pageerror', (err) => pageErrors.push(err.message));
+  let scanPosts = 0;
+  await page.route('**/api/scan-games', (route) => {
+    if (route.request().method() === 'POST') scanPosts += 1;
+    return route.continue();
+  });
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/', { waitUntil: 'networkidle' });
+  await page.locator('#treasure-skip-btn').click();
+  await page.locator('#nav-tab-games').click();
+  await page.locator('#games-add-game-btn').click();
+  await visible('키 없으면 준비 중 안내', page.locator('#game-form-scan-unavailable'));
+  await page.locator('#game-form-pick-photo-btn').click();
+  await visible('사진 선택 시트', page.locator('#scan-modal-sheet'));
+
+  await page.locator('#scan-file-input').setInputFiles({
+    name: 'shelf.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+      'base64'
+    )
+  });
+  await visible('직접 입력 안내', page.locator('#scan-manual-fallback'));
+  await hasText('사진을 보내지 않음', page.locator('#scan-manual-fallback'), '서버로 보내지 않았습니다');
+  check('인식 요청 없음', scanPosts === 0, String(scanPosts));
+
+  await page.locator('#scan-manual-entry-btn').click();
+  await visible('직접 입력 폼', page.locator('#game-input-title'));
+  await hidden('사진 시트 닫힘', page.locator('#scan-modal-sheet'));
+  await page.locator('#game-input-title').fill('키없이등록');
+  await page.locator('#game-form-save-btn').click();
+  await page.locator('#treasure-skip-btn').click();
+  await visible('저장된 게임', page.getByRole('heading', { name: '키없이등록' }));
+  expect(pageErrors, pageErrors.join('\n')).toEqual([]);
+});
+
+test('without a scan key, several photos stay on the device and open manual entry', async ({ page }) => {
+  let scanPosts = 0;
+  await page.route('**/api/scan-games', (route) => {
+    if (route.request().method() === 'POST') scanPosts += 1;
+    return route.continue();
+  });
+
+  await page.setViewportSize({ width: 320, height: 700 });
+  await page.goto('/', { waitUntil: 'networkidle' });
+  await page.locator('#treasure-skip-btn').click();
+  await page.locator('#nav-tab-games').click();
+  await page.locator('#games-add-game-btn').click();
+  await page.locator('#game-form-pick-photo-btn').click();
+  await visible('사진 선택 시트', page.locator('#scan-modal-sheet'));
+
+  const png = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+    'base64'
+  );
+  const longName = `${'shelf'.repeat(24)}.png`;
+  await page.locator('#scan-file-input').setInputFiles([
+    { name: 'shelf-a.png', mimeType: 'image/png', buffer: png },
+    { name: longName, mimeType: 'image/png', buffer: png }
+  ]);
+
+  await visible('직접 입력 안내', page.locator('#scan-manual-fallback'));
+  await hasText('첫 사진 이름', page.locator('#scan-manual-fallback'), 'shelf-a.png');
+  await hasText('둘째 사진 이름', page.locator('#scan-manual-fallback'), longName);
+  await hasText('사진을 보내지 않음', page.locator('#scan-manual-fallback'), '서버로 보내지 않았습니다');
+  check('여러 장도 인식 요청 없음', scanPosts === 0, String(scanPosts));
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth
+  );
+  check('긴 파일 이름이 화면 밖으로 안 나감', overflow <= 1, String(overflow));
+
+  await page.locator('#scan-manual-entry-btn').click();
+  await visible('직접 입력 폼', page.locator('#game-input-title'));
+  await hidden('사진 시트 닫힘', page.locator('#scan-modal-sheet'));
+});
+
+test('ownership filters keep the whole label at 320px', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 700 });
+  await page.goto('/', { waitUntil: 'networkidle' });
+  await page.locator('#nav-tab-games').click();
+  const clipped = await page
+    .locator('#games-ownership-filters button')
+    .evaluateAll((buttons) =>
+      buttons.flatMap((button) =>
+        button.scrollWidth > button.clientWidth + 1 ? [button.textContent?.trim() ?? button.id] : []
+      )
+    );
+  check('소장 상태 글자가 버튼 안에 있음', clipped.length === 0, clipped.join(','));
+  await page.locator('#games-ownership-filters').evaluate((row) => {
+    row.scrollLeft = row.scrollWidth;
+  });
+  const sold = page.getByRole('button', { name: '판매완료', exact: true });
+  await visible('판매완료까지 스크롤됨', sold);
+  const inView = await sold.evaluate((button) => {
+    const box = button.getBoundingClientRect();
+    return box.left >= -1 && box.right <= window.innerWidth + 1 && button.scrollWidth <= button.clientWidth + 1;
+  });
+  check('판매완료 글자가 화면에 다 보임', inView);
+});
+
+test('my page names where records live and the nickname field', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 700 });
+  await page.goto('/', { waitUntil: 'networkidle' });
+  await page.locator('#nav-tab-mypage').click();
+  await hasText('저장 위치 안내', page.locator('#mypage-storage-status'), '이 기기에만 저장됨');
+  const overlap = await page.evaluate(() => {
+    const name = document.querySelector('h2')?.getBoundingClientRect();
+    const login = [...document.querySelectorAll('button')].find((button) =>
+      (button.textContent ?? '').includes('로그인')
+    );
+    if (!name || !login) return true;
+    const box = login.getBoundingClientRect();
+    const x = Math.min(name.right, box.right) - Math.max(name.left, box.left);
+    const y = Math.min(name.bottom, box.bottom) - Math.max(name.top, box.top);
+    return x > 1 && y > 1;
+  });
+  check('닉네임이 로그인 버튼과 안 겹침', !overlap);
+  await page.getByRole('button', { name: '수정' }).click();
+  await visible('닉네임 칸에 이름이 있음', page.getByRole('textbox', { name: '닉네임' }));
 });
 
 test('kakao quick select keeps weight, and game detail lists only that game', async ({ page }) => {
@@ -172,12 +309,32 @@ test('kakao quick select keeps weight, and game detail lists only that game', as
   await page.locator('#nav-tab-games').click();
   await page.locator('#games-kakao-share-btn').click();
   await page.locator('#kakao-share-modal-overlay').waitFor();
-  await page
-    .locator('select')
-    .filter({ has: page.locator('option[value="heavy"]') })
-    .selectOption('heavy');
+  await page.locator('#kakao-filter-weight').selectOption('heavy');
+  await page.locator('#kakao-filter-search').fill('없는이름');
   await page.getByRole('button', { name: '2인 추천/전용' }).click();
-  await visible('헤비만 선택됨', page.getByText('1/2개 선택됨'));
+  await visible('난이도와 검색이 둘 다 맞을 때만 고름', page.getByText('0/2개 선택됨'));
+  await page.locator('#kakao-filter-search').fill('헤비');
+  await page.getByRole('button', { name: '2인 추천/전용' }).click();
+  await visible('헤비이면서 검색에 맞는 게임만', page.getByText('1/2개 선택됨'));
+  const picked = (await page.locator('#kakao-share-modal-overlay').textContent()) ?? '';
+  check('라이트 게임은 빠른 추천에 없음', !picked.includes('라이트합성'));
+
+  await page.evaluate(() => {
+    history.replaceState(null, '', `${location.pathname}${location.search}#play=friend-score`);
+    window.open = (url?: string | URL) => {
+      (window as Window & { __opened?: string }).__opened = String(url ?? '');
+      return null;
+    };
+  });
+  await page.locator('#kakao-share-execute-btn').click();
+  await page.waitForFunction(() => Boolean((window as Window & { __opened?: string }).__opened));
+  const opened = await page.evaluate(() => (window as Window & { __opened?: string }).__opened ?? '');
+  check(
+    '카카오 공유 주소에 플레이 조각이 없음',
+    !opened.includes('#play=') && !opened.includes('friend-score'),
+    opened
+  );
+  check('카카오 앱 키는 가짜 값만', opened.includes('app_key=boardgame'), opened);
 
   await page.locator('#kakao-share-modal-overlay button[aria-label="닫기"]').click();
   await hidden('카카오 모달 닫힘', page.locator('#kakao-share-modal-overlay'));

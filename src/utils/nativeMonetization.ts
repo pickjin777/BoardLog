@@ -18,6 +18,14 @@ export function shouldPrepareNativeFeature(native: boolean, flag: string | undef
   return native && flag === 'true';
 }
 
+/**
+ * Plugin JS is bundled only when the Android package flag is on and that feature flag is on.
+ * The package flag is boardlog.monetization in android/gradle.properties (D-048).
+ */
+export function shouldBundleMonetizationPlugin(packageEnabled: boolean, featureEnabled: boolean): boolean {
+  return packageEnabled && featureEnabled;
+}
+
 /** Rejects anything except Google's sample app id or sample ad-unit id. */
 export function assertGoogleSampleAdId(id: string): void {
   const sampleApp = id.startsWith(`${GOOGLE_SAMPLE_PUBLISHER}~`);

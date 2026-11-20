@@ -62,6 +62,7 @@
 | D-045 | (결함 수정) | 저장소의 추가(add)는 항상 새 id를 발급, 호출자가 준 id는 무시 | Implemented | 2026-10-31 |
 | D-046 | (플레이 포장) | Capacitor로 `dist`를 담은 안드로이드 앱. ID `com.pickjin.boardlog`는 `src/config/appIdentity.ts` 한 곳. 광고·결제 플러그인은 꺼 둔 채 샘플 ID만 | Accepted | 2026-11-11 |
 | D-047 | (화면) | 보관함 화면은 어두운 금고. `#4834D4`는 보석 채움·아이콘 면·스플래시·theme-color로 유지. 어두운 면 위 글자는 밝은 자수정 `#E4DCFF` | Implemented, 소유자 사후 검토 | 2026-11-11 |
+| D-048 | (출시 패키지) | 개발자 계정이 없으므로 출시 패키지에서 AdMob·Play Billing의 JS와 네이티브 플러그인을 뺀다. `boardlog.monetization=true`와 매니페스트 수정으로 다시 켠다 | Accepted | 2026-11-12 |
 
 ### D-001 두 축 동등
 - **Question:** P1-Q01 보드로그가 가장 먼저 해결해야 할 사람
@@ -378,7 +379,7 @@
 ### D-046 플레이용 안드로이드 껍데기
 - **결정:** 포장은 Capacitor 8.6.0(2026-11-11 npm 안정판). 앱 이름 `보드로그`, 애플리케이션 ID `com.pickjin.boardlog`. 웹 빌드 `dist`를 앱에 넣고, WebView가 원격 주소를 열게 두지 않음
 - **한 곳:** ID·앱 이름·네이티브 `/api`가 갈 운영 출처(`https://board-log.vercel.app`)는 `src/config/appIdentity.ts`. `check:secrets`가 안드로이드 프로젝트와 어긋나면 실패. 이 공개 식별자는 비밀값이 아니라서 `VITE_`에 나누지 않음
-- **수익화:** `@capacitor-community/admob`과 `@capgo/native-purchases`(Play Billing)만 설치. `VITE_ADMOB_ENABLED`와 `VITE_PLAY_BILLING_ENABLED`가 문자열 `true`일 때만 초기화하고, 기본은 꺼짐. 그 기본 빌드는 두 플러그인의 JS를 넣지 않는다. 안드로이드 라이브러리는 클래스패스에 남는다. 광고 ID는 구글이 공개한 샘플만. 구독 상품 ID는 `null`(구글 공개 구독 테스트 ID는 없음). `showBanner`·`purchaseProduct` 호출은 검사에서 실패
+- **수익화:** `@capacitor-community/admob`과 `@capgo/native-purchases`(Play Billing)만 설치. `VITE_ADMOB_ENABLED`와 `VITE_PLAY_BILLING_ENABLED`가 문자열 `true`일 때만 초기화하고, 기본은 꺼짐. 광고 ID는 구글이 공개한 샘플만. 구독 상품 ID는 `null`(구글 공개 구독 테스트 ID는 없음). `showBanner`·`purchaseProduct` 호출은 검사에서 실패. 2026-11-12 D-048이 "안드로이드 라이브러리는 클래스패스에 남는다"를 대체한다. 출시 패키지에는 두 라이브러리를 넣지 않는다
 - **껍데기:** 스플래시·런처 배경 모서리와 `splashBackground`는 `#4834D4`. `viewport-fit=cover`와 SystemBars `css` 인셋을 같이 쓴다. 네이티브에서는 서비스 워커를 등록하지 않는다
 - **하지 않음:** 릴리스 서명키, 개발자 계정, 스토어 제출, 운영 키 연결
 - **Impacted:** 03-tech-stack.md, 04-architecture.md, AGENTS.md, docs/play/2026-11-play-readiness.md
@@ -390,6 +391,13 @@
 - **연출:** 첫 진입과 새 게임 추가 때 SVG/CSS 상자. `prefers-reduced-motion`이면 열린 자세로 멈추고, 건너뛰기와 Escape가 있다. 영상·로티·외부 글꼴 파일은 넣지 않는다
 - **하지 않음:** 병합, 배포, 서명키, 스토어 제출, 운영 키
 - **Impacted:** docs/design/DESIGN.md, docs/play/store-icon.md, AGENTS.md
+
+### D-048 출시 패키지에서 광고·결제 제거
+- **결정 (2026-11-12, 소유자):** 구글 플레이 개발자 계정이 아직 없다. 출시용 패키지에는 AdMob과 Play 결제를 넣지 않는다. JS와 네이티브 Capacitor 플러그인이 모두 빠진다. 병합된 매니페스트에 `com.google.android.gms.permission.AD_ID`와 `com.android.vending.BILLING`이 남지 않는다. 디버그·릴리스 빌드 타입은 같은 플래그를 본다
+- **다시 켜기:** `android/gradle.properties`의 `boardlog.monetization=true`, 매니페스트에서 그 두 권한과 AdMob `APPLICATION_ID`의 `tools:node="remove"` 삭제, 웹 빌드의 `VITE_ADMOB_ENABLED=true` 또는 `VITE_PLAY_BILLING_ENABLED=true`. 절차는 `docs/play/data-safety.md`
+- **남기는 것:** npm 의존성, 구글 샘플 광고 ID, 상품 ID `null`
+- **하지 않음:** 병합, 배포, 서명키, 스토어 제출, 운영 키
+- **Impacted:** 04-architecture.md, 05-engineering-standards.md, docs/play/data-safety.md, docs/play/2026-11-play-readiness.md, AGENTS.md
 
 | ID | 내용 | 해결 조건 / 담당 |
 |---|---|---|

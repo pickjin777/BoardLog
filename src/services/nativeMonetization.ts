@@ -8,8 +8,8 @@ import {
 } from '../utils/nativeMonetization';
 import { isNativeShell } from '../utils/nativeShell';
 
-const admobEnabled = import.meta.env.VITE_ADMOB_ENABLED === 'true';
-const billingEnabled = import.meta.env.VITE_PLAY_BILLING_ENABLED === 'true';
+const admobEnabled = __BOARDLOG_MONETIZATION_PACKAGE__ && import.meta.env.VITE_ADMOB_ENABLED === 'true';
+const billingEnabled = __BOARDLOG_MONETIZATION_PACKAGE__ && import.meta.env.VITE_PLAY_BILLING_ENABLED === 'true';
 
 /**
  * Skeleton only. The flag compares are constants so a default build drops both plugins.

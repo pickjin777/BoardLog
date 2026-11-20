@@ -29,6 +29,8 @@ interface GameFormModalProps {
   initialGame?: UserGame | null;
   defaultSearchQuery?: string;
   onOpenScan?: () => void;
+  /** Opens the photo picker without calling recognition. Used when no scan key is configured. */
+  onPickPhoto?: () => void;
 }
 
 const OWNERSHIP_OPTIONS: GameOwnershipStatus[] = ['보유중', '빌려줌', '빌림', '판매예정', '판매완료', '분실', '처분'];
@@ -61,7 +63,8 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
   onSave,
   initialGame,
   defaultSearchQuery = '',
-  onOpenScan
+  onOpenScan,
+  onPickPhoto
 }) => {
   // Search state (when adding a new game)
   const [searchQuery, setSearchQuery] = useState(defaultSearchQuery);
@@ -328,9 +331,19 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
               >
                 <p className="text-xs font-bold text-[#1E272E]">사진으로 여러 개 등록은 아직 준비 중이에요.</p>
                 <p className="text-[11px] text-[#636E72] mt-1 leading-relaxed">
-                  아래 시드 검색이나 직접 입력으로 지금 등록할 수 있어요. 인식 설정이 켜지면 이 자리가 다시 버튼으로
-                  바뀝니다.
+                  사진은 고를 수 있어요. 이름은 읽지 않고, 서버로 보내지 않습니다. 고른 뒤 직접 입력으로 등록하세요.
                 </p>
+                {onPickPhoto && (
+                  <button
+                    id="game-form-pick-photo-btn"
+                    type="button"
+                    onClick={onPickPhoto}
+                    className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-2 text-[11px] font-bold text-[#1E272E] border border-[#898B8D] hover:border-[#4834D4]"
+                  >
+                    <Camera className="w-3.5 h-3.5" />
+                    사진 선택
+                  </button>
+                )}
               </div>
             )}
 

@@ -136,8 +136,8 @@ RLS 정책:
 | `SUPABASE_URL` | Vercel 서버 | 위 함수용 |
 | `GEMINI_API_KEY`, `GEMINI_MODEL` | Vercel 서버(기존) | 사진 인식 |
 | `VITE_CLOUD_PUBLIC` | 클라이언트 | `true`일 때만 클라우드 기능을 모든 사용자에게 표시(D-032) |
-| `VITE_ADMOB_ENABLED` | 클라이언트 | 문자열 `true`일 때만 네이티브 껍데기에서 AdMob 샘플 초기화. 기본 빌드는 플러그인 JS를 넣지 않음(D-046) |
-| `VITE_PLAY_BILLING_ENABLED` | 클라이언트 | 문자열 `true`일 때만 Play Billing 지원 여부를 묻음. 구독 상품 ID는 `null`. 기본 빌드는 플러그인 JS를 넣지 않음(D-046) |
+| `VITE_ADMOB_ENABLED` | 클라이언트 | 문자열 `true`이고 `boardlog.monetization=true`일 때만 네이티브 껍데기에서 AdMob 샘플 초기화. 기본 빌드는 플러그인 JS를 넣지 않음(D-046, D-048) |
+| `VITE_PLAY_BILLING_ENABLED` | 클라이언트 | 문자열 `true`이고 `boardlog.monetization=true`일 때만 Play Billing 지원 여부를 묻음. 구독 상품 ID는 `null`. 기본 빌드는 플러그인 JS를 넣지 않음(D-046, D-048) |
 
 ### 8.1 환경별 배치 (D-032)
 
@@ -150,6 +150,10 @@ RLS 정책:
 | `GEMINI_API_KEY` | 있음 | **없음**(D-037, 사진 인식 꺼짐) | 있음 |
 
 Supabase 변수가 없으면 클라우드 모듈은 로드되지 않고, 클라우드 관련 메뉴도 표시하지 않는다. 기기 기록 기능은 그대로 동작한다.
+
+### 8.2 출시 패키지의 광고·결제 (D-048)
+
+`android/gradle.properties`의 `boardlog.monetization`은 환경변수가 아니다. 기본값은 `false`다. 이 값이 `true`가 아니면 디버그·릴리스 안드로이드 패키지에 AdMob·Play Billing 네이티브 플러그인을 넣지 않고, 웹 번들도 두 플러그인 JS를 넣지 않는다. `VITE_*` 플래그는 그 다음에야 각각을 켠다. 매니페스트의 `tools:node="remove"`를 지워야 `AD_ID`와 `BILLING`이 돌아온다. 절차는 [data-safety](../play/data-safety.md).
 
 ## 9. 미결
 

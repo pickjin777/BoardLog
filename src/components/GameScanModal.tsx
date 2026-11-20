@@ -35,11 +35,21 @@ const ORIENTATION_LABEL: Record<TitleOrientation, { text: string; Icon: typeof A
 interface GameScanModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /** False when the server has no scan key. A chosen photo stays on the device. */
+  allowRecognition: boolean;
+  onManualEntry: () => void;
   existingGames: UserGame[];
   onRegister: (games: NewGame[]) => Promise<void>;
 }
 
-export const GameScanModal: React.FC<GameScanModalProps> = ({ isOpen, onClose, existingGames, onRegister }) => {
+export const GameScanModal: React.FC<GameScanModalProps> = ({
+  isOpen,
+  onClose,
+  allowRecognition,
+  onManualEntry,
+  existingGames,
+  onRegister
+}) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -47,6 +57,8 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({ isOpen, onClose, e
   const [candidates, setCandidates] = useState<ScanCandidate[]>([]);
   const [titles, setTitles] = useState<Record<string, string>>({});
   const [excluded, setExcluded] = useState<Record<string, boolean>>({});
+  const [manualEntry, setManualEntry] = useState(false);
+  const [pickedLabel, setPickedLabel] = useState('');
 
   const ownedTitles = useMemo(() => new Set(existingGames.map((g) => normalizeTitle(g.title))), [existingGames]);
 
@@ -57,6 +69,8 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({ isOpen, onClose, e
     setError(null);
     setIsScanning(false);
     setIsSaving(false);
+    setManualEntry(false);
+    setPickedLabel('');
   }, []);
 
   const handleClose = useCallback(() => {
@@ -64,34 +78,50 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({ isOpen, onClose, e
     onClose();
   }, [reset, onClose]);
 
-  const handleFiles = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const picked = event.target.files;
-    const files: File[] = [];
-    for (let i = 0; i < (picked?.length ?? 0); i += 1) {
-      const file = picked?.item(i);
-      if (file) files.push(file);
-    }
-    event.target.value = '';
-    if (files.length === 0) return;
-
-    setIsScanning(true);
-    setError(null);
-    setCandidates([]);
-    try {
-      const found = await scanGamePhotos(files);
-      if (found.length === 0) {
-        setError('사진에서 보드게임 박스를 찾지 못했습니다. 제목이 보이도록 다시 찍어주세요.');
+  const handleFiles = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const picked = event.target.files;
+      const files: File[] = [];
+      for (let i = 0; i < (picked?.length ?? 0); i += 1) {
+        const file = picked?.item(i);
+        if (file) files.push(file);
       }
-      setCandidates(found);
-      setTitles(Object.fromEntries(found.map((c) => [c.id, c.match?.game.title ?? c.detection.title])));
-    } catch (err) {
-      setError(
-        err instanceof ScanNotConfiguredError || err instanceof Error ? err.message : '사진 인식에 실패했습니다.'
-      );
-    } finally {
-      setIsScanning(false);
-    }
-  }, []);
+      event.target.value = '';
+      if (files.length === 0) return;
+
+      const label = files.map((file) => file.name).join(', ');
+      setPickedLabel(label);
+      if (!allowRecognition) {
+        setManualEntry(true);
+        setError(null);
+        setCandidates([]);
+        return;
+      }
+
+      setIsScanning(true);
+      setError(null);
+      setManualEntry(false);
+      setCandidates([]);
+      try {
+        const found = await scanGamePhotos(files);
+        if (found.length === 0) {
+          setError('사진에서 보드게임 박스를 찾지 못했습니다. 제목이 보이도록 다시 찍어주세요.');
+        }
+        setCandidates(found);
+        setTitles(Object.fromEntries(found.map((c) => [c.id, c.match?.game.title ?? c.detection.title])));
+      } catch (err) {
+        if (err instanceof ScanNotConfiguredError) {
+          setManualEntry(true);
+          setError(null);
+          return;
+        }
+        setError(err instanceof Error ? err.message : '사진 인식에 실패했습니다.');
+      } finally {
+        setIsScanning(false);
+      }
+    },
+    [allowRecognition]
+  );
 
   const selected = useMemo(
     () => candidates.filter((c) => !excluded[c.id] && (titles[c.id] ?? '').trim().length > 0),
@@ -192,7 +222,7 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({ isOpen, onClose, e
                 className="hidden"
               />
 
-              {candidates.length === 0 && !isScanning && (
+              {candidates.length === 0 && !isScanning && !manualEntry && (
                 <button
                   id="scan-pick-photos-btn"
                   type="button"
@@ -201,8 +231,30 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({ isOpen, onClose, e
                 >
                   <Camera className="w-7 h-7 text-[#636E72]" />
                   <span className="text-xs font-bold text-[#1E272E]">사진 선택 (최대 {MAX_SCAN_IMAGES}장)</span>
-                  <span className="text-[11px] text-[#636E72]">가로·세로로 쓰인 제목, 세워둔 박스 모두 인식합니다</span>
+                  <span className="text-[11px] text-[#636E72]">
+                    {allowRecognition
+                      ? '가로·세로로 쓰인 제목, 세워둔 박스 모두 인식합니다'
+                      : '인식 설정이 없으면 이름은 읽지 않고, 고른 사진은 기기에만 있습니다'}
+                  </span>
                 </button>
+              )}
+
+              {manualEntry && (
+                <div id="scan-manual-fallback" className="rounded-2xl border border-[#898B8D] bg-[#F8F9FA] p-4">
+                  <p className="text-xs font-bold text-[#1E272E]">이 사진에서 이름을 읽지 않았습니다.</p>
+                  <p className="mt-1 break-all text-[11px] leading-relaxed text-[#636E72]">
+                    인식 설정이 없어 고른 사진은 서버로 보내지 않았습니다.
+                    {pickedLabel ? ` 선택한 파일: ${pickedLabel}` : ''}
+                  </p>
+                  <button
+                    id="scan-manual-entry-btn"
+                    type="button"
+                    onClick={onManualEntry}
+                    className="mt-3 inline-flex rounded-full bg-[#4834D4] px-4 py-2.5 text-[11px] font-bold text-white"
+                  >
+                    직접 입력으로 등록
+                  </button>
+                </div>
               )}
 
               {isScanning && (

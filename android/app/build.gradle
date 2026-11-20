@@ -44,6 +44,25 @@ dependencies {
 
 apply from: 'capacitor.build.gradle'
 
+// D-048. cap sync writes the plugin dependencies back. This drops them unless the flag is true.
+def boardlogMonetization = providers.gradleProperty('boardlog.monetization').orElse('false').get() == 'true'
+afterEvaluate {
+    if (!boardlogMonetization) {
+        def dropped = ['capacitor-community-admob', 'capgo-native-purchases'] as Set
+        configurations.each { configuration ->
+            def removing = configuration.dependencies.findAll { dropped.contains(it.name) }
+            removing.each { configuration.dependencies.remove(it) }
+        }
+        def pluginsJson = file('src/main/assets/capacitor.plugins.json')
+        if (pluginsJson.exists()) {
+            def pluginsText = pluginsJson.getText('UTF-8')
+            if (pluginsText.contains('@capacitor-community/admob') || pluginsText.contains('@capgo/native-purchases')) {
+                throw new GradleException('boardlog.monetization is off, but capacitor.plugins.json still registers AdMob or Play Billing. Run npm run cap:sync.')
+            }
+        }
+    }
+}
+
 try {
     def servicesJSON = file('google-services.json')
     if (servicesJSON.text) {
