@@ -62,10 +62,10 @@ test('320px empty lists clear the center button, and controls have names', async
   });
   await page.waitForFunction(() => {
     const tab = document.querySelector('#nav-tab-plays');
-    return tab !== null && getComputedStyle(tab).outlineColor === 'rgb(228, 220, 255)';
+    return tab !== null && getComputedStyle(tab).outlineColor === 'rgb(243, 212, 138)';
   });
   const outline = await page.locator('#nav-tab-plays').evaluate((el) => getComputedStyle(el).outlineColor);
-  check('탭 포커스 테두리가 보임', outline === 'rgb(228, 220, 255)', outline);
+  check('탭 포커스 테두리가 보임', outline === 'rgb(243, 212, 138)', outline);
 
   await page.locator('#nav-tab-plays').click();
   await page.locator('#empty-state-description').waitFor();
@@ -377,9 +377,9 @@ test('home secondary text and win rate meet AA, and the game form close button i
     .locator('#home-kpi-games span')
     .first()
     .evaluate((el) => getComputedStyle(el).color);
-  check('보유 게임 라벨이 #E4D3B4', label === 'rgb(228, 211, 180)', label);
+  check('보유 게임 라벨이 크림 위의 #5C4632', label === 'rgb(92, 70, 50)', label);
   const win = await page.locator('#home-kpi-winrate').evaluate((el) => getComputedStyle(el).color);
-  check('승률 숫자가 #9BE7B8', win === 'rgb(155, 231, 184)', win);
+  check('승률 숫자가 크림 위의 #1B6B43', win === 'rgb(27, 107, 67)', win);
 
   await page.locator('#nav-tab-games').click();
   const placeholder = await page
@@ -521,7 +521,7 @@ test('play photos open from the keyboard and the header clears the actions', asy
     if (el instanceof HTMLElement) el.focus({ focusVisible: true } as FocusOptions);
   });
   const outline = await openPhoto.evaluate((el) => getComputedStyle(el).outlineColor);
-  check('사진 포커스 테두리', outline === 'rgb(228, 220, 255)', outline);
+  check('사진 포커스 테두리', outline === 'rgb(243, 212, 138)', outline);
 
   await page.keyboard.press('Enter');
   await visible('엔터로 연 확대', page.locator('#photo-lightbox-modal'));

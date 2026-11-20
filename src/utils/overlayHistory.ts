@@ -6,6 +6,7 @@ export const OVERLAY_ORDER = [
   'kakao',
   'incoming',
   'share',
+  'collector',
   'game',
   'play',
   'playForm',

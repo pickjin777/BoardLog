@@ -7,6 +7,7 @@ import type {
   GameOwnershipStatus,
   GameCondition
 } from '../types';
+import { cleanMemo, cleanTags } from './shelf';
 
 /** Photos are stored as data URLs, so a real backup can be large; this only stops a runaway file. */
 export const MAX_BACKUP_BYTES = 50 * 1024 * 1024;
@@ -33,7 +34,16 @@ export interface ParsedBackup {
   invalidCount: number;
 }
 
-const OWNERSHIP: readonly GameOwnershipStatus[] = ['보유중', '빌려줌', '빌림', '판매예정', '판매완료', '분실', '처분'];
+const OWNERSHIP: readonly GameOwnershipStatus[] = [
+  '보유중',
+  '하고 싶음',
+  '빌려줌',
+  '빌림',
+  '판매예정',
+  '판매완료',
+  '분실',
+  '처분'
+];
 const CONDITIONS: readonly GameCondition[] = ['미개봉', '최상', '상', '중', '하'];
 const RESULTS: readonly MyGameResult[] = ['승리', '패배', '무승부', '참여'];
 
@@ -79,8 +89,9 @@ function normalizeGame(raw: unknown): ImportedGame | null {
       marketPrice: num(raw.marketPrice),
       storageLocation: str(raw.storageLocation),
       condition: oneOf(raw.condition, CONDITIONS, '상'),
-      tags: strArray(raw.tags),
+      tags: cleanTags(raw.tags),
       notes: str(raw.notes),
+      ...(typeof raw.memo === 'string' ? { memo: cleanMemo(raw.memo) } : {}),
       ownershipStatus: oneOf(raw.ownershipStatus, OWNERSHIP, '보유중'),
       playCount: Math.max(0, Math.floor(num(raw.playCount))),
       priceMeta: {

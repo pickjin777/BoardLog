@@ -137,7 +137,7 @@ export const MyPageView: React.FC<MyPageViewProps> = ({ onOpenAuth, onOpenCatalo
       <div className="p-5 bg-white rounded-2xl border border-[#E9ECEF] shadow-sm space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="w-13 h-13 rounded-2xl bg-[#4834D4] text-white font-black text-lg flex items-center justify-center">
+            <div className="w-13 h-13 rounded-2xl bg-[#3A2C22] text-[#F6EBD4] font-black text-lg flex items-center justify-center">
               {user?.nickname ? user.nickname.slice(0, 1).toUpperCase() : 'B'}
             </div>
             <div className="min-w-0">
