@@ -26,7 +26,7 @@ description: 네이비 바탕 위의 크림 정보와 골드 동작. 보드게�
 
 아이콘 모서리, 스플래시 바탕, `theme-color`, 매니페스트 `theme_color`, `splashBackground`는 `#4834D4` 그대로다. 이 값은 `check:secrets`가 잠그고, 앱 화면 색이 아니다. 앱 창 바탕은 `#0E1628`이다.
 
-골드 버튼 글자는 `#1A1408`이다. 흰 글자를 골드 위에 올리지 않는다. 오류 버튼 채움은 `#C4453C`다. 승률 숫자는 크림 위에서 `#1B6B43`이고, 옆에 "N승"을 같이 적는다. 색만으로 상태를 말하지 않는다.
+황동 명판 글자는 네이비 `#0E1628`이다. 흰 글자를 골드 위에 올리지 않는다. 오류 버튼 채움은 `#C4453C`다. 승률 숫자는 크림 위에서 `#1B6B43`이고, 옆에 "N승"을 같이 적는다. 색만으로 상태를 말하지 않는다.
 
 ```yaml
 colors:
@@ -121,7 +121,7 @@ spacing:
 
 ## Shapes
 
-카드는 16px, 추억 카드와 달력 바깥은 24px다. 버튼과 필터는 알약형이다. 레벨 칸은 8px 사각이다. 로고 타일은 12px 사각에 골드 면과 작은 상자다. 잠금 장식은 금, 크림, 구리 `#C9956A`다.
+카드는 16px, 추억 카드와 달력 바깥은 24px다. 동작 버튼은 모서리 8px 명판이다. 필터 칩은 알약형이다. 레벨 칸은 8px 사각이다. 로고 타일은 12px 사각에 골드 면과 작은 상자다. 잠금 장식은 금, 크림, 구리 `#C9956A`다.
 
 ```yaml
 rounded:
@@ -134,11 +134,11 @@ rounded:
 
 ## Components
 
-- **버튼:** 가장 자주 쓰는 동작은 골드 면, `#1A1408` 글자, 누르면 `#C9A24A`. "게임 등록"처럼 나란히 두는 두 번째 동작은 크림 면과 먹색 글자다. 조용한 동작은 `#243044` 면과 크림 글자. 파괴 동작은 `#C4453C`. 카카오 공유만 `#FEE500`.
-- **칩:** 선택되면 크림 면, 먹색 글자, 아래 3px 막대. 아니면 네이비 면과 크림 글자. `aria-pressed`를 같이 둔다.
+- **버튼:** 주요 동작은 황동 명판이다. 위는 `#FBF6DF`, 가운데 `#E8C56A`, 아래 테는 `#8A6424`. 네 모서리 리벳과 안쪽 1px 음각선. 글자는 네이비 `#0E1628`, 굵기 700. 나란히 두는 두 번째 동작과 조용한 동작은 네이비 판(`#172033`)에 황동 테 `#C6A36A`와 리벳, 글자는 크림 `#F6EBD4`. 누르면 1~2px 내려가고 안쪽 그림자가 짙어진다. 끄면 채도를 낮춘다. 포커스는 크림 링과 네이비 외곽선이다. 작은 칩과 아이콘 버튼은 같은 금속이고 리벳은 없다. 파괴 동작은 `#C4453C`. 카카오 공유만 `#FEE500`. `prefers-reduced-motion`이면 이동만 없앤다.
+- **칩:** 선택되면 황동 면과 네이비 글자. 아니면 네이비 면, 황동 테, 크림 글자. 리벳은 없다. `aria-pressed`를 같이 둔다.
 - **카드:** 금색 테두리를 두르지 않는다. 추억 카드는 크림 종이. 게임 카드는 표지가 위, 크림 정보가 아래, 선반 막대 위에 놓인다. 표지가 없으면 미플과 주사위가 있는 같은 자리 표시를 쓴다.
 - **입력:** `#243044` 면, `#C6B48A` 테두리, 크림 글자. 포커스는 2px 링.
-- **하단 탭:** 아이콘과 이름. 현재 탭은 굵기와 짧은 골드 막대와 `aria-current="page"`. 가운데 기록 추가는 골드 원이고 본문을 가리지 않는다.
+- **하단 탭:** 아이콘과 이름. 현재 탭은 굵기와 짧은 골드 막대와 `aria-current="page"`. 가운데 기록 추가는 리벳 없는 황동 원이고 본문을 가리지 않는다.
 - **레벨 경로:** 번호가 있는 칸과, 지금 칸 위의 미플. 홈은 다섯 칸, 자세히는 더 긴 경로다. 자세한 경로와 문제 목록, 배지 선반은 처음 화면 묶음 밖에 둔다.
 - **상자 연출:** 첫 진입, 새 게임 저장, 레벨업. 약 2.2초. 건너뛰기(최소 48×48px)와 Escape. 베일은 클릭을 가로채지 않는다. `prefers-reduced-motion: reduce`이면 애니메이션 없이 열린 자세를 약 0.8초 보여 준다.
 - **달력:** 펼친 기록장. 크림 칸, 먹색 숫자. 기록이 있는 날은 미플 모양 표시나 사진. 오늘은 밑줄, 선택한 날은 먹색 외곽선. 이전·다음은 골드 버튼에 "이전", "다음"을 적는다.
@@ -148,22 +148,22 @@ rounded:
 components:
   button-gold:
     backgroundColor: "{colors.gold-fill}"
-    textColor: "{colors.gold-ink}"
-    rounded: "{rounded.full}"
+    textColor: "#0E1628"
+    rounded: "{rounded.sm}"
     padding: 12px
   button-cream:
-    backgroundColor: "{colors.cream}"
-    textColor: "{colors.cream-ink}"
-    rounded: "{rounded.full}"
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.sm}"
     padding: 12px
   button-quiet:
-    backgroundColor: "{colors.inset}"
+    backgroundColor: "{colors.surface}"
     textColor: "{colors.ink}"
-    rounded: "{rounded.full}"
+    rounded: "{rounded.sm}"
     padding: 12px
   chip-selected:
-    backgroundColor: "{colors.cream}"
-    textColor: "{colors.cream-ink}"
+    backgroundColor: "{colors.gold-fill}"
+    textColor: "#0E1628"
     rounded: "{rounded.full}"
   chip-idle:
     backgroundColor: "{colors.surface}"
@@ -186,7 +186,7 @@ components:
 
 ## Do's and Don'ts
 
-- 주요 동작의 채움은 `#E2B657`, 글자는 `#1A1408`이다.
+- 주요 동작은 황동 명판이고 글자는 `#0E1628`이다. 보조 동작은 네이비 판, 황동 테, 크림 글자다.
 - 앱 화면의 채움, 글자, 포커스, 잠금에는 보라를 쓰지 않는다. 아이콘·스플래시·`theme-color`의 `#4834D4`는 화면 밖 자산이라 여기서 바꾸지 않는다.
 - 카드마다 금색 선을 두르지 않는다. 면의 밝기, 그림자, 여백으로 나눈다.
 - 크림 면의 본문은 `#1C160E` 또는 `#5C4632`다.
