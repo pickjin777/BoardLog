@@ -310,8 +310,9 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
             </div>
             <button
               type="button"
+              aria-label="닫기"
               onClick={onClose}
-              className="p-2 rounded-full hover:bg-[#F1F3F5] text-[#A8ABAF] hover:text-[#1E272E] transition-colors"
+              className="p-2 rounded-full hover:bg-[#F1F3F5] text-[#636E72] hover:text-[#1E272E] transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -358,6 +359,7 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
+                    aria-pressed={shareMode === 'all'}
                     onClick={() => setShareMode('all')}
                     className={`p-3 rounded-2xl border text-left transition-all ${
                       shareMode === 'all'
@@ -369,11 +371,12 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
                       <span className="text-xs font-bold">📦 전체 소장 게임 공유</span>
                       {shareMode === 'all' && <Check className="w-4 h-4 text-[#4834D4]" />}
                     </div>
-                    <p className="text-[11px] text-[#A8ABAF]">보유한 {games.length}개 전체를 목록으로 공유합니다</p>
+                    <p className="text-[11px] text-[#636E72]">보유한 {games.length}개 전체를 목록으로 공유합니다</p>
                   </button>
 
                   <button
                     type="button"
+                    aria-pressed={shareMode === 'selective'}
                     onClick={() => setShareMode('selective')}
                     className={`p-3 rounded-2xl border text-left transition-all ${
                       shareMode === 'selective'
@@ -385,7 +388,7 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
                       <span className="text-xs font-bold">🎯 일부 선택 공유 (추천)</span>
                       {shareMode === 'selective' && <Check className="w-4 h-4 text-[#4834D4]" />}
                     </div>
-                    <p className="text-[11px] text-[#A8ABAF]">인원수(4인이하), 장르 등 조건에 맞는 게임만 선택</p>
+                    <p className="text-[11px] text-[#636E72]">인원수(4인이하), 장르 등 조건에 맞는 게임만 선택</p>
                   </button>
                 </div>
 
@@ -394,10 +397,10 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
                   <div className="p-3.5 bg-[#F8F9FA] rounded-2xl border border-[#E9ECEF] space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5 text-xs font-bold text-[#1E272E]">
-                        <Sparkles className="w-4 h-4 text-[#F5CD79]" />
+                        <Sparkles className="w-4 h-4 text-[#B8860B]" />
                         <span>인기 빠른 필터 프리셋</span>
                       </div>
-                      <span className="text-[10px] text-[#A8ABAF]">원클릭으로 자동 선택</span>
+                      <span className="text-[10px] text-[#636E72]">원클릭으로 자동 선택</span>
                     </div>
 
                     {/* Presets Chips */}
@@ -446,7 +449,7 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
                         onClick={() => applyPresetFilter('all', '전략')}
                         className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1 ${
                           selectedGenre === '전략'
-                            ? 'bg-[#27AE60] text-white shadow-xs'
+                            ? 'bg-[#1B7A43] text-white shadow-xs'
                             : 'bg-white text-[#2D3436] border border-[#E9ECEF] hover:bg-[#F1F3F5]'
                         }`}
                       >
@@ -472,9 +475,11 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
                     <div className="pt-2 border-t border-[#E9ECEF] grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
                       {/* Genre Select */}
                       <div>
-                        {/* biome-ignore lint/a11y/noLabelWithoutControl: TBD-018: label is not yet associated with its input (htmlFor/id) */}
-                        <label className="block text-[10px] font-bold text-[#636E72] mb-1">장르 선택</label>
+                        <label htmlFor="kakao-filter-genre" className="block text-[10px] font-bold text-[#636E72] mb-1">
+                          장르 선택
+                        </label>
                         <select
+                          id="kakao-filter-genre"
                           value={selectedGenre}
                           onChange={(e) => {
                             setSelectedGenre(e.target.value);
@@ -493,9 +498,14 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
 
                       {/* Weight Select */}
                       <div>
-                        {/* biome-ignore lint/a11y/noLabelWithoutControl: TBD-018: label is not yet associated with its input (htmlFor/id) */}
-                        <label className="block text-[10px] font-bold text-[#636E72] mb-1">난이도 (웨이트)</label>
+                        <label
+                          htmlFor="kakao-filter-weight"
+                          className="block text-[10px] font-bold text-[#636E72] mb-1"
+                        >
+                          난이도 (웨이트)
+                        </label>
                         <select
+                          id="kakao-filter-weight"
                           value={weightPreset}
                           onChange={(e) => setWeightPreset(e.target.value as WeightPreset)}
                           className="w-full px-2.5 py-1.5 bg-white border border-[#E9ECEF] rounded-xl text-xs font-bold text-[#1E272E] focus:outline-hidden"
@@ -509,11 +519,19 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
 
                       {/* Search Bar */}
                       <div className="col-span-2 sm:col-span-1">
-                        {/* biome-ignore lint/a11y/noLabelWithoutControl: TBD-018: label is not yet associated with its input (htmlFor/id) */}
-                        <label className="block text-[10px] font-bold text-[#636E72] mb-1">게임 직접 검색</label>
+                        <label
+                          htmlFor="kakao-filter-search"
+                          className="block text-[10px] font-bold text-[#636E72] mb-1"
+                        >
+                          게임 직접 검색
+                        </label>
                         <div className="relative">
-                          <Search className="w-3.5 h-3.5 text-[#A8ABAF] absolute left-2.5 top-1/2 -translate-y-1/2" />
+                          <Search
+                            className="w-3.5 h-3.5 text-[#636E72] absolute left-2.5 top-1/2 -translate-y-1/2"
+                            aria-hidden="true"
+                          />
                           <input
+                            id="kakao-filter-search"
                             type="text"
                             placeholder="게임명 검색..."
                             value={searchQuery}
@@ -567,20 +585,19 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
                         filteredPresetGames.map((game) => {
                           const isSelected = selectedGameIds.has(game.id);
                           return (
-                            // biome-ignore lint/a11y/useKeyWithClickEvents: TBD-018: clickable element has no keyboard handler yet
-                            // biome-ignore lint/a11y/noStaticElementInteractions: TBD-018: clickable non-semantic element has no role yet
-                            <div
+                            <button
                               key={game.id}
+                              type="button"
+                              aria-pressed={isSelected}
                               onClick={() => toggleGameSelection(game.id)}
-                              className={`p-2.5 rounded-xl flex items-center justify-between gap-3 cursor-pointer transition-all ${
+                              className={`w-full p-2.5 rounded-xl flex items-center justify-between gap-3 cursor-pointer transition-all text-left ${
                                 isSelected
                                   ? 'bg-white border border-[#4834D4]/30 shadow-2xs'
-                                  : 'bg-white/60 hover:bg-white border border-transparent text-[#A8ABAF]'
+                                  : 'bg-white/60 hover:bg-white border border-transparent text-[#636E72]'
                               }`}
                             >
                               <div className="flex items-center gap-2.5 min-w-0">
-                                <button
-                                  type="button"
+                                <span
                                   className={`w-5 h-5 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
                                     isSelected
                                       ? 'bg-[#4834D4] text-white'
@@ -588,7 +605,7 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
                                   }`}
                                 >
                                   <Check className="w-3.5 h-3.5 stroke-[3]" />
-                                </button>
+                                </span>
 
                                 <img
                                   src={game.imageUrl}
@@ -621,10 +638,10 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
                                 </div>
                               </div>
 
-                              <span className="text-[11px] font-bold shrink-0 text-[#A8ABAF]">
+                              <span className="text-[11px] font-bold shrink-0 text-[#636E72]">
                                 {isSelected ? '포함됨' : '제외됨'}
                               </span>
-                            </div>
+                            </button>
                           );
                         })
                       ) : (
@@ -638,11 +655,11 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
 
                 {/* 4. Message Options & Greetings */}
                 <div className="p-3.5 bg-[#F8F9FA] rounded-2xl border border-[#E9ECEF] space-y-2.5">
-                  {/* biome-ignore lint/a11y/noLabelWithoutControl: TBD-018: label is not yet associated with its input (htmlFor/id) */}
-                  <label className="block text-xs font-bold text-[#1E272E]">
+                  <label htmlFor="kakao-custom-message" className="block text-xs font-bold text-[#1E272E]">
                     카카오톡 공유 상단 메시지 (선택 입력)
                   </label>
                   <input
+                    id="kakao-custom-message"
                     type="text"
                     placeholder="예: 이번 주말 모임에서 할 보드게임 골라주세요!"
                     value={customMessage}
@@ -829,8 +846,8 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
               >
                 {isCopied ? (
                   <>
-                    <Check className="w-4 h-4 text-[#27AE60]" />
-                    <span className="text-[#27AE60]">복사 완료!</span>
+                    <Check className="w-4 h-4 text-[#1B7A43]" />
+                    <span className="text-[#1B7A43]">복사 완료!</span>
                   </>
                 ) : (
                   <>

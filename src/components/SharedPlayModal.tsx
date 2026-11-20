@@ -68,7 +68,7 @@ export const SharedPlayModal: React.FC<SharedPlayModalProps> = ({ shared, onClos
                 type="button"
                 onClick={onClose}
                 aria-label="닫기"
-                className="rounded-full p-1 text-[#A8ABAF] hover:bg-[#F1F3F5]"
+                className="rounded-full p-1 text-[#636E72] hover:bg-[#F1F3F5]"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -93,7 +93,7 @@ export const SharedPlayModal: React.FC<SharedPlayModalProps> = ({ shared, onClos
                   >
                     <span
                       className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
-                        selected ? 'border-[#4834D4] bg-[#4834D4] text-white' : 'border-[#DCDDE1] bg-white'
+                        selected ? 'border-[#4834D4] bg-[#4834D4] text-white' : 'border-[#636E72] bg-white'
                       }`}
                     >
                       {selected && <Check className="h-3 w-3" strokeWidth={3} />}
@@ -125,7 +125,7 @@ export const SharedPlayModal: React.FC<SharedPlayModalProps> = ({ shared, onClos
             >
               {isSaving ? '저장 중...' : '내 기록에 추가'}
             </button>
-            <p className="mt-2 text-center text-[10px] text-[#A8ABAF]">사진, 평점, 후기는 공유되지 않아요.</p>
+            <p className="mt-2 text-center text-[10px] text-[#636E72]">사진, 평점, 후기는 공유되지 않아요.</p>
           </motion.div>
         </motion.div>
       )}

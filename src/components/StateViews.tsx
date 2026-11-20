@@ -13,7 +13,7 @@ export const LoadingState: React.FC<LoadingStateProps> = ({ message = '데이터
       </div>
     </div>
     <p className="text-sm font-bold text-[#1E272E]">{message}</p>
-    <p className="text-xs text-[#A8ABAF] mt-1">잠시만 기다려 주세요</p>
+    <p className="text-xs text-[#636E72] mt-1">잠시만 기다려 주세요</p>
   </div>
 );
 
@@ -28,13 +28,15 @@ interface EmptyStateProps {
 export const EmptyState: React.FC<EmptyStateProps> = ({ title, description, actionText, onAction, icon }) => (
   <div
     id="empty-state-view"
-    className="flex flex-col items-center justify-center py-14 px-6 text-center bg-white rounded-[28px] border border-dashed border-[#E9ECEF] my-4 shadow-sm"
+    className="flex flex-col items-center justify-center py-5 px-4 text-center bg-white rounded-[28px] border border-dashed border-[#E9ECEF] my-2 shadow-sm"
   >
-    <div className="w-14 h-14 rounded-2xl bg-[#F8F9FA] border border-[#E9ECEF] flex items-center justify-center mb-3 text-[#A8ABAF]">
-      {icon || <PackageOpen className="w-7 h-7 text-[#4834D4]" />}
+    <div className="w-11 h-11 rounded-2xl bg-[#F8F9FA] border border-[#E9ECEF] flex items-center justify-center mb-2 text-[#636E72]">
+      {icon || <PackageOpen className="w-6 h-6 text-[#4834D4]" />}
     </div>
-    <h3 className="text-base font-black italic text-[#1E272E] mb-1">{title}</h3>
-    <p className="text-xs text-[#636E72] max-w-xs mb-5 leading-relaxed">{description}</p>
+    <h3 className="text-sm font-black italic text-[#1E272E] mb-1">{title}</h3>
+    <p id="empty-state-description" className="text-xs text-[#636E72] max-w-xs mb-3 leading-relaxed">
+      {description}
+    </p>
     {actionText && onAction && (
       <button
         id="empty-state-action-btn"
@@ -60,7 +62,7 @@ export const NoSearchResultState: React.FC<NoSearchResultStateProps> = ({ query,
     id="no-search-results-view"
     className="flex flex-col items-center justify-center py-12 px-6 text-center bg-white rounded-[28px] border border-[#E9ECEF] my-4 shadow-sm"
   >
-    <div className="w-12 h-12 rounded-2xl bg-[#F1F3F5] flex items-center justify-center mb-3 text-[#A8ABAF]">
+    <div className="w-12 h-12 rounded-2xl bg-[#F1F3F5] flex items-center justify-center mb-3 text-[#636E72]">
       <SearchX className="w-6 h-6" />
     </div>
     <h3 className="text-base font-black italic text-[#1E272E] mb-1">
