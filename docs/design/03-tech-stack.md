@@ -20,6 +20,7 @@
 | 분석 | GA4, Vercel Web Analytics(`@vercel/analytics` 2.0.1, npm 최신) | — | D-004, D-005 |
 | 패키지 관리 | npm (`package-lock.json`, 설치는 `npm ci`) | npm 10.x | D-021 |
 | Node | `engines.node = 24.x` | — | D-021 |
+| 안드로이드 포장 | Capacitor. 웹 빌드 `dist`를 앱에 포함 | `@capacitor/core` 8.6.0, `@capacitor/android` 8.6.0 (npm, 2026-11-11) | D-046 |
 
 ## 2. 데이터 접근 경로 (D-020)
 

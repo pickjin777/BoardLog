@@ -1,5 +1,5 @@
 import type React from 'react';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Share2, Copy, X } from 'lucide-react';
 import type { PlayRecord } from '../types';
@@ -8,14 +8,19 @@ import { useAuth } from '../context/AuthContext';
 import { storage } from '../services/storage';
 import { formatPlayShareText } from '../utils/playShareText';
 import { buildShareLink } from '../utils/sharedPlay';
+import { PlayCard } from './PlayCard';
+import { useDialogA11y } from './useDialogA11y';
 
 interface PlayShareSheetProps {
   play: PlayRecord | null;
   onClose: () => void;
+  onShared?: (playId: string) => void;
 }
 
-export const PlayShareSheet: React.FC<PlayShareSheetProps> = ({ play, onClose }) => {
+export const PlayShareSheet: React.FC<PlayShareSheetProps> = ({ play, onClose, onShared }) => {
   const { showToast } = useToast();
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useDialogA11y(!!play, onClose, dialogRef);
   const { user } = useAuth();
   // Friends cannot tell who '게스트 플레이어' is, so a guest is asked for a name once.
   const [sharerName, setSharerName] = useState(
@@ -34,6 +39,7 @@ export const PlayShareSheet: React.FC<PlayShareSheetProps> = ({ play, onClose })
     storage.setShareName(sharerName);
     try {
       await navigator.clipboard.writeText(text);
+      if (play) onShared?.(play.id);
       showToast('결과가 복사됐어요. 카톡 채팅방에 붙여넣으세요.', 'success');
       onClose();
     } catch {
@@ -45,6 +51,7 @@ export const PlayShareSheet: React.FC<PlayShareSheetProps> = ({ play, onClose })
     storage.setShareName(sharerName);
     try {
       await navigator.share({ text });
+      if (play) onShared?.(play.id);
       onClose();
     } catch (err) {
       // The user backing out of the share sheet is not a failure.
@@ -58,26 +65,32 @@ export const PlayShareSheet: React.FC<PlayShareSheetProps> = ({ play, onClose })
       {play && (
         <motion.div
           id="play-share-sheet"
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          tabIndex={-1}
           className="fixed inset-0 z-[60] flex items-end justify-center bg-black/40 p-3 sm:items-center"
-          initial={{ opacity: 0 }}
+          initial={{ opacity: 1 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+          exit={{ opacity: 1 }}
           onClick={onClose}
         >
           <motion.div
-            className="w-full max-w-md rounded-[28px] bg-white p-5 shadow-xl"
-            initial={{ y: 40 }}
+            className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl"
+            initial={{ y: 12 }}
             animate={{ y: 0 }}
-            exit={{ y: 40 }}
+            exit={{ y: 12 }}
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
             onClick={(e) => e.stopPropagation()}
           >
+            <PlayCard play={play} variant="sheet" />
             <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-sm font-black italic text-[#1E272E]">같이 한 사람들에게 결과 공유</h3>
+              <h3 className="text-sm font-medium text-[#F6EBD4]">결과 공유</h3>
               <button
                 type="button"
                 onClick={onClose}
                 aria-label="닫기"
-                className="rounded-full p-1 text-[#A8ABAF] hover:bg-[#F1F3F5]"
+                className="rounded-full p-1 text-[#636E72] hover:bg-[#F1F3F5]"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -96,7 +109,7 @@ export const PlayShareSheet: React.FC<PlayShareSheetProps> = ({ play, onClose })
               />
             </label>
 
-            <pre className="mb-4 max-h-56 overflow-y-auto whitespace-pre-wrap rounded-2xl border border-[#E9ECEF] bg-[#F8F9FA] p-3.5 font-sans text-xs leading-relaxed text-[#2D3436]">
+            <pre className="mb-4 max-h-56 overflow-y-auto whitespace-pre-wrap rounded-2xl border border-[#E9ECEF] bg-[#F8F9FA] p-4 font-sans text-xs leading-relaxed text-[#2D3436]">
               {text}
             </pre>
 
@@ -107,7 +120,7 @@ export const PlayShareSheet: React.FC<PlayShareSheetProps> = ({ play, onClose })
                   type="button"
                   onClick={share}
                   disabled={!nameReady}
-                  className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-[#FEE500] py-2.5 text-xs font-black text-[#191919] transition-transform active:scale-95 disabled:opacity-40"
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-[#FEE500] py-2.5 text-xs font-black text-[#191919] transition-transform disabled:opacity-40"
                 >
                   <Share2 className="h-3.5 w-3.5" />
                   카톡 등으로 공유
@@ -118,7 +131,7 @@ export const PlayShareSheet: React.FC<PlayShareSheetProps> = ({ play, onClose })
                 type="button"
                 onClick={copyText}
                 disabled={!nameReady}
-                className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-2.5 text-xs font-bold transition-transform active:scale-95 disabled:opacity-40 ${
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-2.5 text-xs font-bold transition-transform disabled:opacity-40 ${
                   canNativeShare ? 'bg-[#F1F3F5] text-[#2D3436]' : 'bg-[#FEE500] text-[#191919]'
                 }`}
               >
@@ -129,7 +142,7 @@ export const PlayShareSheet: React.FC<PlayShareSheetProps> = ({ play, onClose })
             <button
               type="button"
               onClick={onClose}
-              className="mt-2 w-full py-2 text-[11px] font-bold text-[#A8ABAF] hover:text-[#636E72]"
+              className="mt-2 w-full py-2 text-[11px] font-bold text-[#636E72] hover:text-[#2D3436]"
             >
               다음에 할게요
             </button>

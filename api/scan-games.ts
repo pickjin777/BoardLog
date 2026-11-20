@@ -1,10 +1,12 @@
 import { GoogleGenAI, Type } from '@google/genai';
+import { PUBLIC_SCAN_ERROR } from '../src/utils/publicScanError';
 
 /**
  * Model ids retire while still appearing in the account's model list, so a single
  * hardcoded id eventually stops working. GEMINI_MODEL wins when set; otherwise these
  * are tried in order, starting with the alias that tracks the current flash release.
  */
+
 const MODEL_CANDIDATES = (process.env.GEMINI_MODEL ? [process.env.GEMINI_MODEL] : []).concat([
   'gemini-flash-latest',
   'gemini-3.5-flash',
@@ -62,65 +64,33 @@ const RESPONSE_SCHEMA = {
  */
 export function classifyProviderError(err: unknown): { status: number; error: string; reason: string } {
   const text = (err instanceof Error ? err.message : String(err)).toLowerCase();
+  const detail = (err instanceof Error ? err.message : String(err)).slice(0, 300);
+  let status = 502;
+  let reason = 'UNKNOWN';
 
   if (text.includes('api key not valid') || text.includes('api_key_invalid') || text.includes('invalid api key')) {
-    return {
-      status: 502,
-      reason: 'INVALID_KEY',
-      error: 'Gemini API 키가 올바르지 않습니다. 키를 다시 발급받아 등록해주세요.'
-    };
+    reason = 'INVALID_KEY';
+  } else if (text.includes('permission_denied') || text.includes('has not been used') || text.includes('is disabled')) {
+    reason = 'API_DISABLED';
+  } else if (text.includes('not_found') || text.includes('not found')) {
+    reason = 'MODEL_NOT_FOUND';
+  } else if (text.includes('resource_exhausted') || text.includes('quota') || text.includes('rate limit')) {
+    status = 429;
+    reason = 'RATE_LIMITED';
+  } else if (text.includes('location') || text.includes('region') || text.includes('user location')) {
+    reason = 'REGION_BLOCKED';
+  } else if (text.includes('unavailable') || text.includes('overloaded') || text.includes('high demand')) {
+    status = 503;
+    reason = 'MODEL_OVERLOADED';
+  } else {
+    const upstreamStatus = (err as { status?: unknown }).status;
+    const fromMessage = /\b(4\d{2}|5\d{2})\b/.exec(text);
+    const upstream = typeof upstreamStatus === 'number' ? String(upstreamStatus) : fromMessage?.[1];
+    reason = upstream ? `UNKNOWN_${upstream}` : 'UNKNOWN';
   }
-  if (text.includes('permission_denied') || text.includes('has not been used') || text.includes('is disabled')) {
-    return {
-      status: 502,
-      reason: 'API_DISABLED',
-      error: '구글 프로젝트에서 Generative Language API가 켜져 있지 않습니다.'
-    };
-  }
-  if (text.includes('not_found') || text.includes('not found')) {
-    return {
-      status: 502,
-      reason: 'MODEL_NOT_FOUND',
-      error: `시도한 모델(${MODEL_CANDIDATES.join(', ')})을 모두 쓸 수 없습니다. 아래 목록에서 하나를 골라 GEMINI_MODEL 환경변수로 지정해주세요.`
-    };
-  }
-  if (text.includes('resource_exhausted') || text.includes('quota') || text.includes('rate limit')) {
-    return {
-      status: 429,
-      reason: 'RATE_LIMITED',
-      error: '사용 한도를 넘었습니다. 잠시 후 다시 시도해주세요.'
-    };
-  }
-  if (text.includes('location') || text.includes('region') || text.includes('user location')) {
-    return {
-      status: 502,
-      reason: 'REGION_BLOCKED',
-      error: '현재 지역에서는 이 모델을 쓸 수 없습니다.'
-    };
-  }
-  // Google's own transient overload, distinct from a quota being spent: the message
-  // itself says a retry is expected to work, so no raw detail needs to reach the user.
-  if (text.includes('unavailable') || text.includes('overloaded') || text.includes('high demand')) {
-    return {
-      status: 503,
-      reason: 'MODEL_OVERLOADED',
-      error: '지금 사용자가 몰려 있습니다. 잠시 후 다시 시도해주세요.'
-    };
-  }
-  // The provider's HTTP status separates the remaining causes without echoing its text back.
-  const status = (err as { status?: unknown }).status;
-  const fromMessage = /\b(4\d{2}|5\d{2})\b/.exec(text);
-  const upstream = typeof status === 'number' ? String(status) : fromMessage?.[1];
 
-  // Unclassified failures have no other route to whoever can fix them: the log is not
-  // reachable from the app. Truncated, and only on this branch.
-  const detail = (err instanceof Error ? err.message : String(err)).slice(0, 300);
-
-  return {
-    status: 502,
-    reason: upstream ? `UNKNOWN_${upstream}` : 'UNKNOWN',
-    error: `사진 인식에 실패했습니다.${upstream ? ` (구글 응답 코드 ${upstream})` : ''}\n\n${detail}`
-  };
+  console.error('scan-games provider text', { reason, detail });
+  return { status, reason, error: PUBLIC_SCAN_ERROR };
 }
 
 /**
@@ -152,11 +122,32 @@ interface IncomingImage {
 interface HandlerRequest {
   method?: string;
   body?: unknown;
+  headers?: { origin?: string | string[] };
 }
 
 interface HandlerResponse {
   status(code: number): HandlerResponse;
+  setHeader(name: string, value: string): void;
   json(payload: unknown): void;
+  end(): void;
+}
+
+const NATIVE_SHELL_ORIGINS = new Set(['https://localhost', 'http://localhost', 'capacitor://localhost']);
+
+/** The bundled shell is a different origin from the Vercel function. Other sites stay blocked. */
+export function nativeShellAllowOrigin(origin: string | string[] | undefined): string | null {
+  const value = Array.isArray(origin) ? origin[0] : origin;
+  if (!value || !NATIVE_SHELL_ORIGINS.has(value)) return null;
+  return value;
+}
+
+function applyNativeShellCors(req: HandlerRequest, res: HandlerResponse): void {
+  const allow = nativeShellAllowOrigin(req.headers?.origin);
+  if (!allow) return;
+  res.setHeader('Access-Control-Allow-Origin', allow);
+  res.setHeader('Vary', 'Origin');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 }
 
 function readImages(body: unknown): IncomingImage[] | string {
@@ -173,7 +164,7 @@ function readImages(body: unknown): IncomingImage[] | string {
       return '이미지 형식이 올바르지 않습니다.';
     }
     if (!ALLOWED_MIME.includes(mimeType)) {
-      return '지원되지 않는 이미지 형식입니다. (JPG, PNG, WebP)';
+      return '지원되지 않는 이미지 형식입니다. JPG, PNG, WebP';
     }
     // base64 inflates by 4/3, so this bounds the decoded size.
     if (data.length * 0.75 > MAX_IMAGE_BYTES) {
@@ -184,14 +175,36 @@ function readImages(body: unknown): IncomingImage[] | string {
   return images;
 }
 
+/** Non-empty server key. The value is never returned to the browser. */
+export function isScanConfigured(apiKey: string | undefined): apiKey is string {
+  return typeof apiKey === 'string' && apiKey.trim().length > 0;
+}
+
 export default async function handler(req: HandlerRequest, res: HandlerResponse): Promise<void> {
+  applyNativeShellCors(req, res);
+  if (req.method === 'OPTIONS') {
+    if (nativeShellAllowOrigin(req.headers?.origin)) {
+      res.status(204).end();
+      return;
+    }
+    res.status(405).json({ error: '허용되지 않은 요청입니다.' });
+    return;
+  }
+
+  // A probe the client can call without sending a photo or reaching Gemini.
+  // When a key is added, the next check turns the button back on by itself.
+  if (req.method === 'GET') {
+    res.status(200).json({ available: isScanConfigured(process.env.GEMINI_API_KEY) });
+    return;
+  }
+
   if (req.method !== 'POST') {
     res.status(405).json({ error: '허용되지 않은 요청입니다.' });
     return;
   }
 
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
+  if (!isScanConfigured(apiKey)) {
     // Surfaced as a setup problem, not a user error: the deployment is missing its key.
     res.status(503).json({ error: '사진 인식 기능이 아직 설정되지 않았습니다.', code: 'NOT_CONFIGURED' });
     return;
@@ -199,7 +212,7 @@ export default async function handler(req: HandlerRequest, res: HandlerResponse)
 
   const images = readImages(req.body);
   if (typeof images === 'string') {
-    res.status(400).json({ error: images });
+    res.status(400).json({ error: images, code: 'VALIDATION' });
     return;
   }
 
@@ -253,19 +266,11 @@ export default async function handler(req: HandlerRequest, res: HandlerResponse)
   if (classified.reason === 'MODEL_NOT_FOUND') {
     const available = await listUsableModels(apiKey);
     // A candidate rejected as "not found" that still appears in the account's own
-    // listing was never actually missing: the provider is misbehaving under load, and
-    // swapping GEMINI_MODEL to another id already tried would fail the same way.
+    // listing was never actually missing: the provider is misbehaving under load.
     const stillListed = MODEL_CANDIDATES.some((model) => available.includes(model));
-    if (stillListed) {
-      res.status(503).json({
-        error: '지금 일시적으로 요청을 처리하지 못했습니다. 잠시 후 다시 시도해주세요.',
-        reason: 'PROVIDER_UNSTABLE',
-        available
-      });
-      return;
-    }
-    res.status(classified.status).json({ error: classified.error, reason: classified.reason, available });
+    console.error('scan-games model list', { tried: MODEL_CANDIDATES, available, stillListed });
+    res.status(stillListed ? 503 : classified.status).json({ error: PUBLIC_SCAN_ERROR, code: 'SCAN_FAILED' });
     return;
   }
-  res.status(classified.status).json({ error: classified.error, reason: classified.reason });
+  res.status(classified.status).json({ error: PUBLIC_SCAN_ERROR, code: 'SCAN_FAILED' });
 }

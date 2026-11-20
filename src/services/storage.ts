@@ -1,6 +1,8 @@
 import type { UserGame, PlayRecord, UserProfile } from '../types';
 import { formatDate } from '../utils/formatters';
 import { type ParsedBackup, gameDedupKey, playDedupKey } from '../utils/backupImport';
+import { parseCollectorState, remapCollectorIds, type CollectorState } from '../utils/collectorProgress';
+import { loginFailureDelayMs, waitMs } from '../utils/loginBackoff';
 
 const DB_NAME = 'board_log_db_v1';
 const DB_VERSION = 1;
@@ -12,6 +14,9 @@ const LS_ACTIVE_USER = 'boardlog_active_user';
 const LS_ALL_USERS = 'boardlog_all_users';
 const LS_GUEST_UID = 'boardlog_guest_uid';
 const LS_SHARE_NAME = 'boardlog_share_name';
+const LS_SCAN_ENABLED = 'boardlog_scan_enabled';
+const LS_SCAN_CONSENT = 'boardlog_scan_consent';
+const LS_LOGIN_FAILURES = 'boardlog_login_failures';
 
 const PBKDF2_ITERATIONS = 210_000;
 const PBKDF2_HASH = 'SHA-256';
@@ -22,6 +27,8 @@ const QUOTA_MESSAGE = '저장 공간이 가득 찼습니다. 사진 수를 줄�
 
 const gamesKey = (uid: string) => `boardlog_games_${uid}`;
 const playsKey = (uid: string) => `boardlog_plays_${uid}`;
+/** XP and quest claims. Separate from games and plays so those formats stay as they are. */
+const progressKey = (uid: string) => `boardlog_progress_${uid}`;
 
 type Backend = 'idb' | 'ls';
 
@@ -120,6 +127,8 @@ export interface ImportPlan {
   skippedGames: number;
   skippedPlays: number;
   invalidCount: number;
+  /** Null when the file has no readable collector progress. */
+  progress: CollectorState | null;
 }
 
 class BoardLogStorage {
@@ -354,13 +363,17 @@ class BoardLogStorage {
   }
 
   async signIn(email: string, password: string): Promise<UserProfile> {
+    const failures = this.lsGet<number>(LS_LOGIN_FAILURES, 0);
+    await waitMs(loginFailureDelayMs(failures));
     const users = this.lsGet<Record<string, StoredUser>>(LS_ALL_USERS, {});
     const cleanEmail = email.trim().toLowerCase();
     const record = users[cleanEmail];
+    const reject = (message: string): never => {
+      this.lsSetQuiet(LS_LOGIN_FAILURES, failures + 1);
+      throw new Error(message);
+    };
 
-    if (!record) {
-      throw new Error('등록되지 않은 이메일 계정입니다.');
-    }
+    if (!record) reject('등록되지 않은 이메일 계정입니다.');
 
     if (record.password) {
       const candidate = await derivePasswordHash(
@@ -368,18 +381,17 @@ class BoardLogStorage {
         base64ToBytes(record.password.salt),
         record.password.iterations
       );
-      if (candidate !== record.password.hash) {
-        throw new Error('비밀번호가 일치하지 않습니다.');
-      }
+      if (candidate !== record.password.hash) reject('비밀번호가 일치하지 않습니다.');
     } else if (record.passwordHash && legacyHashMatches(password, record.passwordHash)) {
       record.password = await createPasswordRecord(password);
       delete record.passwordHash;
       users[cleanEmail] = record;
       this.lsSet(LS_ALL_USERS, users);
     } else {
-      throw new Error('비밀번호가 일치하지 않습니다.');
+      reject('비밀번호가 일치하지 않습니다.');
     }
 
+    this.lsSetQuiet(LS_LOGIN_FAILURES, 0);
     await this.setActiveSession(record.profile);
     return record.profile;
   }
@@ -406,7 +418,7 @@ class BoardLogStorage {
       for (let i = 0; i < localStorage.length; i += 1) {
         const key = localStorage.key(i);
         if (!key) continue;
-        const match = /^boardlog_(?:games|plays)_(guest_[a-z0-9]+)$/.exec(key);
+        const match = /^boardlog_(?:games|plays|progress)_(guest_[a-z0-9]+)$/.exec(key);
         if (match && match[1] !== activeGuestUid) {
           stale.push(key);
         }
@@ -436,6 +448,48 @@ class BoardLogStorage {
 
   async signOut(): Promise<void> {
     await this.setActiveSession(null);
+  }
+
+  /**
+   * Removes one device account and only that account's games and plays.
+   * There is no server user record to delete.
+   */
+  async deleteAccount(uid: string): Promise<void> {
+    const backend = await this.resolveBackend(uid);
+    const games = await this.getUserGames(uid);
+    const plays = await this.getUserPlays(uid);
+    if (backend === 'idb') {
+      const removed = await this.idbWriteTx([STORE_GAMES, STORE_PLAYS], (tx) => {
+        for (const game of games) tx.objectStore(STORE_GAMES).delete(game.id);
+        for (const play of plays) tx.objectStore(STORE_PLAYS).delete(play.id);
+      });
+      if (!removed) {
+        throw new Error('이 기기의 기록을 지우지 못했습니다.');
+      }
+    }
+
+    localStorage.removeItem(gamesKey(uid));
+    localStorage.removeItem(playsKey(uid));
+    localStorage.removeItem(progressKey(uid));
+
+    const users = this.lsGet<Record<string, StoredUser>>(LS_ALL_USERS, {});
+    let removedUser = false;
+    for (const [email, record] of Object.entries(users)) {
+      if (record.profile.uid === uid) {
+        delete users[email];
+        removedUser = true;
+      }
+    }
+    if (removedUser) this.lsSet(LS_ALL_USERS, users);
+
+    if (this.lsGet<string | null>(LS_GUEST_UID, null) === uid) {
+      localStorage.removeItem(LS_GUEST_UID);
+    }
+    const active = await this.getActiveSession();
+    if (active?.uid === uid) {
+      await this.setActiveSession(null);
+    }
+    this.backends.delete(uid);
   }
 
   async updateProfile(uid: string, updates: Partial<UserProfile>): Promise<UserProfile> {
@@ -685,6 +739,27 @@ class BoardLogStorage {
     this.lsSetQuiet(LS_SHARE_NAME, name.trim());
   }
 
+  /** Missing key means on. Off blocks every scan request, including the availability probe. */
+  isPhotoRecognitionEnabled(): boolean {
+    return this.lsGet<string>(LS_SCAN_ENABLED, '1') !== '0';
+  }
+
+  setPhotoRecognitionEnabled(enabled: boolean): void {
+    this.lsSetQuiet(LS_SCAN_ENABLED, enabled ? '1' : '0');
+  }
+
+  hasPhotoScanConsent(): boolean {
+    return this.lsGet<string>(LS_SCAN_CONSENT, '') === '1';
+  }
+
+  grantPhotoScanConsent(): void {
+    this.lsSetQuiet(LS_SCAN_CONSENT, '1');
+  }
+
+  revokePhotoScanConsent(): void {
+    this.lsSetQuiet(LS_SCAN_CONSENT, '');
+  }
+
   // --- Import JSON backup ---
   /**
    * Read-only: works out what a backup would add so the user can confirm first.
@@ -722,12 +797,15 @@ class BoardLogStorage {
     const playKeys = new Set(existingPlays.map(playDedupKey));
     const newPlays: PlayRecord[] = [];
     const playCountBumps = new Map<string, number>();
+    const sourcePlayToTarget = new Map<string, string>();
     let skippedPlays = 0;
 
-    parsed.plays.forEach(({ sourceGameId, data }) => {
+    parsed.plays.forEach(({ sourceId, sourceGameId, data }) => {
       const key = playDedupKey(data);
       if (playKeys.has(key)) {
         skippedPlays += 1;
+        const existing = existingPlays.find((play) => playDedupKey(play) === key);
+        if (sourceId && existing) sourcePlayToTarget.set(sourceId, existing.id);
         return;
       }
       playKeys.add(key);
@@ -737,9 +815,11 @@ class BoardLogStorage {
         (sourceGameId ? sourceToTarget.get(sourceGameId) : undefined) ??
         gameIdByKey.get(gameDedupKey(data.gameTitle)) ??
         null;
+      const id = randomId('play');
+      if (sourceId) sourcePlayToTarget.set(sourceId, id);
       newPlays.push({
         ...data,
-        id: randomId('play'),
+        id,
         gameId,
         createdAt: data.createdAt || formatDate(),
         updatedAt: formatDate()
@@ -756,11 +836,15 @@ class BoardLogStorage {
       playCountBumps,
       skippedGames,
       skippedPlays,
-      invalidCount: parsed.invalidCount
+      invalidCount: parsed.invalidCount,
+      progress: parsed.progress
+        ? remapCollectorIds(parsed.progress, { games: sourceToTarget, plays: sourcePlayToTarget })
+        : null
     };
   }
 
   async commitImport(uid: string, plan: ImportPlan): Promise<void> {
+    if (plan.progress) this.saveCollectorProgress(uid, plan.progress);
     if (plan.newGames.length === 0 && plan.newPlays.length === 0) return;
 
     if ((await this.resolveBackend(uid)) === 'idb') {
@@ -807,6 +891,19 @@ class BoardLogStorage {
     this.lsSet(playsKey(uid), [...plan.newPlays, ...plays]);
   }
 
+  /**
+   * Collector XP lives in localStorage, not in the game or play stores.
+   * A missing or unreadable value is treated as "not migrated yet".
+   */
+  getCollectorProgress(uid: string): CollectorState | null {
+    if (!uid) return null;
+    return parseCollectorState(this.lsGet<unknown>(progressKey(uid), null));
+  }
+
+  saveCollectorProgress(uid: string, state: CollectorState): void {
+    this.lsSet(progressKey(uid), state);
+  }
+
   // --- Export JSON ---
   async exportUserDataJson(uid: string): Promise<string> {
     const games = await this.getUserGames(uid);
@@ -818,7 +915,8 @@ class BoardLogStorage {
         exportedAt: new Date().toISOString(),
         user: session,
         games,
-        plays
+        plays,
+        progress: this.getCollectorProgress(uid)
       },
       null,
       2

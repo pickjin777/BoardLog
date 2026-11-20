@@ -53,10 +53,7 @@ test('a play shared by link is added to a friend’s own log, and hostile links 
   check('이름 입력 후 공유 가능', await A.page.locator('#play-share-copy-btn').isEnabled());
   // biome-ignore lint/performance/useDomNodeTextContent: Playwright's locator.innerText() (rendered text), not the DOM property
   const sheetText = await A.page.locator('#play-share-sheet pre').innerText();
-  check(
-    "문구에서 '나' 대신 이름",
-    sheetText.includes('👥 참여: 철수, 영희, 민수') && sheetText.includes('👑 승자: 영희')
-  );
+  check("문구에서 '나' 대신 이름", sheetText.includes('참여: 철수, 영희, 민수') && sheetText.includes('승자: 영희'));
   await A.page.locator('#play-share-copy-btn').click();
   const clip = await A.page.evaluate(() => navigator.clipboard.readText());
   const link = clip.match(/https?:\/\/\S+#play=\S+/)?.[0] ?? '';

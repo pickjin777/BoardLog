@@ -10,6 +10,7 @@ interface AuthContextValue {
   signUp: (email: string, pass: string, nickname: string) => Promise<void>;
   signInAnonymously: () => Promise<void>;
   signOut: () => Promise<void>;
+  deleteAccount: () => Promise<void>;
   updateTheme: (theme: 'light' | 'dark' | 'auto') => Promise<void>;
   updateNickname: (nickname: string) => Promise<void>;
 }
@@ -63,6 +64,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(guest);
   };
 
+  const deleteAccount = async () => {
+    if (!user) return;
+    await storage.deleteAccount(user.uid);
+    const guest = await storage.signInAnonymously();
+    setUser(guest);
+  };
+
   const updateTheme = async (theme: 'light' | 'dark' | 'auto') => {
     if (!user) return;
     const updated = await storage.updateProfile(user.uid, { theme });
@@ -84,6 +92,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signUp,
         signInAnonymously,
         signOut,
+        deleteAccount,
         updateTheme,
         updateNickname
       }}

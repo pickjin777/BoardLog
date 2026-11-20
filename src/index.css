@@ -1,11 +1,83 @@
 @import "tailwindcss";
 
 @layer base {
-  body {
-    background-color: #F1F3F5;
-    color: #2D3436;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  html {
+    color-scheme: dark;
   }
+
+  body {
+    background-color: #0e1628;
+    color: #f6ebd4;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    font-family:
+      -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic",
+      sans-serif;
+  }
+}
+
+/*
+ * viewport-fit=cover lets the page draw under the status bar and the home indicator.
+ * On the web and on a current Android WebView, env() is the inset. Capacitor's
+ * SystemBars plugin also sets --safe-area-inset-* ; older WebViews get native
+ * padding instead, and both values stay 0 so this does not add a second gap.
+ */
+#top-app-header {
+  padding-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+}
+
+#bottom-navigation-bar {
+  padding-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+}
+
+#scan-modal-sheet {
+  padding-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+}
+
+@media (max-width: 1023px) {
+  #app-shell-main {
+    padding-bottom: calc(9.5rem + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)));
+  }
+}
+
+@media (min-width: 1024px) {
+  #bottom-navigation-bar {
+    padding-bottom: 0;
+  }
+}
+
+/*
+ * Tailwind marks focused fields outline-style:none, and Chrome's own ring is easy to miss on
+ * this gray page. !important keeps a 2px brand ring on keyboard focus.
+ */
+/* Focus is gold on navy and ink on cream. Brand purple is not used in the app UI.
+   Brass plates set their own double ring later so it stays visible on both grounds. */
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid #f3d48a !important;
+  outline-offset: 2px !important;
+}
+
+.paper :where(button, a, input, select, textarea):focus-visible {
+  outline-color: #1c160e !important;
+}
+
+/* 48px touch target. Icon buttons and chips were under that after the vault restyle. */
+button,
+[role='button'] {
+  min-width: 48px;
+  min-height: 48px;
+}
+
+input:not([type='checkbox']):not([type='radio']):not([type='file']):not([type='hidden']),
+select,
+textarea {
+  min-height: 48px;
+}
+
+/* Placeholder must stay at opacity 1 or the browser fades it under AA again. */
+::placeholder {
+  color: #e4d3b4;
+  opacity: 1;
 }
 
 /* Dedicated Print Styles for Book Catalogue & PDF Export */
@@ -84,4 +156,868 @@
     color: #111827 !important;
     font-weight: bold !important;
   }
+
+  /* The screen theme is dark. A printed catalog stays ink on paper. */
+  .printable-catalog-root,
+  .printable-catalog-root * {
+    background: #ffffff !important;
+    background-image: none !important;
+    color: #111827 !important;
+    box-shadow: none !important;
+  }
 }
+
+/* Vault theme. Component utilities keep their names; these unlayered rules repaint them.
+   Normative values live in docs/design/DESIGN.md. Kakao yellow and photo scrims stay. */
+.accent-\[\#4834D4\] { accent-color: #E2B657; }
+.active\:bg-\[\#DFE4EA\]:active { background-color: #2C3C56; }
+.bg-\[\#1B7A43\]\/10 { background-color: #9BE7B833; }
+.bg-\[\#4834D4\]\/10 { background-color: #E2B6572E; }
+.bg-\[\#4834D4\]\/5 { background-color: #E2B6572E; }
+.bg-\[\#636E72\] { background-color: #5C5144; }
+.bg-\[\#E67E22\]\/10 { background-color: #FFC58A33; }
+.bg-\[\#E8F3ED\] { background-color: #163028; }
+.bg-\[\#E9ECEF\] { background-color: #2C3C56; }
+.bg-\[\#EB4D4B\] { background-color: #C4453C; }
+.bg-\[\#EB4D4B\]\/10 { background-color: #3A221F; }
+.bg-\[\#EBFAEF\] { background-color: #163028; }
+.bg-\[\#F1F2F6\] { background-color: #243044; }
+.bg-\[\#F1F3F5\] { background-color: #243044; }
+.bg-\[\#F8F9FA\] { background-color: #243044; }
+.bg-\[\#FBF3E2\] { background-color: #3A2E16; }
+.bg-\[\#FDECEA\] { background-color: #3A221F; }
+.bg-\[\#FEEBEC\] { background-color: #3A221F; }
+.bg-\[\#FFF3CD\] { background-color: #3A2E16; }
+.bg-amber-100 { background-color: #3A2E16; }
+.bg-amber-50 { background-color: #3A2E16; }
+.bg-sky-50 { background-color: #1A2834; }
+.bg-stone-100 { background-color: #243044; }
+.bg-stone-200 { background-color: #243044; }
+.bg-white { background-color: #172033; background-image: none; box-shadow: 0 8px 18px rgba(5, 8, 16, 0.28); }
+.bg-white\/60 { background-color: #17203399; }
+.bg-white\/70 { background-color: #172033B3; }
+.bg-white\/90 { background-color: #172033E6; }
+.bg-white\/95 { background-color: #172033F2; }
+.border-\[\#1B7A43\]\/20 { border-color: #9BE7B8; }
+.border-\[\#1B7A43\]\/30 { border-color: #9BE7B8; }
+.border-\[\#1E272E\] { border-color: #C9A24A; }
+.border-\[\#1E272E\]\/10 { border-color: #2C3C56; }
+.border-\[\#4834D4\] { border-color: #E2B657; }
+.border-\[\#4834D4\]\/20 { border-color: #E2B657; }
+.border-\[\#4834D4\]\/30 { border-color: #E2B657; }
+.border-\[\#4834D4\]\/40 { border-color: #E2B657; }
+.border-\[\#636E72\] { border-color: #E4D3B4; }
+.border-\[\#898B8D\] { border-color: #C6A36A; }
+.border-\[\#CBD5E1\] { border-color: #C6A36A; }
+.border-\[\#CED4DA\] { border-color: #C6A36A; }
+.border-\[\#CED6E0\] { border-color: #C6A36A; }
+.border-\[\#E9ECEF\] { border-color: #2C3C56; }
+.border-\[\#E9ECEF\]\/70 { border-color: #2C3C56; }
+.border-\[\#EB4D4B\]\/20 { border-color: #FFC2BC; }
+.border-\[\#EB4D4B\]\/30 { border-color: #FFC2BC; }
+.border-\[\#EB4D4B\]\/40 { border-color: #FFC2BC; }
+.border-\[\#F5C6C2\] { border-color: #FFC2BC; }
+.border-\[\#FFEBAA\] { border-color: #C6A36A; }
+.border-amber-200 { border-color: #C6A36A; }
+.border-amber-300 { border-color: #C6A36A; }
+.border-sky-300 { border-color: #8EB7E0; }
+.divide-\[\#898B8D\] > :not(:last-child) { border-color: #C6A36A; }
+.divide-\[\#E9ECEF\] > :not(:last-child) { border-color: #2C3C56; }
+.fill-\[\#B8860B\] { fill: #F3D48A; }
+.focus\:bg-white:focus { background-color: #172033; }
+.focus\:border-\[\#4834D4\]:focus { border-color: #E2B657; }
+.focus\:ring-\[\#4834D4\]\/10:focus { --tw-ring-color: #E2B65755; }
+.focus\:ring-\[\#4834D4\]\/20:focus { --tw-ring-color: #E2B65766; }
+@media (hover: hover) { .group-hover\:text-\[\#4834D4\]:is(:where(.group):hover *) { color: #E2B657; } }
+@media (hover: hover) { .hover\:bg-\[\#4834D4\]\/20:hover { background-color: #E2B6572E; } }
+@media (hover: hover) { .hover\:bg-\[\#4834D4\]\/5:hover { background-color: #E2B6572E; } }
+@media (hover: hover) { .hover\:bg-\[\#E9ECEF\]:hover { background-color: #2C3C56; } }
+@media (hover: hover) { .hover\:bg-\[\#EB4D4B\]:hover { background-color: #C4453C; } }
+@media (hover: hover) { .hover\:bg-\[\#F1F3F5\]:hover { background-color: #243044; } }
+@media (hover: hover) { .hover\:bg-\[\#F8F9FA\]:hover { background-color: #243044; } }
+@media (hover: hover) { .hover\:bg-\[\#FCD7D7\]:hover { background-color: #3A221F; } }
+@media (hover: hover) { .hover\:bg-\[\#FEEBEC\]:hover { background-color: #3A221F; } }
+@media (hover: hover) { .hover\:bg-amber-100:hover { background-color: #3A2E16; } }
+@media (hover: hover) { .hover\:bg-white:hover { background-color: #172033; } }
+@media (hover: hover) { .hover\:border-\[\#4834D4\]:hover { border-color: #E2B657; } }
+@media (hover: hover) { .hover\:border-\[\#4834D4\]\/30:hover { border-color: #E2B657; } }
+@media (hover: hover) { .hover\:border-\[\#4834D4\]\/40:hover { border-color: #E2B657; } }
+@media (hover: hover) { .hover\:text-\[\#1E272E\]:hover { color: #F6EBD4; } }
+@media (hover: hover) { .hover\:text-\[\#2D3436\]:hover { color: #F6EBD4; } }
+@media (hover: hover) { .hover\:text-\[\#3c2ab9\]:hover { color: #E2B657; } }
+@media (hover: hover) { .hover\:text-\[\#4834D4\]:hover { color: #E2B657; } }
+@media (hover: hover) { .hover\:text-\[\#B8860B\]:hover { color: #F3D48A; } }
+@media (hover: hover) { .hover\:text-\[\#EB4D4B\]:hover { color: #FFC2BC; } }
+@media (min-width: 64rem) { .lg\:bg-\[\#4834D4\]\/10 { background-color: #E2B6572E; } }
+@media (min-width: 64rem) { @media (hover: hover) { .lg\:hover\:bg-\[\#F8F9FA\]:hover { background-color: #243044; } } }
+.placeholder-stone-400::placeholder { color: #E4D3B4; }
+.ring-\[\#4834D4\]\/20 { --tw-ring-color: #E2B65766; }
+.ring-white { --tw-ring-color: #172033; }
+.selection\:bg-\[\#4834D4\]\/20::selection, .selection\:bg-\[\#4834D4\]\/20 ::selection { background-color: #E2B6572E; }
+.selection\:text-\[\#4834D4\]::selection, .selection\:text-\[\#4834D4\] ::selection { color: #E2B657; }
+.text-\[\#1B6B43\] { color: #9BE7B8; }
+.text-\[\#1B7A43\] { color: #9BE7B8; }
+.text-\[\#1E272E\] { color: #F6EBD4; }
+.text-\[\#2D3436\] { color: #F6EBD4; }
+.text-\[\#4834D4\] { color: #E2B657; }
+.text-\[\#636E72\] { color: #E4D3B4; }
+.text-\[\#856404\] { color: #F3D48A; }
+.text-\[\#8A6516\] { color: #F3D48A; }
+.text-\[\#B8860B\] { color: #F3D48A; }
+.text-\[\#C0392B\] { color: #FFC2BC; }
+.text-\[\#E67E22\] { color: #FFC58A; }
+.text-\[\#EB4D4B\] { color: #FFC2BC; }
+.text-\[\#F5A623\] { color: #FFC58A; }
+.text-amber-300 { color: #F3D48A; }
+.text-amber-700 { color: #F8E2B0; }
+.text-amber-800 { color: #F8E2B0; }
+.text-amber-900 { color: #F8E2B0; }
+.text-amber-950 { color: #F8E2B0; }
+.text-sky-800 { color: #C5DEFF; }
+
+/* Type scale. Size and color carry hierarchy. 600 is a title, 500 is emphasis. */
+.font-black,
+.font-extrabold {
+  font-weight: 600;
+}
+.font-bold {
+  font-weight: 500;
+}
+.italic {
+  font-style: normal;
+}
+.tracking-tight,
+.tracking-tighter,
+.tracking-widest,
+.tracking-wide {
+  letter-spacing: 0;
+}
+.uppercase {
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.treasure-shell {
+  background-color: #0e1628;
+  background-image: radial-gradient(720px 220px at 50% -20%, rgba(226, 182, 87, 0.08), transparent 64%);
+  background-attachment: fixed;
+}
+
+.treasure-hero,
+.home-hero {
+  background-color: #172033;
+  box-shadow: 0 10px 24px rgba(5, 8, 16, 0.28);
+}
+
+.treasure-stage {
+  position: absolute;
+  top: 33%;
+  left: 50%;
+  display: flex;
+  width: min(16rem, 78vw);
+  transform: translate(-50%, -50%);
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.treasure-chest-svg {
+  width: min(10.5rem, 48vw);
+  height: auto;
+  overflow: visible;
+}
+
+.treasure-caption {
+  margin: 0;
+  padding: 0.35rem 0.85rem;
+  border: 1px solid #c6a36a;
+  border-radius: 8px;
+  background: rgb(16 14 11 / 88%);
+  color: #f3d48a;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-align: center;
+}
+
+.treasure-skip {
+  position: static;
+  min-width: 3rem;
+  min-height: 3rem;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid #c6a36a;
+  border-radius: 999px;
+  background: #1c1812;
+  color: #f6ebd4;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.treasure-lid {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+}
+
+.treasure-reveal.is-open .treasure-lid {
+  animation: treasure-lid-open 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.treasure-reveal.is-open .treasure-rays,
+.treasure-reveal.is-open .treasure-glow {
+  animation: treasure-light 1.15s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes treasure-lid-open {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(-36deg); }
+}
+
+@keyframes treasure-light {
+  0% { opacity: 0; }
+  35% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .treasure-reveal.is-open .treasure-lid,
+  .treasure-reveal.is-open .treasure-rays,
+  .treasure-reveal.is-open .treasure-glow {
+    animation: none;
+  }
+
+  .treasure-reveal.is-open .treasure-lid {
+    transform: rotate(-36deg);
+  }
+
+  .treasure-reveal.is-open .treasure-rays,
+  .treasure-reveal.is-open .treasure-glow {
+    opacity: 0.9;
+  }
+}
+
+/* Seven columns share the row. Day buttons may be narrower than 48px at 320 so Saturday stays on screen. */
+#play-calendar {
+  width: auto;
+  max-width: none;
+  margin-inline: -16px;
+  overflow: visible;
+}
+
+#play-calendar .calendar-day {
+  min-width: 0;
+  width: 100%;
+  min-height: 48px;
+  height: 52px;
+  padding: 0;
+}
+
+#play-calendar .calendar-day:focus-visible {
+  outline-offset: -2px !important;
+}
+
+.play-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px;
+  width: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .memory-card,
+  .memory-card *,
+  .play-calendar,
+  .play-calendar * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Filled brand utilities become gold with dark ink, including tiles that are not buttons. */
+.bg-\[\#4834D4\] {
+  background-color: #e2b657;
+  color: #1a1408;
+}
+
+.hover\:bg-\[\#4834D4\]:hover,
+.hover\:bg-\[\#3c2ab9\]:hover,
+.active\:bg-\[\#3c2ab9\]:active,
+.active\:bg-\[\#32229e\]:active {
+  background-color: #c9a24a;
+  color: #1a1408;
+}
+
+button.bg-\[\#4834D4\],
+a.bg-\[\#4834D4\] {
+  background-color: #e2b657;
+  color: #0e1628;
+}
+
+button.bg-\[\#4834D4\]:hover,
+a.bg-\[\#4834D4\]:hover {
+  background-color: #c9a24a;
+  color: #0e1628;
+}
+
+input.border-\[\#E9ECEF\],
+select.border-\[\#E9ECEF\],
+textarea.border-\[\#E9ECEF\] {
+  border-color: #c6b48a;
+}
+
+/*
+ * Brass nameplate. One set of tokens paints every major action.
+ * Primary: gold plate, navy label. Secondary: navy plate, brass rim, cream label.
+ * Chips and icon buttons stay in the same metals and skip the corner rivets.
+ * Kakao yellow and the ruby destructive fill are not plates.
+ */
+:root {
+  --brass-hi: #fbf6df;
+  --brass-mid: #e8c56a;
+  --brass-low: #8a6424;
+  --brass-edge: #6e5420;
+  --brass-ink: #0e1628;
+  --plate-navy-hi: #2a3c5c;
+  --plate-navy: #172033;
+  --plate-navy-low: #10182a;
+  --plate-cream: #f6ebd4;
+  --plate-line: #c6a36a;
+  --plate-focus: #f6ebd4;
+  --plate-focus-ink: #0e1628;
+  --plate-rivet: radial-gradient(circle, #3d2c10 0 1px, #fff8dc 1.15px 1.8px, #6b501c 1.9px 2.45px, transparent 2.6px);
+}
+
+:is(
+  .btn-gold,
+  button.bg-\[\#4834D4\]:not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(.py-1\.5):not(.shadow-xs):not(.shadow-2xs):not([aria-pressed]),
+  a.bg-\[\#4834D4\],
+  button.bg-\[\#E2B657\],
+  a.bg-\[\#E2B657\]
+) {
+  position: relative;
+  border: 1px solid var(--brass-edge);
+  border-radius: 8px;
+  background-color: var(--brass-mid);
+  background-image: linear-gradient(
+    180deg,
+    var(--brass-hi) 0%,
+    #f3d48a 16%,
+    var(--brass-mid) 48%,
+    #c4963c 78%,
+    var(--brass-low) 100%
+  );
+  color: var(--brass-ink);
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: keep-all;
+  box-shadow:
+    inset 0 1px 0 rgb(255 250 230 / 95%),
+    inset 0 0 0 1px rgb(92 64 18 / 45%),
+    inset 0 -1px 0 rgb(62 42 12 / 55%),
+    0 1px 0 #5c4314;
+  transition:
+    transform 90ms ease,
+    box-shadow 90ms ease,
+    filter 90ms ease;
+}
+
+:is(
+  .btn-cream,
+  .btn-quiet,
+  button.bg-\[\#F1F3F5\]:not([aria-pressed]):not(.calendar-day):not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(:has(img)),
+  button.rounded-2xl.bg-white:not([class*='EB4D4B']):not(:has(img)),
+  button.rounded-full.font-bold.hover\:bg-\[\#F1F3F5\]:not(.bg-white):not(.bg-\[\#F1F3F5\]):not([class*='4834D4']):not(
+      [class*='FEE500']
+    ):not([class*='EB4D4B'])
+) {
+  position: relative;
+  border: 1px solid var(--plate-line);
+  border-radius: 8px;
+  background-color: var(--plate-navy);
+  background-image: linear-gradient(180deg, var(--plate-navy-hi) 0%, var(--plate-navy) 46%, var(--plate-navy-low) 100%);
+  color: var(--plate-cream);
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: keep-all;
+  box-shadow:
+    inset 0 1px 0 rgb(243 212 138 / 45%),
+    inset 0 0 0 1px rgb(14 20 36 / 80%),
+    0 1px 0 #6e5420;
+  transition:
+    transform 90ms ease,
+    box-shadow 90ms ease,
+    filter 90ms ease;
+}
+
+:is(
+    .btn-gold,
+    button.bg-\[\#4834D4\]:not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(.py-1\.5):not(.shadow-xs):not(
+        .shadow-2xs
+      ):not([aria-pressed]),
+    a.bg-\[\#4834D4\],
+    button.bg-\[\#E2B657\],
+    a.bg-\[\#E2B657\],
+    .btn-cream,
+    .btn-quiet,
+    button.bg-\[\#F1F3F5\]:not([aria-pressed]):not(.calendar-day):not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(:has(img)),
+    button.rounded-2xl.bg-white:not([class*='EB4D4B']):not(:has(img)),
+    button.rounded-full.font-bold.hover\:bg-\[\#F1F3F5\]:not(.bg-white):not(.bg-\[\#F1F3F5\]):not([class*='4834D4']):not(
+        [class*='FEE500']
+      ):not([class*='EB4D4B'])
+  )
+  :where(svg, span, strong) {
+  color: inherit;
+}
+
+:is(
+    .btn-gold,
+    button.bg-\[\#4834D4\]:not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(.py-1\.5):not(.shadow-xs):not(
+        .shadow-2xs
+      ):not([aria-pressed]),
+    a.bg-\[\#4834D4\],
+    button.bg-\[\#E2B657\],
+    a.bg-\[\#E2B657\],
+    .btn-cream,
+    .btn-quiet,
+    button.bg-\[\#F1F3F5\]:not([aria-pressed]):not(.calendar-day):not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(:has(img)),
+    button.rounded-2xl.bg-white:not([class*='EB4D4B']):not(:has(img)),
+    button.rounded-full.font-bold.hover\:bg-\[\#F1F3F5\]:not(.bg-white):not(.bg-\[\#F1F3F5\]):not([class*='4834D4']):not(
+        [class*='FEE500']
+      ):not([class*='EB4D4B'])
+  ):not(:has(> svg:only-child)):not(.px-2)::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    var(--plate-rivet) 6px 6px / 6px 6px no-repeat,
+    var(--plate-rivet) calc(100% - 6px) 6px / 6px 6px no-repeat,
+    var(--plate-rivet) 6px calc(100% - 6px) / 6px 6px no-repeat,
+    var(--plate-rivet) calc(100% - 6px) calc(100% - 6px) / 6px 6px no-repeat;
+}
+
+@media (max-width: 1023px) {
+  #nav-fab-add-play {
+    border-radius: 999px;
+  }
+
+  #nav-fab-add-play::before {
+    content: none;
+  }
+}
+
+@media (hover: hover) {
+  :is(
+    .btn-gold,
+    button.bg-\[\#4834D4\]:not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(.py-1\.5):not(.shadow-xs):not(
+        .shadow-2xs
+      ):not([aria-pressed]),
+    a.bg-\[\#4834D4\],
+    button.bg-\[\#E2B657\],
+    a.bg-\[\#E2B657\]
+  ):hover:not(:disabled) {
+    background-image: linear-gradient(180deg, #fffaf0 0%, #f8e7b0 18%, #e2b657 50%, #c9a24a 100%);
+  }
+
+  :is(
+    .btn-cream,
+    .btn-quiet,
+    button.bg-\[\#F1F3F5\]:not([aria-pressed]):not(.calendar-day):not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(:has(img)),
+    button.rounded-2xl.bg-white:not([class*='EB4D4B']):not(:has(img)),
+    button.rounded-full.font-bold.hover\:bg-\[\#F1F3F5\]:not(.bg-white):not(.bg-\[\#F1F3F5\]):not([class*='4834D4']):not(
+        [class*='FEE500']
+      ):not([class*='EB4D4B'])
+  ):hover:not(:disabled) {
+    background-image: linear-gradient(180deg, #35486c 0%, #1c2944 48%, #121a2c 100%);
+  }
+}
+
+:is(
+  .btn-gold,
+  button.bg-\[\#4834D4\]:not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(.py-1\.5):not(.shadow-xs):not(.shadow-2xs):not([aria-pressed]),
+  a.bg-\[\#4834D4\],
+  button.bg-\[\#E2B657\],
+  a.bg-\[\#E2B657\]
+):active:not(:disabled) {
+  transform: translateY(2px);
+  background-image: linear-gradient(180deg, #c9a24a 0%, #a07c32 42%, #6e5420 100%);
+  box-shadow:
+    inset 0 3px 6px rgb(40 26 8 / 50%),
+    inset 0 0 0 1px rgb(62 42 12 / 65%);
+}
+
+:is(
+  .btn-cream,
+  .btn-quiet,
+  button.bg-\[\#F1F3F5\]:not([aria-pressed]):not(.calendar-day):not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(:has(img)),
+  button.rounded-2xl.bg-white:not([class*='EB4D4B']):not(:has(img)),
+  button.rounded-full.font-bold.hover\:bg-\[\#F1F3F5\]:not(.bg-white):not(.bg-\[\#F1F3F5\]):not([class*='4834D4']):not(
+      [class*='FEE500']
+    ):not([class*='EB4D4B'])
+):active:not(:disabled) {
+  transform: translateY(2px);
+  background-image: linear-gradient(180deg, #1a2740 0%, #0e1628 100%);
+  box-shadow:
+    inset 0 3px 6px rgb(0 0 0 / 48%),
+    inset 0 0 0 1px rgb(198 163 106 / 40%);
+}
+
+:is(
+  .btn-gold,
+  button.bg-\[\#4834D4\]:not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(.py-1\.5):not(.shadow-xs):not(.shadow-2xs):not([aria-pressed]),
+  a.bg-\[\#4834D4\],
+  button.bg-\[\#E2B657\],
+  a.bg-\[\#E2B657\],
+  .btn-cream,
+  .btn-quiet,
+  button.bg-\[\#F1F3F5\]:not([aria-pressed]):not(.calendar-day):not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(:has(img)),
+  button.rounded-2xl.bg-white:not([class*='EB4D4B']):not(:has(img)),
+  button.rounded-full.font-bold.hover\:bg-\[\#F1F3F5\]:not(.bg-white):not(.bg-\[\#F1F3F5\]):not([class*='4834D4']):not(
+      [class*='FEE500']
+    ):not([class*='EB4D4B']),
+  .chip-on,
+  .chip-off,
+  button.shadow-xs.bg-\[\#4834D4\],
+  button.shadow-2xs.bg-\[\#4834D4\],
+  button.py-1.bg-\[\#4834D4\],
+  button.py-1\.5.bg-\[\#4834D4\],
+  button.text-\[10px\].bg-\[\#4834D4\],
+  button.text-\[11px\].bg-\[\#4834D4\],
+  button.bg-\[\#1B7A43\],
+  button:has(> svg:only-child):not([aria-pressed]):not([class*='EB4D4B']):not([class*='FEE500']):not(.calendar-day):not(
+      .chip-on
+    ):not(.chip-off)
+):focus-visible {
+  outline: 2px solid var(--plate-focus-ink) !important;
+  outline-offset: 4px !important;
+  box-shadow:
+    inset 0 1px 0 rgb(255 250 230 / 70%),
+    inset 0 0 0 1px rgb(90 62 18 / 40%),
+    0 0 0 3px var(--plate-focus);
+}
+
+:is(
+  .btn-gold,
+  button.bg-\[\#4834D4\]:not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(.py-1\.5):not(.shadow-xs):not(.shadow-2xs):not([aria-pressed]),
+  a.bg-\[\#4834D4\],
+  button.bg-\[\#E2B657\],
+  a.bg-\[\#E2B657\],
+  .btn-cream,
+  .btn-quiet,
+  button.bg-\[\#F1F3F5\]:not([aria-pressed]):not(.calendar-day):not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(:has(img)),
+  button.rounded-2xl.bg-white:not([class*='EB4D4B']):not(:has(img)),
+  button.rounded-full.font-bold.hover\:bg-\[\#F1F3F5\]:not(.bg-white):not(.bg-\[\#F1F3F5\]):not([class*='4834D4']):not(
+      [class*='FEE500']
+    ):not([class*='EB4D4B'])
+):disabled {
+  filter: saturate(0.22) brightness(0.96);
+  opacity: 0.68;
+  box-shadow: inset 0 0 0 1px rgb(70 55 30 / 28%);
+  cursor: not-allowed;
+}
+
+:is(
+  .btn-gold,
+  button.bg-\[\#4834D4\]:not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(.py-1\.5):not(.shadow-xs):not(.shadow-2xs):not([aria-pressed]),
+  a.bg-\[\#4834D4\],
+  button.bg-\[\#E2B657\],
+  a.bg-\[\#E2B657\],
+  .btn-cream,
+  .btn-quiet,
+  button.bg-\[\#F1F3F5\]:not([aria-pressed]):not(.calendar-day):not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(:has(img)),
+  button.rounded-2xl.bg-white:not([class*='EB4D4B']):not(:has(img)),
+  button.rounded-full.font-bold.hover\:bg-\[\#F1F3F5\]:not(.bg-white):not(.bg-\[\#F1F3F5\]):not([class*='4834D4']):not(
+      [class*='FEE500']
+    ):not([class*='EB4D4B'])
+):disabled::before {
+  opacity: 0.35;
+}
+
+.chip-on,
+button.shadow-xs.bg-\[\#4834D4\],
+button.shadow-2xs.bg-\[\#4834D4\],
+button.py-1.bg-\[\#4834D4\],
+button.py-1\.5.bg-\[\#4834D4\],
+button.text-\[10px\].bg-\[\#4834D4\],
+button.text-\[11px\].bg-\[\#4834D4\],
+button.bg-\[\#1B7A43\] {
+  border: 1px solid var(--brass-edge);
+  border-radius: 999px;
+  background-color: var(--brass-mid);
+  background-image: linear-gradient(180deg, var(--brass-hi) 0%, var(--brass-mid) 55%, #b8893a 100%);
+  color: var(--brass-ink);
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1px rgb(92 64 18 / 40%);
+}
+
+.chip-off,
+button[aria-pressed='false'].rounded-full:not(.calendar-day),
+button.rounded-full.bg-white.text-\[10px\],
+button.rounded-full.bg-white.text-\[11px\],
+button.rounded-full.bg-white.py-1,
+button.rounded-full.bg-white.py-1\.5 {
+  border: 1px solid var(--plate-line);
+  border-radius: 999px;
+  background-color: var(--plate-navy);
+  background-image: linear-gradient(180deg, #243044 0%, var(--plate-navy) 100%);
+  color: var(--plate-cream);
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1px rgb(14 22 40 / 65%);
+}
+
+button:has(> svg:only-child):not([aria-pressed]):not([class*='EB4D4B']):not([class*='FEE500']):not(.btn-gold):not(
+    .calendar-day
+  ):not(.chip-on):not(.chip-off):not(.treasure-skip) {
+  border: 1px solid var(--plate-line);
+  border-radius: 8px;
+  background-color: var(--plate-navy);
+  background-image: linear-gradient(180deg, #243656 0%, var(--plate-navy-low) 100%);
+  color: var(--plate-cream);
+  box-shadow:
+    inset 0 1px 0 rgb(243 212 138 / 35%),
+    inset 0 0 0 1px rgb(8 12 22 / 55%);
+}
+
+button:has(> svg:only-child):not([aria-pressed]):not([class*='EB4D4B']):not([class*='FEE500']):not(.btn-gold):not(
+    .calendar-day
+  ):not(.chip-on):not(.chip-off):not(.treasure-skip):active:not(:disabled) {
+  transform: translateY(1px);
+  background-image: linear-gradient(180deg, #172033 0%, #0c1220 100%);
+  box-shadow: inset 0 2px 4px rgb(0 0 0 / 45%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :is(
+    .btn-gold,
+    .btn-cream,
+    .btn-quiet,
+    button.bg-\[\#4834D4\],
+    a.bg-\[\#4834D4\],
+    button.bg-\[\#E2B657\],
+    a.bg-\[\#E2B657\],
+    button.bg-\[\#F1F3F5\],
+    .chip-on,
+    .chip-off
+  ),
+  :is(.btn-gold, .btn-cream, .btn-quiet)::before,
+  button:has(> svg:only-child) {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  :is(.btn-gold, .btn-cream, .btn-quiet, button.bg-\[\#4834D4\], button.bg-\[\#E2B657\], button.bg-\[\#F1F3F5\]):active,
+  button:has(> svg:only-child):active {
+    transform: none;
+  }
+}
+
+.paper {
+  background-color: #f6ebd4 !important;
+  background-image: none !important;
+  color: #1c160e;
+  border-color: transparent !important;
+  box-shadow: 0 10px 22px rgba(6, 10, 18, 0.28);
+}
+
+.paper .text-\[\#1E272E\],
+.paper .text-\[\#2D3436\],
+.paper .text-\[\#F6EBD4\],
+.paper .text-amber-950,
+.paper .text-amber-900 {
+  color: #1c160e;
+}
+
+.paper .text-\[\#636E72\],
+.paper .text-\[\#E4D3B4\] {
+  color: #5c4632;
+}
+
+.paper .bg-\[\#F1F3F5\] {
+  background-color: #e7d7b8;
+}
+
+/* Gold text fails on cream. Use bronze there. */
+.paper .text-\[\#4834D4\] {
+  color: #6b4423;
+}
+
+@media (hover: hover) {
+  .paper .group-hover\:text-\[\#4834D4\]:is(:where(.group):hover *) {
+    color: #6b4423;
+  }
+}
+
+.paper .on-navy,
+.paper .on-navy .text-\[\#F6EBD4\],
+.paper .on-navy .text-\[\#1C160E\] {
+  color: #f6ebd4;
+}
+
+.paper .on-navy .text-\[\#E4D3B4\],
+.paper .on-navy .is-muted {
+  color: #e4d3b4;
+}
+
+.paper .on-navy .is-ink {
+  color: #1c160e;
+}
+
+.cover-placeholder {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #172033;
+  color: #f6ebd4;
+}
+
+.cover-motif {
+  position: absolute;
+  inset: 12% 18%;
+  width: 64%;
+  height: 76%;
+}
+
+.cover-initials {
+  position: relative;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: #f6ebd4;
+}
+
+.home-chest {
+  width: min(28vw, 96px);
+  height: auto;
+  max-height: 84px;
+  object-fit: contain;
+  flex: none;
+}
+
+.stat-win {
+  color: #1b6b43;
+}
+
+.game-box {
+  background: transparent !important;
+  background-image: none !important;
+  border-color: transparent !important;
+  box-shadow: none;
+}
+
+.game-shelf {
+  position: relative;
+  padding-bottom: 16px;
+}
+
+.game-shelf::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 8px;
+  border-radius: 4px;
+  background: #3a2c22;
+  box-shadow: 0 6px 0 #241910;
+}
+
+.game-shelf > :only-child {
+  max-width: 16rem;
+}
+
+.logbook {
+  background: #f3e6cc;
+  color: #1c160e;
+  box-shadow: 0 12px 24px rgba(6, 10, 18, 0.28);
+}
+
+.calendar-selected {
+  outline: 2px solid #1c160e;
+  outline-offset: -2px;
+}
+
+.calendar-today > span:last-child {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.calendar-day-mark {
+  position: absolute;
+  top: 7px;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px 2px 4px 4px;
+  background: #1c160e;
+}
+
+.calendar-day-mark::before {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: 1px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #1c160e;
+}
+
+.level-path {
+  display: flex;
+  gap: 8px;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 18px 2px 4px;
+}
+
+.level-space {
+  position: relative;
+  display: flex;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: #1a2b4a;
+  color: #f6ebd4;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.level-space[aria-current='step'] {
+  outline: 2px solid #1c160e;
+  outline-offset: 2px;
+}
+
+.level-meeple {
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  width: 18px;
+  height: 22px;
+  transform: translateX(-50%);
+}
+
+.nav-pip {
+  width: 14px;
+  height: 3px;
+  margin-top: 2px;
+  border-radius: 999px;
+  background: transparent;
+}
+
+.nav-pip.is-on {
+  background: #e2b657;
+}
+

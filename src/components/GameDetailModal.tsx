@@ -1,4 +1,5 @@
 import type React from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   X,
@@ -15,34 +16,59 @@ import {
   Calendar,
   MessageCircle
 } from 'lucide-react';
-import type { UserGame } from '../types';
+import type { PlayRecord, UserGame } from '../types';
+import { playsForGame } from '../utils/gamePlays';
 import { formatWon } from '../utils/formatters';
 import { getOwnershipBadgeColor } from './GameCard';
 import { useToast } from '../context/ToastContext';
-import { applyImageFallback } from '../utils/imageFallback';
+import { formatDuration } from '../utils/formatters';
+import { CoverImage } from './CoverPlaceholder';
+import { useDialogA11y } from './useDialogA11y';
+import { cleanMemo } from '../utils/shelf';
 
 interface GameDetailModalProps {
   game: UserGame | null;
+  plays?: PlayRecord[];
+  games?: Pick<UserGame, 'id' | 'title'>[];
   isOpen: boolean;
   onClose: () => void;
   onEdit: (game: UserGame) => void;
   onDelete: (game: UserGame) => void;
   onStartPlay: (game: UserGame) => void;
+  onOpenPlay?: (play: PlayRecord) => void;
+  onSaveMemo?: (memo: string) => void;
 }
 
 export const GameDetailModal: React.FC<GameDetailModalProps> = ({
   game,
+  plays = [],
+  games = [],
   isOpen,
   onClose,
   onEdit,
   onDelete,
-  onStartPlay
+  onStartPlay,
+  onOpenPlay,
+  onSaveMemo
 }) => {
   const { showToast } = useToast();
+  const [memo, setMemo] = useState(game?.memo ?? '');
+  useEffect(() => {
+    const next = game?.memo ?? '';
+    setMemo(next);
+  }, [game]);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useDialogA11y(isOpen && !!game, onClose, dialogRef);
   if (!isOpen || !game) return null;
 
+  const gamePlays = playsForGame(game, plays, games);
+  const wins = gamePlays.filter((play) => play.myResult === '승리').length;
+  const minutes = gamePlays.reduce((sum, play) => sum + (play.durationMinutes || 0), 0);
+  const winRate = gamePlays.length > 0 ? Math.round((wins / gamePlays.length) * 100) : 0;
+  const photos = gamePlays.flatMap((play) => play.photos.map((photo) => photo.url)).slice(0, 12);
+
   const handleShareSingleGame = async () => {
-    const text = `🎲 [보드게임 추천] ${game.title}\n👥 인원: ${game.minPlayers}~${game.maxPlayers}인${game.bestPlayers ? ` (추천: ${game.bestPlayers})` : ''}\n⏱ 시간: ${game.playTime}분\n⭐ 난이도: ${game.weight?.toFixed(1) || '2.0'}/5.0\n🏷 장르: ${game.genre.join(', ')}\n${game.notes ? `💬 메모: ${game.notes}\n` : ''}\n👉 같이 플레이해요!`;
+    const text = `${game.title}\n인원: ${game.minPlayers}~${game.maxPlayers}인${game.bestPlayers ? ` (추천 ${game.bestPlayers})` : ''}\n시간: ${game.playTime}분\n난이도: ${game.weight?.toFixed(1) || '2.0'}/5.0\n장르: ${game.genre.join(', ')}\n${game.notes ? `메모: ${game.notes}\n` : ''}같이 플레이해요`;
     if (navigator.share) {
       try {
         await navigator.share({
@@ -64,34 +90,36 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
     <AnimatePresence>
       <div
         id="game-detail-modal-overlay"
-        className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40 backdrop-blur-xs overflow-y-auto"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        tabIndex={-1}
+        className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40 overflow-y-auto"
       >
         <motion.div
-          initial={{ opacity: 0, scale: 0.96, y: 15 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.96, y: 15 }}
-          className="w-full max-w-md bg-white rounded-[32px] shadow-2xl border border-[#E9ECEF] overflow-hidden my-auto max-h-[92vh] flex flex-col"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+          exit={{ opacity: 0, y: 8 }}
+          className="w-full max-w-lg md:max-w-2xl bg-white rounded-2xl shadow-2xl border border-[#E9ECEF] overflow-hidden my-auto max-h-[92vh] flex flex-col"
         >
           {/* Hero Image & Floating Controls */}
           <div className="relative w-full h-56 sm:h-64 bg-[#F8F9FA] shrink-0">
-            <img
-              src={
-                game.imageUrl ||
-                'https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?auto=format&fit=crop&w=600&q=80'
-              }
+            <CoverImage
+              title={game.title}
+              imageUrl={game.imageUrl}
               alt={game.title}
-              referrerPolicy="no-referrer"
-              className="w-full h-full object-cover"
-              onError={applyImageFallback}
+              className="h-full w-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
             {/* Top Close & Actions */}
-            <div className="absolute top-3.5 right-3.5 flex items-center gap-1.5">
+            <div className="absolute top-4 right-3.5 flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={handleShareSingleGame}
-                className="w-8 h-8 rounded-full bg-[#FEE500] text-[#191919] hover:bg-[#F5DC00] flex items-center justify-center backdrop-blur-xs transition-colors shadow-xs"
+                className="w-8 h-8 rounded-full bg-[#FEE500] text-[#191919] hover:bg-[#F5DC00] flex items-center justify-center transition-colors shadow-xs"
+                aria-label="카카오톡으로 공유하기"
                 title="카카오톡으로 공유하기"
               >
                 <MessageCircle className="w-4 h-4 fill-[#191919]" />
@@ -99,7 +127,8 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
               <button
                 type="button"
                 onClick={() => onEdit(game)}
-                className="w-8 h-8 rounded-full bg-black/40 text-white hover:bg-[#4834D4] flex items-center justify-center backdrop-blur-xs transition-colors"
+                className="w-8 h-8 rounded-full bg-black/40 text-white hover:bg-[#4834D4] flex items-center justify-center transition-colors"
+                aria-label="수정하기"
                 title="수정하기"
               >
                 <Edit className="w-3.5 h-3.5" />
@@ -107,7 +136,8 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
               <button
                 type="button"
                 onClick={() => onDelete(game)}
-                className="w-8 h-8 rounded-full bg-black/40 text-white hover:bg-[#EB4D4B] flex items-center justify-center backdrop-blur-xs transition-colors"
+                className="w-8 h-8 rounded-full bg-black/40 text-white hover:bg-[#EB4D4B] flex items-center justify-center transition-colors"
+                aria-label="삭제하기"
                 title="삭제하기"
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -115,7 +145,8 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="w-8 h-8 rounded-full bg-black/40 text-white hover:bg-black/60 flex items-center justify-center backdrop-blur-xs transition-colors"
+                className="w-8 h-8 rounded-full bg-black/40 text-white hover:bg-black/60 flex items-center justify-center transition-colors"
+                aria-label="닫기"
                 title="닫기"
               >
                 <X className="w-4 h-4" />
@@ -133,7 +164,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
                   {game.ownershipStatus}
                 </span>
                 {game.condition && (
-                  <span className="px-2 py-0.5 rounded-full bg-white/20 text-white text-[10px] font-bold backdrop-blur-xs">
+                  <span className="px-2 py-0.5 rounded-full bg-white/20 text-white text-[10px] font-bold">
                     상태: {game.condition}
                   </span>
                 )}
@@ -144,11 +175,11 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
           </div>
 
           {/* Details Scroll Area */}
-          <div className="p-4.5 sm:p-5 overflow-y-auto flex-1 space-y-4">
+          <div className="p-4 sm:p-5 overflow-y-auto flex-1 space-y-4">
             {/* Quick Meta Grid */}
-            <div className="grid grid-cols-3 gap-2 p-3.5 bg-[#F8F9FA] rounded-2xl border border-[#E9ECEF] text-center">
+            <div className="grid grid-cols-3 gap-2 p-4 bg-[#F8F9FA] rounded-2xl border border-[#E9ECEF] text-center">
               <div>
-                <div className="flex items-center justify-center gap-1 text-[#A8ABAF] mb-0.5">
+                <div className="flex items-center justify-center gap-1 text-[#636E72] mb-0.5">
                   <Users className="w-3.5 h-3.5" />
                   <span className="text-[10px] font-bold">추천 인원</span>
                 </div>
@@ -163,35 +194,97 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
               </div>
 
               <div className="border-x border-[#E9ECEF]">
-                <div className="flex items-center justify-center gap-1 text-[#A8ABAF] mb-0.5">
+                <div className="flex items-center justify-center gap-1 text-[#636E72] mb-0.5">
                   <Clock className="w-3.5 h-3.5" />
                   <span className="text-[10px] font-bold">플레이 타임</span>
                 </div>
                 <p className="text-xs font-black text-[#1E272E]">{game.playTime}분</p>
-                <span className="text-[9px] text-[#A8ABAF]">{game.recommendedAge}세 이상</span>
+                <span className="text-[9px] text-[#636E72]">{game.recommendedAge}세 이상</span>
               </div>
 
               <div>
-                <div className="flex items-center justify-center gap-1 text-[#A8ABAF] mb-0.5">
+                <div className="flex items-center justify-center gap-1 text-[#636E72] mb-0.5">
                   <Flame className="w-3.5 h-3.5 text-[#4834D4]" />
                   <span className="text-[10px] font-bold">난이도</span>
                 </div>
                 <p className="text-xs font-black text-[#1E272E]">{game.weight.toFixed(1)} / 5.0</p>
-                <span className="text-[9px] text-[#A8ABAF]">
+                <span className="text-[9px] text-[#636E72]">
                   {game.weight <= 1.5 ? '입문' : game.weight <= 2.8 ? '보통' : game.weight <= 3.8 ? '중상' : '헤비'}
                 </span>
               </div>
             </div>
 
+            <div id="game-detail-stats" className="grid grid-cols-2 gap-2 text-center text-xs">
+              <div className="rounded-2xl bg-[#F8F9FA] px-2 py-2">
+                <p className="text-[#636E72]">플레이</p>
+                <p className="text-base font-medium text-[#1E272E]">{gamePlays.length}회</p>
+              </div>
+              <div className="rounded-2xl bg-[#F8F9FA] px-2 py-2">
+                <p className="text-[#636E72]">승 / 승률</p>
+                <p className="text-base font-medium text-[#1E272E]">
+                  {wins}승 · {winRate}%
+                </p>
+              </div>
+              <div className="rounded-2xl bg-[#F8F9FA] px-2 py-2">
+                <p className="text-[#636E72]">마지막</p>
+                <p className="text-base font-medium text-[#1E272E]">{gamePlays[0]?.date || '없음'}</p>
+              </div>
+              <div className="rounded-2xl bg-[#F8F9FA] px-2 py-2">
+                <p className="text-[#636E72]">총 시간</p>
+                <p className="text-base font-medium text-[#1E272E]">{formatDuration(minutes)}</p>
+              </div>
+            </div>
+
+            {photos.length > 0 && (
+              <div id="game-detail-photos" className="flex gap-2 overflow-x-auto">
+                {photos.map((url) => (
+                  <img key={url} src={url} alt="" className="h-20 w-20 shrink-0 rounded-lg object-cover" />
+                ))}
+              </div>
+            )}
+
+            {game.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {game.tags.map((tag) => (
+                  <span key={tag} className="rounded-full bg-[#F1F3F5] px-2 py-1 text-xs text-[#1E272E]">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            <form
+              className="flex items-center gap-2"
+              onSubmit={(event) => {
+                event.preventDefault();
+                onSaveMemo?.(cleanMemo(memo));
+              }}
+            >
+              <label className="min-w-0 flex-1">
+                <span className="mb-1 block text-xs text-[#636E72]">한 줄 메모</span>
+                <input
+                  id="game-detail-memo"
+                  value={memo}
+                  maxLength={80}
+                  onChange={(event) => setMemo(event.target.value)}
+                  placeholder="이 게임에 대한 한 줄"
+                  className="w-full rounded-full border border-[#E9ECEF] bg-white px-3 text-sm text-[#1E272E]"
+                />
+              </label>
+              <button id="game-detail-memo-save" type="submit" className="btn-gold shrink-0 rounded-full px-3 text-xs">
+                메모 저장
+              </button>
+            </form>
+
             {/* Play Count Banner */}
-            <div className="p-3.5 bg-white rounded-2xl border border-[#E9ECEF] shadow-sm flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-[#4834D4] text-white flex items-center justify-center shadow-[0_4px_12px_rgba(72,52,212,0.3)]">
+            <div className="p-4 bg-white rounded-2xl border border-[#E9ECEF] shadow-sm flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 rounded-xl bg-[#4834D4] text-white flex items-center justify-center">
                   <CheckSquare className="w-4.5 h-4.5" />
                 </div>
                 <div>
-                  <p className="text-xs font-black text-[#1E272E]">총 {game.playCount || 0}회 플레이</p>
-                  <p className="text-[10px] text-[#636E72]">누적된 기록을 확인하세요</p>
+                  <p className="text-xs font-black text-[#1E272E]">이 게임 기록 {gamePlays.length}회</p>
+                  <p className="text-[10px] text-[#636E72]">연결된 기록과, 이름만 같고 아직 연결되지 않은 기록</p>
                 </div>
               </div>
 
@@ -199,17 +292,49 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
                 id="game-detail-record-cta"
                 type="button"
                 onClick={() => onStartPlay(game)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#4834D4] hover:bg-[#3c2ab9] text-white rounded-full text-xs font-bold shadow-[0_4px_12px_rgba(72,52,212,0.3)] transition-all"
+                className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-[#4834D4] hover:bg-[#3c2ab9] text-white rounded-full text-xs font-bold transition-colors"
               >
                 <PlusCircle className="w-3.5 h-3.5" />
                 <span>기록 추가</span>
               </button>
             </div>
 
+            <div id="game-detail-play-list" className="space-y-1.5">
+              <h4 className="text-[11px] font-bold text-[#636E72]">이 게임의 플레이 기록</h4>
+              {gamePlays.length === 0 ? (
+                <p id="game-detail-plays-empty" className="text-xs text-[#636E72]">
+                  아직 이 게임의 기록이 없어요.
+                </p>
+              ) : (
+                <ul className="space-y-1.5">
+                  {gamePlays.map((play) => (
+                    <li key={play.id}>
+                      <button
+                        type="button"
+                        onClick={() => onOpenPlay?.(play)}
+                        className="w-full text-left px-3 py-2 rounded-xl bg-[#F8F9FA] border border-[#E9ECEF] flex items-center justify-between gap-2"
+                      >
+                        <span className="min-w-0">
+                          <span className="block text-xs font-bold text-[#1E272E]">{play.date}</span>
+                          <span className="block text-[10px] text-[#636E72] truncate">
+                            {play.location || '장소 없음'}
+                            {play.participants.length > 0
+                              ? ` · ${play.participants.map((person) => person.name).join(', ')}`
+                              : ''}
+                          </span>
+                        </span>
+                        <span className="shrink-0 text-[10px] font-bold text-[#4834D4]">{play.myResult}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
             {/* Genres */}
             {game.genre && game.genre.length > 0 && (
               <div>
-                <h4 className="text-[11px] font-bold text-[#A8ABAF] mb-1.5 flex items-center gap-1">
+                <h4 className="text-[11px] font-bold text-[#636E72] mb-1.5 flex items-center gap-1">
                   <Tag className="w-3 h-3" />
                   <span>장르 & 태그</span>
                 </h4>
@@ -229,21 +354,21 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
             {/* Storage, Purchase Date & Publisher */}
             <div className="grid grid-cols-3 gap-2 text-xs">
               <div className="p-3 bg-[#F8F9FA] rounded-2xl border border-[#E9ECEF]">
-                <span className="text-[10px] text-[#A8ABAF] block mb-0.5">구매일시</span>
+                <span className="text-[10px] text-[#636E72] block mb-0.5">구매일시</span>
                 <span className="font-bold text-[#1E272E] flex items-center gap-1 text-[11px]">
                   <Calendar className="w-3 h-3 text-[#4834D4] shrink-0" />
                   <span className="truncate">{game.purchaseDate || '미지정'}</span>
                 </span>
               </div>
               <div className="p-3 bg-[#F8F9FA] rounded-2xl border border-[#E9ECEF]">
-                <span className="text-[10px] text-[#A8ABAF] block mb-0.5">보관 장소</span>
+                <span className="text-[10px] text-[#636E72] block mb-0.5">보관 장소</span>
                 <span className="font-bold text-[#1E272E] flex items-center gap-1 text-[11px]">
                   <MapPin className="w-3 h-3 text-[#4834D4] shrink-0" />
                   <span className="truncate">{game.storageLocation || '미지정'}</span>
                 </span>
               </div>
               <div className="p-3 bg-[#F8F9FA] rounded-2xl border border-[#E9ECEF]">
-                <span className="text-[10px] text-[#A8ABAF] block mb-0.5">제작사 / 유통사</span>
+                <span className="text-[10px] text-[#636E72] block mb-0.5">제작사 / 유통사</span>
                 <span className="font-bold text-[#1E272E] truncate block text-[11px]">
                   {game.publisher || '미입력'}
                 </span>
@@ -252,7 +377,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
 
             {/* Price Information */}
             {(game.purchasePrice > 0 || game.originalPrice > 0 || game.marketPrice > 0) && (
-              <div className="p-3.5 bg-white rounded-2xl border border-[#E9ECEF] shadow-sm space-y-2">
+              <div className="p-4 bg-white rounded-2xl border border-[#E9ECEF] shadow-sm space-y-2">
                 <div className="flex items-center justify-between text-xs font-bold text-[#1E272E]">
                   <span>가격 정보</span>
                   <span className="text-[10px] font-bold text-[#4834D4] bg-[#4834D4]/10 px-2 py-0.5 rounded-full flex items-center gap-0.5">
@@ -263,27 +388,27 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
 
                 <div className="grid grid-cols-3 gap-2 text-center pt-1 text-xs">
                   <div className="p-2 bg-[#F8F9FA] rounded-xl border border-[#E9ECEF]">
-                    <span className="text-[9px] text-[#A8ABAF] block">구매가</span>
+                    <span className="text-[9px] text-[#636E72] block">구매가</span>
                     <span className="font-black text-[#1E272E]">{formatWon(game.purchasePrice)}</span>
                   </div>
                   <div className="p-2 bg-[#F8F9FA] rounded-xl border border-[#E9ECEF]">
-                    <span className="text-[9px] text-[#A8ABAF] block">정가</span>
+                    <span className="text-[9px] text-[#636E72] block">정가</span>
                     <span className="font-bold text-[#636E72]">{formatWon(game.originalPrice)}</span>
                   </div>
                   <div className="p-2 bg-[#F8F9FA] rounded-xl border border-[#E9ECEF]">
-                    <span className="text-[9px] text-[#A8ABAF] block">중고 시세</span>
+                    <span className="text-[9px] text-[#636E72] block">중고 시세</span>
                     <span className="font-bold text-[#636E72]">{formatWon(game.marketPrice)}</span>
                   </div>
                 </div>
 
-                {game.priceMeta?.source && <p className="text-[10px] text-[#A8ABAF]">출처: {game.priceMeta.source}</p>}
+                {game.priceMeta?.source && <p className="text-[10px] text-[#636E72]">출처: {game.priceMeta.source}</p>}
               </div>
             )}
 
             {/* Notes */}
             {game.notes && (
-              <div className="p-3.5 bg-[#F8F9FA] rounded-2xl border border-[#E9ECEF] text-xs text-[#636E72]">
-                <span className="text-[10px] font-bold text-[#A8ABAF] block mb-1">메모</span>
+              <div className="p-4 bg-[#F8F9FA] rounded-2xl border border-[#E9ECEF] text-xs text-[#636E72]">
+                <span className="text-[10px] font-bold text-[#636E72] block mb-1">메모</span>
                 <p className="leading-relaxed whitespace-pre-line">{game.notes}</p>
               </div>
             )}
@@ -295,7 +420,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
               id="game-detail-delete-btn"
               type="button"
               onClick={() => onDelete(game)}
-              className="px-3.5 py-3 bg-[#FEEBEC] hover:bg-[#FCD7D7] text-[#EB4D4B] text-xs font-bold rounded-full transition-colors flex items-center justify-center gap-1 shrink-0"
+              className="px-4 py-3 bg-[#FEEBEC] hover:bg-[#FCD7D7] text-[#EB4D4B] text-xs font-bold rounded-full transition-colors flex items-center justify-center gap-1 shrink-0"
               title="게임 삭제"
             >
               <Trash2 className="w-4 h-4" />
@@ -312,7 +437,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
               id="game-detail-start-play-btn"
               type="button"
               onClick={() => onStartPlay(game)}
-              className="flex-2 py-3 bg-[#4834D4] hover:bg-[#3c2ab9] active:bg-[#3c2ab9] text-white text-xs font-bold rounded-full shadow-[0_4px_14px_rgba(72,52,212,0.3)] transition-colors text-center flex items-center justify-center gap-1.5"
+              className="flex-2 py-3 bg-[#4834D4] hover:bg-[#3c2ab9] active:bg-[#3c2ab9] text-white text-xs font-bold rounded-full transition-colors text-center flex items-center justify-center gap-1.5"
             >
               <PlusCircle className="w-4 h-4" />
               <span>플레이 기록</span>
