@@ -1,5 +1,19 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import handler, { isScanConfigured, nativeShellAllowOrigin } from '../../api/scan-games';
+
+const { generateContent } = vi.hoisted(() => ({ generateContent: vi.fn() }));
+
+vi.mock('@google/genai', () => ({
+  Type: { OBJECT: 'OBJECT', ARRAY: 'ARRAY', STRING: 'STRING', NUMBER: 'NUMBER' },
+  GoogleGenAI: class {
+    models = {
+      generateContent,
+      list: async function* list() {
+        yield* [];
+      }
+    };
+  }
+}));
 
 const ORIGINAL = process.env.GEMINI_API_KEY;
 
@@ -63,6 +77,60 @@ describe('scan-games availability', () => {
     await handler({ method: 'POST', body: {} }, res.res);
     expect(res.state.status).toBe(503);
     expect(res.state.body).toMatchObject({ code: 'NOT_CONFIGURED' });
+  });
+});
+
+const oneImage = { data: 'QQ==', mimeType: 'image/jpeg' };
+
+describe('one photo limit and multi-game parse', () => {
+  afterEach(() => {
+    generateContent.mockReset();
+  });
+
+  it('rejects a second photo before Gemini is called', async () => {
+    process.env.GEMINI_API_KEY = 'not-a-real-key';
+    const res = capture();
+    await handler({ method: 'POST', body: { images: [oneImage, oneImage] } }, res.res);
+    expect(res.state.status).toBe(400);
+    expect(res.state.body).toEqual({ error: '사진은 한 장만 보낼 수 있습니다.', code: 'VALIDATION' });
+    expect(generateContent).not.toHaveBeenCalled();
+  });
+
+  it('parses every game from the one photo and drops a bad or duplicate row', async () => {
+    process.env.GEMINI_API_KEY = 'not-a-real-key';
+    generateContent.mockResolvedValue({
+      text: JSON.stringify({
+        games: [
+          { title: '카탄', confidence: 0.4 },
+          { title: '카탄', confidence: 0.9 },
+          { title: '스플렌더', confidence: 0.7 },
+          { title: '', confidence: 1 },
+          { title: '확신없음', confidence: '높음' }
+        ]
+      })
+    });
+    const res = capture();
+    await handler({ method: 'POST', body: { images: [oneImage] } }, res.res);
+    expect(res.state.status).toBe(200);
+    expect(res.state.body).toEqual({
+      games: [
+        { title: '카탄', confidence: 0.9 },
+        { title: '스플렌더', confidence: 0.7 }
+      ]
+    });
+    expect(JSON.stringify(res.state.body)).not.toContain('not-a-real-key');
+    const request = generateContent.mock.calls[0]?.[0] as {
+      contents: { parts: { text?: string; inlineData?: unknown }[] }[];
+      config: { responseSchema: { required: string[]; properties: { games: { items: { required: string[] } } } } };
+    };
+    const prompt = request.contents[0]?.parts[0]?.text ?? '';
+    expect(prompt).toContain('one photograph');
+    expect(prompt).toContain('"games"');
+    expect(prompt).toContain('confidence');
+    expect(request.contents[0]?.parts.filter((part) => part.inlineData)).toHaveLength(1);
+    expect(request.config.responseSchema.required).toEqual(['games']);
+    expect(request.config.responseSchema.properties.games.items.required).toEqual(['title', 'confidence']);
+    expect(JSON.stringify(request.config.responseSchema)).not.toContain('orientation');
   });
 });
 

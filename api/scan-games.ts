@@ -1,5 +1,6 @@
 import { GoogleGenAI, Type } from '@google/genai';
 import { PUBLIC_SCAN_ERROR } from '../src/utils/publicScanError';
+import { MAX_SCAN_IMAGES, ONE_PHOTO_LIMIT_MESSAGE, parseRecognizedGames } from '../src/utils/scanRecognition';
 
 /**
  * Model ids retire while still appearing in the account's model list, so a single
@@ -12,49 +13,43 @@ const MODEL_CANDIDATES = (process.env.GEMINI_MODEL ? [process.env.GEMINI_MODEL] 
   'gemini-3.5-flash',
   'gemini-2.5-flash'
 ]);
-const MAX_IMAGES = 4;
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp'];
 
-const PROMPT = `You are reading photographs of physical board game boxes, usually stacked or shelved together.
+const PROMPT = `You are reading one photograph of physical board game boxes. A single photo may show several boxes at once.
 
-Identify every distinct board game box you can see and report the product title printed on it.
+Return every distinct board game whose title you can read. The response is a JSON object with a "games" array. Each item has only:
+- "title": the product title printed on that box, in the language printed on the box. Keep Korean titles in Korean. When both a Korean and an English title are printed, use the Korean one.
+- "confidence": a number from 0 to 1 for how sure you are of that title.
 
-Text orientation varies. Handle all three of these:
-- Horizontal text printed across a box face.
+Titles may be printed in any of these ways. Read all of them:
+- Horizontal text across a box face.
 - Vertically stacked characters, each one below the previous.
-- Horizontal text on a box standing on its edge, so the title reads rotated 90 degrees clockwise or counter-clockwise (spine text).
+- Horizontal text on a spine, rotated 90 degrees clockwise or counter-clockwise.
 
 Rules:
-- Report the title exactly as printed, in its original language. Keep Korean titles in Korean.
-- When a box shows both a Korean and an English title, put the Korean one in "title" and the English one in "titleEn".
-- One entry per physical box. Never merge two boxes, never split one box into two.
+- One array item per physical box. Never merge two boxes. Never split one box into two.
 - Ignore publisher names, taglines, player-count badges, age ratings, awards, barcodes and expansion banners.
-- When a title is partly hidden or blurred, report what is legible and lower the confidence.
-- Report no board game boxes as an empty list rather than guessing.`;
+- When a title is partly hidden or blurred, report the legible part and lower the confidence.
+- When the photo shows no board game box, return an empty "games" array. Do not guess.`;
 
 const RESPONSE_SCHEMA = {
   type: Type.OBJECT,
   properties: {
-    detections: {
+    games: {
       type: Type.ARRAY,
+      description: 'Every board game read from this one photo',
       items: {
         type: Type.OBJECT,
         properties: {
           title: { type: Type.STRING, description: 'Title as printed on the box' },
-          titleEn: { type: Type.STRING, description: 'English title when the box also shows one' },
-          orientation: {
-            type: Type.STRING,
-            enum: ['horizontal', 'vertical', 'rotated'],
-            description: 'How the title text was oriented in the photo'
-          },
           confidence: { type: Type.NUMBER, description: '0 to 1' }
         },
-        required: ['title', 'orientation', 'confidence']
+        required: ['title', 'confidence']
       }
     }
   },
-  required: ['detections']
+  required: ['games']
 };
 
 /**
@@ -154,7 +149,7 @@ function readImages(body: unknown): IncomingImage[] | string {
   if (typeof body !== 'object' || body === null) return '요청 형식이 올바르지 않습니다.';
   const raw = (body as { images?: unknown }).images;
   if (!Array.isArray(raw) || raw.length === 0) return '이미지가 없습니다.';
-  if (raw.length > MAX_IMAGES) return `사진은 한 번에 ${MAX_IMAGES}장까지 보낼 수 있습니다.`;
+  if (raw.length > MAX_SCAN_IMAGES) return ONE_PHOTO_LIMIT_MESSAGE;
 
   const images: IncomingImage[] = [];
   for (const entry of raw) {
@@ -248,9 +243,9 @@ export default async function handler(req: HandlerRequest, res: HandlerResponse)
         return;
       }
 
-      const parsed = JSON.parse(text) as { detections?: unknown };
-      const detections = Array.isArray(parsed.detections) ? parsed.detections : [];
-      res.status(200).json({ detections, model });
+      const parsed = JSON.parse(text) as unknown;
+      const games = parseRecognizedGames(parsed);
+      res.status(200).json({ games });
       return;
     } catch (err) {
       console.error(`scan-games failed on ${model}`, err);

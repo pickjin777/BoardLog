@@ -7,25 +7,16 @@ import { compressImage } from '../utils/imageCompressor';
 import { isNativeShell } from '../utils/nativeShell';
 import { PUBLIC_SCAN_ERROR } from '../utils/publicScanError';
 import { scanAvailableFromResponse } from '../utils/scanAvailability';
-import { findSeedMatch, type SeedMatch } from '../utils/titleMatch';
+import {
+  MAX_SCAN_IMAGES,
+  ONE_PHOTO_LIMIT_MESSAGE,
+  matchRecognizedGames,
+  parseRecognizedGames,
+  type ScanCandidate
+} from '../utils/scanRecognition';
 
-export const MAX_SCAN_IMAGES = 4;
-
-export type TitleOrientation = 'horizontal' | 'vertical' | 'rotated';
-
-export interface ScanDetection {
-  title: string;
-  titleEn?: string;
-  orientation: TitleOrientation;
-  confidence: number;
-}
-
-export interface ScanCandidate {
-  id: string;
-  detection: ScanDetection;
-  /** Null when the photographed title is not in the seed list; registered under its read title. */
-  match: SeedMatch | null;
-}
+export { MAX_SCAN_IMAGES, ONE_PHOTO_LIMIT_MESSAGE };
+export type { ScanCandidate };
 
 export class ScanNotConfiguredError extends Error {
   constructor() {
@@ -80,17 +71,6 @@ function toInlineImage(dataUrl: string): { data: string; mimeType: string } {
   return { data: dataUrl.slice(separator + 1), mimeType };
 }
 
-function isDetection(value: unknown): value is ScanDetection {
-  if (typeof value !== 'object' || value === null) return false;
-  const { title, orientation, confidence } = value as Record<string, unknown>;
-  return (
-    typeof title === 'string' &&
-    title.trim().length > 0 &&
-    (orientation === 'horizontal' || orientation === 'vertical' || orientation === 'rotated') &&
-    typeof confidence === 'number'
-  );
-}
-
 /**
  * Asks the server whether a scan key is configured. A missing route, a 503, or a network
  * error all mean "off", so the form can explain that instead of opening a broken scan.
@@ -119,12 +99,10 @@ export async function fetchScanAvailable(): Promise<boolean> {
 export async function scanGamePhotos(files: File[], seeds: SeedGame[] = SEED_GAMES): Promise<ScanCandidate[]> {
   assertScanAllowed();
   if (files.length === 0) return [];
-  if (files.length > MAX_SCAN_IMAGES) {
-    throw new Error(`사진은 한 번에 ${MAX_SCAN_IMAGES}장까지 인식할 수 있습니다.`);
-  }
+  if (files.length > MAX_SCAN_IMAGES) throw new Error(ONE_PHOTO_LIMIT_MESSAGE);
 
-  const compressed = await Promise.all(files.map((file) => compressImage(file)));
-  const images = compressed.map((result) => toInlineImage(result.dataUrl));
+  const compressed = await compressImage(files[0]);
+  const images = [toInlineImage(compressed.dataUrl)];
 
   const response = await fetch(scanApiUrl(), {
     method: 'POST',
@@ -132,7 +110,7 @@ export async function scanGamePhotos(files: File[], seeds: SeedGame[] = SEED_GAM
     body: JSON.stringify({ images })
   });
 
-  let payload: { detections?: unknown; error?: unknown; code?: unknown; available?: unknown } = {};
+  let payload: { games?: unknown; error?: unknown; code?: unknown; available?: unknown } = {};
   try {
     payload = await response.json();
   } catch {
@@ -141,18 +119,5 @@ export async function scanGamePhotos(files: File[], seeds: SeedGame[] = SEED_GAM
 
   if (!response.ok) throw errorForScanResponse(payload);
 
-  const raw = Array.isArray(payload.detections) ? payload.detections : [];
-  const seen = new Set<string>();
-  const candidates: ScanCandidate[] = [];
-
-  raw.filter(isDetection).forEach((detection, index) => {
-    const match = findSeedMatch(detection.title, seeds);
-    // One shelf photo can show the same box twice from different angles.
-    const key = match ? match.game.id : detection.title.trim().toLowerCase();
-    if (seen.has(key)) return;
-    seen.add(key);
-    candidates.push({ id: `scan_${index}_${key}`, detection, match });
-  });
-
-  return candidates;
+  return matchRecognizedGames(parseRecognizedGames(payload), seeds);
 }
