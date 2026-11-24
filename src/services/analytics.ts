@@ -1,3 +1,4 @@
+import { storage } from './storage';
 import {
   type AnalyticsEventName,
   type AnalyticsEventParams,
@@ -9,6 +10,7 @@ import {
 type GtagWindow = Window & { dataLayer?: unknown[]; gtag?: (...args: unknown[]) => void };
 
 let started = false;
+let halted = false;
 
 const measurementId = (): string | undefined => {
   const id = import.meta.env.VITE_GA_MEASUREMENT_ID?.trim();
@@ -23,6 +25,12 @@ export const isGoogleAnalyticsEnabled = (): boolean => measurementId() !== undef
  * no request is made (FR-MEAS-01). The page view is sent by hand so the address can be cleaned first.
  */
 export function initAnalytics(): void {
+  // Under 14, and "not chosen yet", must not load the script. A later choice of 14+ calls this again.
+  if (!storage.allowsOffDeviceCollection()) {
+    halted = true;
+    return;
+  }
+  halted = false;
   const id = measurementId();
   if (!id || started || typeof window === 'undefined') return;
   started = true;
@@ -61,7 +69,7 @@ export function track<K extends AnalyticsEventName>(
   name: K,
   ...args: AnalyticsEventParams[K] extends undefined ? [] : [AnalyticsEventParams[K]]
 ): void {
-  if (!started) return;
+  if (!started || halted) return;
   try {
     const event = validateEvent(name, args[0] as Record<string, unknown> | undefined);
     if (!event) return;

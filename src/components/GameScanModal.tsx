@@ -5,6 +5,7 @@ import { X, Camera, Loader2, AlertCircle, Check, RotateCw, ArrowDown, ArrowRight
 import type { UserGame } from '../types';
 import { formatDate } from '../utils/formatters';
 import { storage } from '../services/storage';
+import { AgeBandChooser } from './AgeBandChooser';
 import {
   fetchScanAvailable,
   scanGamePhotos,
@@ -62,6 +63,7 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
   const [isScanning, setIsScanning] = useState(false);
   const [consentChecked, setConsentChecked] = useState(false);
   const [hasConsent, setHasConsent] = useState(false);
+  const [ageBand, setAgeBand] = useState(() => storage.getAgeBand());
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [candidates, setCandidates] = useState<ScanCandidate[]>([]);
@@ -94,6 +96,7 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
 
   useEffect(() => {
     if (!isOpen) return;
+    setAgeBand(storage.getAgeBand());
     setHasConsent(storage.hasPhotoScanConsent());
     setConsentChecked(false);
   }, [isOpen]);
@@ -261,54 +264,73 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
                 className="hidden"
               />
 
-              {candidates.length === 0 && !isScanning && !manualEntry && recognitionOn && !hasConsent && (
+              {candidates.length === 0 && !isScanning && !manualEntry && recognitionOn && ageBand === 'unset' && (
                 <div
-                  id="scan-consent-dialog"
-                  className="space-y-3 rounded-2xl border border-[#C6B48A] bg-[#F6EBD4] p-4"
+                  id="age-band-panel"
+                  className="space-y-3 rounded-2xl border border-[#C6B48A] bg-[#F6EBD4] p-4 text-[#1C160E]"
                 >
-                  <h3 className="text-sm font-medium text-[#1C160E]">사진 인식 안내</h3>
-                  <p className="text-xs leading-relaxed text-[#1C160E]">
-                    고른 사진(최대 {MAX_SCAN_IMAGES}장)은 이 기기에서 크기를 줄이고, 위치 등 사진에 붙은 정보(EXIF)를
-                    제거한 뒤 보드로그 서버를 거쳐 Google Gemini로 보내 게임 이름을 읽는 데 쓰입니다. 보드로그는 이
-                    사진을 저장하지 않습니다.
-                  </p>
-                  <label
-                    className="flex min-h-12 items-center gap-2 text-xs text-[#1C160E]"
-                    htmlFor="scan-consent-check"
-                  >
-                    <input
-                      id="scan-consent-check"
-                      type="checkbox"
-                      checked={consentChecked}
-                      onChange={(event) => setConsentChecked(event.target.checked)}
-                    />
-                    위 내용을 확인했습니다
-                  </label>
-                  <div className="flex gap-2">
-                    <button
-                      id="scan-consent-decline"
-                      type="button"
-                      onClick={handleClose}
-                      className="min-h-12 flex-1 rounded-full bg-[#243044] px-3 text-xs font-medium text-[#F6EBD4]"
-                    >
-                      동의하지 않음
-                    </button>
-                    <button
-                      id="scan-consent-confirm"
-                      type="button"
-                      disabled={!consentChecked}
-                      onClick={() => {
-                        storage.grantPhotoScanConsent();
-                        setHasConsent(true);
-                        setConsentChecked(false);
-                      }}
-                      className="btn-gold min-h-12 flex-1 rounded-full px-3 text-xs font-medium disabled:opacity-50"
-                    >
-                      동의하고 계속
-                    </button>
-                  </div>
+                  <AgeBandChooser
+                    onDone={(band) => {
+                      setAgeBand(band);
+                      setHasConsent(storage.hasPhotoScanConsent());
+                    }}
+                  />
                 </div>
               )}
+
+              {candidates.length === 0 &&
+                !isScanning &&
+                !manualEntry &&
+                recognitionOn &&
+                ageBand === '14_or_over' &&
+                !hasConsent && (
+                  <div
+                    id="scan-consent-dialog"
+                    className="space-y-3 rounded-2xl border border-[#C6B48A] bg-[#F6EBD4] p-4"
+                  >
+                    <h3 className="text-sm font-medium text-[#1C160E]">사진 인식 안내</h3>
+                    <p className="text-xs leading-relaxed text-[#1C160E]">
+                      고른 사진(최대 {MAX_SCAN_IMAGES}장)은 이 기기에서 크기를 줄이고, 위치 등 사진에 붙은 정보(EXIF)를
+                      제거한 뒤 보드로그 서버를 거쳐 Google Gemini로 보내 게임 이름을 읽는 데 쓰입니다. 보드로그는 이
+                      사진을 저장하지 않습니다.
+                    </p>
+                    <label
+                      className="flex min-h-12 items-center gap-2 text-xs text-[#1C160E]"
+                      htmlFor="scan-consent-check"
+                    >
+                      <input
+                        id="scan-consent-check"
+                        type="checkbox"
+                        checked={consentChecked}
+                        onChange={(event) => setConsentChecked(event.target.checked)}
+                      />
+                      위 내용을 확인했습니다
+                    </label>
+                    <div className="flex gap-2">
+                      <button
+                        id="scan-consent-decline"
+                        type="button"
+                        onClick={handleClose}
+                        className="min-h-12 flex-1 rounded-full bg-[#243044] px-3 text-xs font-medium text-[#F6EBD4]"
+                      >
+                        동의하지 않음
+                      </button>
+                      <button
+                        id="scan-consent-confirm"
+                        type="button"
+                        disabled={!consentChecked}
+                        onClick={() => {
+                          storage.grantPhotoScanConsent();
+                          setHasConsent(true);
+                          setConsentChecked(false);
+                        }}
+                        className="btn-gold min-h-12 flex-1 rounded-full px-3 text-xs font-medium disabled:opacity-50"
+                      >
+                        동의하고 계속
+                      </button>
+                    </div>
+                  </div>
+                )}
 
               {candidates.length === 0 && !isScanning && !manualEntry && (!recognitionOn || hasConsent) && (
                 <button

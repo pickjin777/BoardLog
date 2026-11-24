@@ -69,6 +69,7 @@
 | D-053 | (선반) | 홈 레일·게임 상세·마이 전시대·하고 싶음·태그·한 줄 메모. 필드는 선택. 하고 싶음은 등록 경험치를 주지 않음 | Implemented, 소유자 사후 검토 | 2026-11-13 |
 | D-054 | (백업) | JSON 백업에 `boardlog_progress`를 넣는다. 예전 파일은 progress 없이 그대로 읽힌다. 안드로이드 자동 백업은 끈다 | Implemented, 소유자 사후 검토 | 2026-11-14 |
 | D-055 | (화면) | 주요 버튼은 황동 명판, 보조 버튼은 네이비 판과 황동 테. 앱 화면에 보라를 쓰지 않는다 | Implemented, 소유자 사후 검토 | 2026-11-16 |
+| D-056 | (법적 고지) | 개인정보 처리방침·이용약관 초안을 공개 HTML로 둔다. 만 14세 미만은 기기 밖 전송을 끈다. Play 대상 연령 권고는 13세 이상 | Implemented, 법률 검토 전 | 2026-11-24 |
 
 ### D-001 두 축 동등
 - **Question:** P1-Q01 보드로그가 가장 먼저 해결해야 할 사람
@@ -373,7 +374,7 @@
 - **개인정보:** 허용 목록 밖의 이벤트·매개변수·값은 전송 전에 버림(`validateEvent`). 페이지 주소는 `#` 조각을 떼고 보냄: 공유 링크에 친구 이름·점수가 들어 있고, 떼지 않으면 첫 `page_view`가 그 기록 전체를 GA로 보냄(E2E 변이 검사로 재현 확인). GA4 자동 page_view를 끄고 직접 전송, `allow_google_signals`·`allow_ad_personalization_signals` 끔
 - **Vercel Web Analytics:** `@vercel/analytics/react`. 로컬 서버(localhost)에서는 주입하지 않음(스크립트가 없어 404가 남). 전송 주소도 `#` 제거
 - **테스트용 빌드:** `.env.analytics-test`(가짜 ID `G-TEST123456`, 비밀 아님)로 `dist-ga`를 따로 빌드해 GA로 가는 데이터를 E2E로 검증. 구글 서버에는 연결하지 않음
-- **고지 화면:** 마이페이지 하단 "개인정보·이용 통계 안내". Google Analytics 문단은 측정 ID가 빌드에 있을 때만 표시. **문의처는 넣지 않음**(소유자가 정할 연락처가 없음, TBD-020)
+- **고지 화면:** 마이페이지 하단 "개인정보·이용 통계 안내". Google Analytics 문단은 측정 ID가 빌드에 있을 때만 표시. **문의처는 넣지 않음**(소유자가 정할 연락처가 없음, TBD-020). 2026-11-24 D-056이 문의처를 마이 화면에 넣었다
 - **Alternatives:** 개인정보 고지 없이 측정만(D-005 위반), 소유자 동의 화면(쿠키 동의 배너, 이번엔 안 함. 법적 필요성은 TBD-005)
 
 ### D-045 추가(add)는 항상 새 id
@@ -448,6 +449,13 @@
 - **하지 않음:** 병합, 배포, 데이터 형식
 - **Impacted:** docs/design/DESIGN.md, src/index.css
 
+### D-056 개인정보 처리방침, 이용약관, 만 14세 미만
+- **결정 (2026-11-24, 소유자가 이 세션에서 개발자 정보와 학생 이용을 지정):** 처리방침과 약관 초안을 `docs/legal/`과 `public/privacy.html`, `public/terms.html`에 둔다. 공개 주소는 `https://board-log.vercel.app/privacy.html`, `https://board-log.vercel.app/terms.html`. 연락처(진상두, 픽진, pickjin777@gmail.com, 경기도 군포시 번영로 314 4층 공유오피스1호)는 그 문서와 마이 화면 문의 칸에만 둔다
+- **수집:** 소장·플레이·기기 안 계정은 개발자가 받지 않는다. 기기 밖으로 나가는 것은 사진 인식(Gemini), 측정 ID가 있을 때의 Google Analytics, 웹의 Vercel Web Analytics뿐이다. 카카오 로그인·광고·인앱 결제는 이 패키지에 없다
+- **만 14세:** 나이를 기기에만 저장한다. 미선택과 만 14세 미만은 위 세 경로를 시작하지 않는다. 보호자 확인 버튼은 안내를 읽었다는 표시이고, 수집 동의가 아니며, 전송을 켜 주지 않는다. 기기 안 기록은 학생도 쓴다. 스토어 대상 연령 권고는 13세 이상(Families 제외)이며 콘솔에 넣지 않았다. 선택지는 `docs/legal/under-14.md`
+- **하지 않음:** 병합, 배포, 아이콘·스플래시·표지, 스토어 제출. 법적 충분성은 TBD-005
+- **Impacted:** docs/legal/, docs/store/play-listing-ko.md, public/privacy.html, public/terms.html
+
 | ID | 내용 | 해결 조건 / 담당 |
 |---|---|---|
 | TBD-001 | 이름 표기가 달라 갈라진 게임 허브를 합치는 기능 | 실제 문제 보고 시 결정 |
@@ -466,7 +474,7 @@
 | TBD-015 | ~~저장소 공개 여부, Actions 한도~~ **해결 2026-10-30:** 저장소는 Public. 브랜치 규칙 무료 적용 확인. Actions 표준 러너 한도는 공개 저장소 기준 무료(2026-06 지식, 요금 페이지 미확인). 코드·설계 문서가 공개 상태임을 소유자가 인지 | — |
 | TBD-016 | Vercel Preview 환경에서 `GEMINI_API_KEY` 제거(D-037). 대상은 프로덕션 프로젝트 `board-log`(TBD-017) | 소유자 작업(Vercel 프로젝트 설정) |
 | TBD-019 | **한 글자 시드 게임 제목 인식 불가**: 사진 인식 결과의 제목이 정규화 후 2글자 미만이면 시드 목록 매칭을 건너뜀(`findSeedMatch`의 `query.length < 2` 가드). 시드 300개 중 "뱅!", "라" 2개가 해당. 영문 제목(BANG!)으로 읽히면 매칭됨. M0 PR4 테스트가 발견, `it.fails`로 표시 | 동작 변경이라 M0 범위 밖. 사용자 영향이 작아 M1 이후 |
-| TBD-020 | 개인정보·이용 통계 안내 화면의 **문의처**(FR-PRIV-01)와 제3자 삭제 요청 창구(TBD-011). 소유자가 공개해도 되는 연락처를 정해야 함. 정해지기 전까지 화면에 문의처가 없음 | 소유자 결정 |
+| TBD-020 | ~~문의처 없음~~ **2026-11-24:** 소유자가 이름·메일·주소를 지정. 마이 화면 문의 칸과 `docs/legal/`에 넣음. 전화번호는 없음. 법적 충분성은 TBD-005 | — |
 | TBD-018 | **접근성 정리 54건**: 입력과 연결되지 않은 label 36, 키보드 처리 없는 클릭 요소 16(`useKeyWithClickEvents` 8 + `noStaticElementInteractions` 8), `role="radio"` 버튼 1(`useSemanticElements`), autoFocus 1. M0 PR3에서 Biome 오류로 드러났고, UI 동작을 바꾸는 수정이라 위치별 `biome-ignore`(사유 `TBD-018`)로 표시만 함. `grep -rn "TBD-018" src`로 위치 확인 | M0 이후. 우선순위는 사용자 영향 데이터 후(M1 이후) 결정 |
 | TBD-017 | 같은 저장소에 Vercel 프로젝트 2개 연결: 실제 서비스는 `board-log`(계정 `pickjin1`, `board-log.vercel.app`, 소유자 확인 2026-10-30). `boardlog`(팀 `wlstkden-6327s-projects`, `boardlog-blush.vercel.app`)는 미사용인데 푸시마다 빌드되고 `GEMINI_API_KEY`를 가질 수 있음 → 연결 해제 또는 삭제 여부 | 소유자 작업(Vercel 설정) |
 | TBD-006 | 최신 iOS 사파리의 7일 저장 제한, 홈 화면 앱 예외, `navigator.storage.persist()` 효과, GA4 쿠키 유효기간 제한 | 실제 아이폰으로 확인. **M1 기간 소유자 작업, 관문 지표(D-041)** |

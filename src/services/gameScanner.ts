@@ -71,6 +71,7 @@ export function errorForScanResponse(payload: { code?: unknown; error?: unknown 
 function assertScanAllowed(): void {
   if (!storage.isPhotoRecognitionEnabled()) throw new ScanDisabledError();
   if (!storage.hasPhotoScanConsent()) throw new ScanConsentRequiredError();
+  if (!storage.allowsOffDeviceCollection()) throw new ScanDisabledError();
 }
 
 function toInlineImage(dataUrl: string): { data: string; mimeType: string } {
@@ -102,6 +103,7 @@ function scanApiUrl(): string {
 
 export async function fetchScanAvailable(): Promise<boolean> {
   if (!storage.isPhotoRecognitionEnabled() || !storage.hasPhotoScanConsent()) return false;
+  if (!storage.allowsOffDeviceCollection()) return false;
   try {
     const response = await fetch(scanApiUrl(), { method: 'GET' });
     let body: unknown = null;

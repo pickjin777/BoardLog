@@ -343,6 +343,7 @@ describe('storage: JSON backup includes collector progress', () => {
 
 describe('storage: photo recognition prefs and login delay', () => {
   it('remembers consent separately from the off switch', () => {
+    storage.setAgeBand('14_or_over');
     expect(storage.isPhotoRecognitionEnabled()).toBe(true);
     expect(storage.hasPhotoScanConsent()).toBe(false);
     storage.grantPhotoScanConsent();
@@ -352,6 +353,28 @@ describe('storage: photo recognition prefs and login delay', () => {
     expect(storage.hasPhotoScanConsent()).toBe(true);
     storage.revokePhotoScanConsent();
     storage.setPhotoRecognitionEnabled(true);
+    expect(storage.hasPhotoScanConsent()).toBe(false);
+  });
+
+  it('does not store scan consent before an age is chosen', () => {
+    localStorage.removeItem('boardlog_age_band');
+    expect(storage.getAgeBand()).toBe('unset');
+    expect(storage.allowsOffDeviceCollection()).toBe(false);
+    storage.grantPhotoScanConsent();
+    expect(storage.hasPhotoScanConsent()).toBe(false);
+  });
+
+  it('turns photo recognition off for under 14 and ignores a later grant', () => {
+    storage.setAgeBand('14_or_over');
+    storage.grantPhotoScanConsent();
+    storage.setPhotoRecognitionEnabled(true);
+    storage.setAgeBand('under_14');
+    expect(storage.allowsOffDeviceCollection()).toBe(false);
+    expect(storage.isPhotoRecognitionEnabled()).toBe(false);
+    expect(storage.hasPhotoScanConsent()).toBe(false);
+    storage.setPhotoRecognitionEnabled(true);
+    storage.grantPhotoScanConsent();
+    expect(storage.isPhotoRecognitionEnabled()).toBe(false);
     expect(storage.hasPhotoScanConsent()).toBe(false);
   });
 

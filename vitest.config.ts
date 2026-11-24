@@ -20,7 +20,8 @@ export default defineConfig({
         'src/utils/nativeMonetization.ts': { branches: 100 },
         'src/utils/omitNativeMonetization.ts': { branches: 100 },
         'src/utils/memoryCard.ts': { branches: 100 },
-        'src/utils/thumbnail.ts': { branches: 100 }
+        'src/utils/thumbnail.ts': { branches: 100 },
+        'src/utils/ageGate.ts': { branches: 100 }
       }
     }
   }
