@@ -18,7 +18,7 @@ async function photoData(page: Page): Promise<string> {
     ctx.fillStyle = '#3A2E16';
     ctx.fillRect(0, 0, 480, 320);
     const meeples: Array<[string, number, number]> = [
-      ['#4834D4', 120, 150],
+      ['#E2B657', 120, 150],
       ['#F3D48A', 220, 120],
       ['#C4453C', 310, 180],
       ['#9BE7B8', 180, 220]
@@ -58,7 +58,7 @@ async function seedHistory(page: Page) {
     canvas.height = 160;
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('canvas');
-    ctx.fillStyle = '#4834D4';
+    ctx.fillStyle = '#E2B657';
     ctx.fillRect(0, 0, 160, 160);
     ctx.fillStyle = '#F3D48A';
     ctx.beginPath();
@@ -234,11 +234,13 @@ test('memory cards and the month calendar stay on the device', async ({ page }, 
 
   const plainDay = page.getByRole('button', { name: /11월 2일, 게임 1판/ });
   await expect(plainDay.locator('img')).toHaveCount(0);
-  await expect(plainDay.locator('.calendar-day-mark')).toBeVisible();
+  await expect(plainDay.locator('[data-cover="temporary"]')).toContainText('도미니언');
+  await expect(plainDay.locator('.calendar-day-mark')).toHaveCount(0);
   const emptyDay = page.getByRole('button', { name: /11월 1일, 기록 없음/ });
   await expect(emptyDay.locator('.calendar-day-mark')).toHaveCount(0);
+  await expect(emptyDay.locator('[data-cover="temporary"]')).toHaveCount(0);
   await expect(emptyDay.locator('img')).toHaveCount(0);
-  await expect(page.locator('#play-calendar .calendar-day-mark')).toHaveCount(1);
+  await expect(page.locator('#play-calendar .calendar-day-mark')).toHaveCount(0);
 
   const fill = await day.evaluate((button) => {
     const image = button.querySelector('img');

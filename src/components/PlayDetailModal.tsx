@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, Trophy, Clock, Calendar, MapPin, Users, Star, Edit, Trash2, Image as ImageIcon } from 'lucide-react';
 import type { PlayPhoto, PlayRecord } from '../types';
 import { formatDuration } from '../utils/formatters';
-import { applyImageFallback, coverSrc } from '../utils/imageFallback';
+import { applyImageFallback } from '../utils/imageFallback';
+import { CoverImage } from './CoverPlaceholder';
 import { useDialogA11y } from './useDialogA11y';
 
 function photoOpenName(photo: PlayPhoto, index: number): string {
@@ -71,19 +72,18 @@ export const PlayDetailModal: React.FC<PlayDetailModalProps> = ({ play, isOpen, 
           {/* Header */}
           <div className="p-4 sm:p-5 border-b border-[#E9ECEF] bg-white">
             <div className="grid grid-cols-[3rem_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-0.5">
-              <img
-                src={coverSrc(play.gameImageUrl)}
+              <CoverImage
+                title={play.gameTitle}
+                imageUrl={play.gameImageUrl}
                 alt={play.gameTitle}
-                referrerPolicy="no-referrer"
-                onError={applyImageFallback}
-                className="row-span-2 w-12 h-12 rounded-2xl object-cover bg-stone-200 border border-[#E9ECEF] shadow-sm"
+                className="row-span-2 h-12 w-12 rounded-2xl object-cover border border-[#E9ECEF] shadow-sm"
               />
               <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
                 <h2 className="max-w-full truncate text-base font-black text-[#1E272E]">{play.gameTitle}</h2>
                 <span
                   className={`shrink-0 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
                     play.myResult === '승리'
-                      ? 'bg-[#4834D4]/10 text-[#4834D4] border-[#4834D4]/20'
+                      ? 'bg-[#E2B657]/10 text-[#E2B657] border-[#E2B657]/20'
                       : 'bg-[#F1F3F5] text-[#636E72] border-[#E9ECEF]'
                   }`}
                 >
@@ -94,7 +94,7 @@ export const PlayDetailModal: React.FC<PlayDetailModalProps> = ({ play, isOpen, 
                 <button
                   type="button"
                   onClick={() => onEdit(play)}
-                  className="p-2 text-[#636E72] hover:text-[#4834D4] rounded-full hover:bg-[#F1F3F5] transition-colors"
+                  className="p-2 text-[#636E72] hover:text-[#E2B657] rounded-full hover:bg-[#F1F3F5] transition-colors"
                   aria-label="기록 수정"
                   title="기록 수정"
                 >
@@ -138,7 +138,7 @@ export const PlayDetailModal: React.FC<PlayDetailModalProps> = ({ play, isOpen, 
               <div>
                 <span className="text-[10px] text-[#636E72] block mb-0.5 font-bold">장소</span>
                 <span className="font-bold text-[#1E272E] flex items-center justify-center gap-1">
-                  <MapPin className="w-3 h-3 text-[#4834D4]" />
+                  <MapPin className="w-3 h-3 text-[#E2B657]" />
                   {play.location || '미입력'}
                 </span>
               </div>
@@ -179,14 +179,14 @@ export const PlayDetailModal: React.FC<PlayDetailModalProps> = ({ play, isOpen, 
                   <div
                     key={p.id || idx}
                     className={`p-4 flex items-center justify-between text-xs ${
-                      p.isWinner ? 'bg-[#4834D4]/5 font-bold' : ''
+                      p.isWinner ? 'bg-[#E2B657]/5 font-bold' : ''
                     }`}
                   >
                     <div className="flex items-center gap-2">
                       <span
                         className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
                           p.rank === 1 || p.isWinner
-                            ? 'bg-[#4834D4] text-white shadow-xs'
+                            ? 'bg-[#E2B657] text-white shadow-xs'
                             : p.rank === 2
                               ? 'bg-[#636E72] text-white'
                               : 'bg-[#E9ECEF] text-[#636E72]'
@@ -197,7 +197,7 @@ export const PlayDetailModal: React.FC<PlayDetailModalProps> = ({ play, isOpen, 
                       <span className="text-[#1E272E] flex items-center gap-1">
                         {p.name}
                         {p.name === '나' && (
-                          <span className="text-[9px] px-1.5 py-0.5 bg-[#4834D4]/10 text-[#4834D4] rounded-full font-bold">
+                          <span className="text-[9px] px-1.5 py-0.5 bg-[#E2B657]/10 text-[#E2B657] rounded-full font-bold">
                             본인
                           </span>
                         )}
@@ -207,7 +207,7 @@ export const PlayDetailModal: React.FC<PlayDetailModalProps> = ({ play, isOpen, 
                     <div className="flex items-center gap-3">
                       {p.score !== null && <span className="font-black text-[#1E272E] text-sm">{p.score}점</span>}
                       {p.isWinner && (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#4834D4] bg-[#4834D4]/10 px-2.5 py-0.5 rounded-full">
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#E2B657] bg-[#E2B657]/10 px-2.5 py-0.5 rounded-full">
                           <Trophy className="w-3 h-3" />
                           <span>승리</span>
                         </span>
@@ -271,7 +271,7 @@ export const PlayDetailModal: React.FC<PlayDetailModalProps> = ({ play, isOpen, 
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 bg-[#4834D4] hover:bg-[#3c2ab9] text-white text-xs font-bold rounded-full transition-colors"
+              className="px-5 py-2.5 bg-[#E2B657] hover:bg-[#C9A24A] text-white text-xs font-bold rounded-full transition-colors"
             >
               확인
             </button>

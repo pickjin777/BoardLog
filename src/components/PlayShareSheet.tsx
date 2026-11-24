@@ -105,7 +105,7 @@ export const PlayShareSheet: React.FC<PlayShareSheetProps> = ({ play, onClose, o
                 maxLength={30}
                 onChange={(e) => setSharerName(e.target.value)}
                 placeholder="예: 철수"
-                className="rounded-xl border border-[#E9ECEF] bg-white px-3 py-2 text-xs text-[#1E272E] focus:border-[#4834D4] focus:outline-none"
+                className="rounded-xl border border-[#E9ECEF] bg-white px-3 py-2 text-xs text-[#1E272E] focus:border-[#E2B657] focus:outline-none"
               />
             </label>
 

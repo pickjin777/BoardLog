@@ -98,7 +98,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onClick, onDelete, den
         <div className={`paper flex flex-1 flex-col justify-between rounded-b-2xl ${dense ? 'px-2 py-1.5' : 'p-3'}`}>
           <div>
             <div className="flex items-baseline gap-1.5 mb-1">
-              <h3 className="text-sm font-black text-[#1E272E] line-clamp-1 group-hover:text-[#4834D4] transition-colors">
+              <h3 className="text-sm font-black text-[#1E272E] line-clamp-1 group-hover:text-[#E2B657] transition-colors">
                 {game.title}
               </h3>
               {game.titleEn && <span className="text-[10px] text-[#636E72] line-clamp-1 truncate">{game.titleEn}</span>}

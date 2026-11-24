@@ -525,7 +525,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
           {/* Header */}
           <div className="p-4 sm:p-5 border-b border-[#E9ECEF] flex items-center justify-between bg-white shrink-0">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#4834D4]/10 text-[#4834D4] flex items-center justify-center font-bold">
+              <div className="w-10 h-10 rounded-2xl bg-[#E2B657]/10 text-[#E2B657] flex items-center justify-center font-bold">
                 <Trophy className="w-5 h-5" />
               </div>
               <div>
@@ -560,7 +560,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                   htmlFor="play-game-search-input"
                   className="text-xs font-bold text-[#1E272E] flex items-center gap-1.5"
                 >
-                  <Dices className="w-3.5 h-3.5 text-[#4834D4]" />
+                  <Dices className="w-3.5 h-3.5 text-[#E2B657]" />
                   <span>플레이한 보드게임</span>
                   <span className="text-[#EB4D4B]">*</span>
                 </label>
@@ -568,7 +568,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setIsSelectingGame(true)}
-                    className="text-[11px] font-bold text-[#4834D4] hover:underline flex items-center gap-1"
+                    className="text-[11px] font-bold text-[#E2B657] hover:underline flex items-center gap-1"
                   >
                     <Search className="w-3 h-3" />
                     <span>다른 게임 검색 / 변경</span>
@@ -590,7 +590,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <h3 className="text-sm font-black text-[#1E272E] truncate">{gameTitle}</h3>
                         {gameId ? (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#4834D4]/10 text-[#4834D4] border border-[#4834D4]/20">
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#E2B657]/10 text-[#E2B657] border border-[#E2B657]/20">
                             내 소장 게임
                           </span>
                         ) : (
@@ -613,7 +613,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                 </div>
               ) : (
                 /* B. Search / Autocomplete & Input Box */
-                <div className="space-y-2 p-4 bg-[#F8F9FA] rounded-2xl border border-[#4834D4]/20 shadow-xs">
+                <div className="space-y-2 p-4 bg-[#F8F9FA] rounded-2xl border border-[#E2B657]/20 shadow-xs">
                   {/* Category Filter Tabs */}
                   <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
                     <button
@@ -621,7 +621,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                       onClick={() => setSearchCategory('all')}
                       className={`px-3 py-1 rounded-full text-[11px] font-bold transition-colors shrink-0 ${
                         searchCategory === 'all'
-                          ? 'bg-[#4834D4] text-white shadow-xs'
+                          ? 'bg-[#E2B657] text-white shadow-xs'
                           : 'bg-white text-[#636E72] border border-[#898B8D] hover:bg-[#F1F3F5]'
                       }`}
                     >
@@ -644,7 +644,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                         onClick={() => setSearchCategory('owned')}
                         className={`px-3 py-1 rounded-full text-[11px] font-bold transition-colors shrink-0 ${
                           searchCategory === 'owned'
-                            ? 'bg-[#4834D4] text-white shadow-xs'
+                            ? 'bg-[#E2B657] text-white shadow-xs'
                             : 'bg-white text-[#636E72] border border-[#898B8D] hover:bg-[#F1F3F5]'
                         }`}
                       >
@@ -678,7 +678,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                           }
                         }
                       }}
-                      className="w-full pl-9 pr-8 py-2.5 bg-white border border-[#898B8D] rounded-2xl text-xs font-bold text-[#1E272E] focus:outline-hidden focus:border-[#4834D4] focus:ring-2 focus:ring-[#4834D4]/10 transition-colors"
+                      className="w-full pl-9 pr-8 py-2.5 bg-white border border-[#898B8D] rounded-2xl text-xs font-bold text-[#1E272E] focus:outline-hidden focus:border-[#E2B657] focus:ring-2 focus:ring-[#E2B657]/10 transition-colors"
                     />
                     {gameSearchQuery && (
                       <button
@@ -697,14 +697,14 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                     <button
                       type="button"
                       onClick={() => handleSelectCustomTitle(gameSearchQuery)}
-                      className="w-full p-2.5 rounded-xl bg-white hover:bg-[#4834D4]/5 border border-dashed border-[#4834D4]/40 text-left text-xs font-bold text-[#4834D4] flex items-center justify-between transition-colors shadow-2xs"
+                      className="w-full p-2.5 rounded-xl bg-white hover:bg-[#E2B657]/5 border border-dashed border-[#E2B657]/40 text-left text-xs font-bold text-[#E2B657] flex items-center justify-between transition-colors shadow-2xs"
                     >
                       <div className="flex items-center gap-2 truncate">
                         <span className="truncate">
                           <strong>"{gameSearchQuery}"</strong> 이름으로 직접 기록하기
                         </span>
                       </div>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#4834D4]/10 font-bold shrink-0">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#E2B657]/10 font-bold shrink-0">
                         직접 입력 선택
                       </span>
                     </button>
@@ -736,7 +736,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                                   </span>
                                 )}
                                 {game.isOwned ? (
-                                  <span className="text-[9px] px-1.5 py-0.2 rounded-md bg-[#4834D4]/10 text-[#4834D4] font-bold shrink-0">
+                                  <span className="text-[9px] px-1.5 py-0.2 rounded-md bg-[#E2B657]/10 text-[#E2B657] font-bold shrink-0">
                                     소장
                                   </span>
                                 ) : (
@@ -792,7 +792,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                     htmlFor="play-input-date"
                     className="block text-[11px] font-bold text-[#1E272E] mb-1 flex items-center gap-1"
                   >
-                    <Calendar className="w-3 h-3 text-[#4834D4]" />
+                    <Calendar className="w-3 h-3 text-[#E2B657]" />
                     <span>플레이 날짜</span>
                   </label>
                   <input
@@ -801,7 +801,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                     placeholder="YYYY.MM.DD"
                     value={playDate}
                     onChange={(e) => setPlayDate(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-[#898B8D] rounded-xl text-xs font-semibold text-[#1E272E] focus:outline-hidden focus:border-[#4834D4] transition-colors"
+                    className="w-full px-3 py-2 bg-white border border-[#898B8D] rounded-xl text-xs font-semibold text-[#1E272E] focus:outline-hidden focus:border-[#E2B657] transition-colors"
                   />
                 </div>
 
@@ -810,7 +810,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                     htmlFor="play-input-location"
                     className="block text-[11px] font-bold text-[#1E272E] mb-1 flex items-center gap-1"
                   >
-                    <MapPin className="w-3 h-3 text-[#4834D4]" />
+                    <MapPin className="w-3 h-3 text-[#E2B657]" />
                     <span>장소</span>
                   </label>
                   <input
@@ -819,7 +819,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                     placeholder="장소"
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-[#898B8D] rounded-xl text-xs font-semibold text-[#1E272E] focus:outline-hidden focus:border-[#4834D4] transition-colors"
+                    className="w-full px-3 py-2 bg-white border border-[#898B8D] rounded-xl text-xs font-semibold text-[#1E272E] focus:outline-hidden focus:border-[#E2B657] transition-colors"
                   />
                 </div>
               </div>
@@ -837,7 +837,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                       onClick={() => setLocation(loc)}
                       className={`px-2.5 py-1 rounded-full text-[10px] font-bold shrink-0 transition-colors border ${
                         isSelected
-                          ? 'bg-[#4834D4] text-white border-[#4834D4] shadow-2xs'
+                          ? 'bg-[#E2B657] text-white border-[#E2B657] shadow-2xs'
                           : 'bg-white text-[#636E72] border-[#898B8D] hover:bg-[#F1F3F5]'
                       }`}
                     >
@@ -851,12 +851,12 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
               <div className="pt-3 border-t border-[#E9ECEF] space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="text-[11px] font-bold text-[#1E272E] flex items-center gap-1">
-                    <Clock className="w-3 h-3 text-[#4834D4]" />
+                    <Clock className="w-3 h-3 text-[#E2B657]" />
                     <span>시작 / 종료 시간</span>
                   </div>
 
                   {/* Total Duration Highlight Pill */}
-                  <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#4834D4]/10 border border-[#4834D4]/20 rounded-full text-xs font-black text-[#4834D4]">
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#E2B657]/10 border border-[#E2B657]/20 rounded-full text-xs font-black text-[#E2B657]">
                     <span className="text-[10px] font-bold text-[#636E72]">총 플레이:</span>
                     <span>
                       {formatDuration(durationMinutes)} ({durationMinutes}분)
@@ -911,7 +911,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                       }}
                       className={`px-2 py-0.5 rounded-md text-[10px] font-bold shrink-0 transition-colors border ${
                         durationMinutes === mins
-                          ? 'bg-[#4834D4]/10 text-[#4834D4] border-[#4834D4]/30'
+                          ? 'bg-[#E2B657]/10 text-[#E2B657] border-[#E2B657]/30'
                           : 'bg-white text-[#636E72] border-[#898B8D] hover:bg-[#F1F3F5]'
                       }`}
                     >
@@ -925,7 +925,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
             {/* 3. My Result Selection */}
             <fieldset className="border-0 p-0 m-0 min-w-0">
               <legend className="block text-xs font-bold text-[#1E272E] mb-1.5 flex items-center gap-1.5">
-                <Trophy className="w-3.5 h-3.5 text-[#4834D4]" />
+                <Trophy className="w-3.5 h-3.5 text-[#E2B657]" />
                 <span>나의 결과</span>
                 {!myResult && (
                   <span className="font-medium text-[#636E72]">· 아래에서 승자를 탭하면 자동으로 정해져요</span>
@@ -945,7 +945,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                     className={`py-2 rounded-full text-xs font-bold border transition-colors text-center ${
                       myResult === res
                         ? res === '승리'
-                          ? 'bg-[#4834D4] text-white border-[#4834D4]'
+                          ? 'bg-[#E2B657] text-white border-[#E2B657]'
                           : 'bg-[#E2B657] text-[#1A1408] border-[#C9A24A] shadow-xs'
                         : 'bg-[#F8F9FA] text-[#636E72] border-[#898B8D] hover:bg-[#F1F3F5]'
                     }`}
@@ -966,7 +966,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                 <button
                   type="button"
                   onClick={addParticipant}
-                  className="inline-flex items-center gap-1 text-[11px] font-bold text-[#4834D4] bg-[#4834D4]/10 hover:bg-[#4834D4]/20 px-2.5 py-1 rounded-full transition-colors"
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-[#E2B657] bg-[#E2B657]/10 hover:bg-[#E2B657]/20 px-2.5 py-1 rounded-full transition-colors"
                 >
                   <Plus className="w-3 h-3" />
                   <span>참여자 추가</span>
@@ -981,7 +981,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                       key={name}
                       type="button"
                       onClick={() => addCompanion(name)}
-                      className="inline-flex items-center gap-0.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-white border border-[#E9ECEF] text-[#1E272E] hover:border-[#4834D4]/40 hover:text-[#4834D4] transition-colors"
+                      className="inline-flex items-center gap-0.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-white border border-[#E9ECEF] text-[#1E272E] hover:border-[#E2B657]/40 hover:text-[#E2B657] transition-colors"
                     >
                       <Plus className="w-3 h-3" />
                       {name}
@@ -995,7 +995,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                   <div
                     key={p.id || idx}
                     className={`p-2.5 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center gap-2 text-xs transition-colors ${
-                      p.isWinner ? 'bg-[#4834D4]/5 border-[#4834D4]/30' : 'bg-[#F8F9FA] border-[#E9ECEF]'
+                      p.isWinner ? 'bg-[#E2B657]/5 border-[#E2B657]/30' : 'bg-[#F8F9FA] border-[#E9ECEF]'
                     }`}
                   >
                     {/* Name */}
@@ -1008,7 +1008,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                         aria-pressed={p.isWinner}
                         className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 border transition-colors ${
                           p.isWinner
-                            ? 'bg-[#4834D4] text-white border-[#4834D4] shadow-xs'
+                            ? 'bg-[#E2B657] text-white border-[#E2B657] shadow-xs'
                             : 'bg-white text-[#636E72] border-[#898B8D]'
                         }`}
                       >
@@ -1021,7 +1021,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                         placeholder="이름"
                         value={p.name}
                         onChange={(e) => updateParticipant(idx, { name: e.target.value })}
-                        className="w-full px-2.5 py-1.5 bg-white border border-[#898B8D] rounded-xl text-xs font-bold text-[#1E272E] focus:outline-hidden focus:border-[#4834D4]"
+                        className="w-full px-2.5 py-1.5 bg-white border border-[#898B8D] rounded-xl text-xs font-bold text-[#1E272E] focus:outline-hidden focus:border-[#E2B657]"
                       />
                     </div>
 
@@ -1044,7 +1044,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                               rank: e.target.value === '' ? null : Number(e.target.value)
                             })
                           }
-                          className="w-full px-2 py-1.5 bg-white border border-[#898B8D] rounded-xl text-xs text-center font-bold text-[#1E272E] focus:outline-hidden focus:border-[#4834D4]"
+                          className="w-full px-2 py-1.5 bg-white border border-[#898B8D] rounded-xl text-xs text-center font-bold text-[#1E272E] focus:outline-hidden focus:border-[#E2B657]"
                         />
                       </div>
                       <div className="flex items-center gap-1 flex-1">
@@ -1064,7 +1064,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                               score: e.target.value === '' ? null : Number(e.target.value)
                             })
                           }
-                          className="w-full px-2 py-1.5 bg-white border border-[#898B8D] rounded-xl text-xs text-center font-bold text-[#1E272E] focus:outline-hidden focus:border-[#4834D4]"
+                          className="w-full px-2 py-1.5 bg-white border border-[#898B8D] rounded-xl text-xs text-center font-bold text-[#1E272E] focus:outline-hidden focus:border-[#E2B657]"
                         />
                       </div>
                     </div>
@@ -1162,7 +1162,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isUploadingPhoto}
-                    className="flex flex-col items-center justify-center p-3 rounded-2xl border border-dashed border-[#CED6E0] hover:border-[#4834D4] bg-[#F8F9FA] hover:bg-[#4834D4]/5 aspect-square transition-colors text-[#636E72] hover:text-[#4834D4]"
+                    className="flex flex-col items-center justify-center p-3 rounded-2xl border border-dashed border-[#CED6E0] hover:border-[#E2B657] bg-[#F8F9FA] hover:bg-[#E2B657]/5 aspect-square transition-colors text-[#636E72] hover:text-[#E2B657]"
                   >
                     <Camera className="w-5 h-5 mb-1 text-[#636E72]" />
                     <span className="text-[10px] font-bold">{isUploadingPhoto ? '압축 중...' : '사진 추가'}</span>
@@ -1190,7 +1190,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                       />
                     </button>
                   ))}
-                  <span className="text-xs font-bold text-[#4834D4] ml-2">{rating}점 / 5점</span>
+                  <span className="text-xs font-bold text-[#E2B657] ml-2">{rating}점 / 5점</span>
                 </div>
               </fieldset>
 
@@ -1204,7 +1204,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                   placeholder="한 판에 대한 메모"
                   value={review}
                   onChange={(e) => setReview(e.target.value)}
-                  className="w-full p-3 bg-[#F8F9FA] border border-[#898B8D] rounded-2xl text-xs text-[#1E272E] focus:bg-white focus:outline-hidden focus:border-[#4834D4] focus:ring-2 focus:ring-[#4834D4]/10 transition-colors"
+                  className="w-full p-3 bg-[#F8F9FA] border border-[#898B8D] rounded-2xl text-xs text-[#1E272E] focus:bg-white focus:outline-hidden focus:border-[#E2B657] focus:ring-2 focus:ring-[#E2B657]/10 transition-colors"
                 />
               </div>
             </div>
@@ -1226,7 +1226,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
               type="button"
               disabled={isSubmitting}
               onClick={handleSubmit}
-              className="inline-flex items-center gap-1.5 px-6 py-2.5 bg-[#4834D4] hover:bg-[#3c2ab9] active:bg-[#32229e] text-white text-xs font-bold rounded-full transition-colors disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-6 py-2.5 bg-[#E2B657] hover:bg-[#C9A24A] active:bg-[#A07C32] text-white text-xs font-bold rounded-full transition-colors disabled:opacity-50"
             >
               <Save className="w-4 h-4" />
               <span>{isSubmitting ? '저장 중...' : initialPlay ? '수정 완료' : '기록 저장'}</span>

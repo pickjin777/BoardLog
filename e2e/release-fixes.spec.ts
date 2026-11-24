@@ -487,7 +487,7 @@ test('play photos open from the keyboard and the header clears the actions', asy
   const photo =
     'data:image/svg+xml,' +
     encodeURIComponent(
-      '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" fill="#4834D4"/></svg>'
+      '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" fill="#E2B657"/></svg>'
     );
   await putRows(page, [
     {
@@ -610,16 +610,18 @@ test('broken catalog, seed, and play-form photos use the same fallback', async (
 
   await page.locator('#nav-tab-games').click();
   await page.locator('#games-print-catalog-btn').click();
-  await usesFallback('도록 표 표지', '#printable-catalog-document img');
+  await expect(page.locator('#printable-catalog-document [data-cover="temporary"]').first()).toContainText('깨진표지');
+  check('도록 표 표지는 임시 표지', true);
   await page.getByRole('button', { name: '수록 카드형' }).click();
-  await usesFallback('도록 카드 표지', '#printable-catalog-document img');
+  await expect(page.locator('#printable-catalog-document [data-cover="temporary"]').first()).toContainText('깨진표지');
+  check('도록 카드 표지는 임시 표지', true);
   await page.locator('#game-catalog-modal-overlay button[aria-label="닫기"]').click();
 
   await page.locator('#games-add-game-btn').click();
   await page.locator('#seed-game-search-input').fill('카탄');
   await visible(
     '시드 검색은 외부 사진 없이 자리 표시',
-    page.locator('#game-form-modal-overlay [data-cover="placeholder"]')
+    page.locator('#game-form-modal-overlay [data-cover="temporary"]')
   );
   check(
     '시드 검색이 이미지를 요청하지 않음',

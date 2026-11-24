@@ -10,7 +10,7 @@ const config: CapacitorConfig = {
   appId: APP_ID,
   appName: APP_NAME,
   webDir: 'dist',
-  backgroundColor: '#100E0B',
+  backgroundColor: '#0E1628',
   server: {
     androidScheme: 'https',
     hostname: 'localhost'
@@ -22,7 +22,7 @@ const config: CapacitorConfig = {
     SplashScreen: {
       launchAutoHide: true,
       launchShowDuration: 0,
-      backgroundColor: '#4834D4',
+      backgroundColor: '#0E1628',
       androidScaleType: 'CENTER_CROP',
       showSpinner: false
     },

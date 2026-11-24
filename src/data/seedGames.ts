@@ -1,5 +1,10 @@
 import type { SeedGame } from '../types';
 
+/**
+ * Seed imageUrl stays empty on purpose.
+ * The screen draws a temporary chest cover with the Korean title (see temporaryCover.ts).
+ * A publisher's own art may be stored only after that publisher allows it.
+ */
 export const SEED_GAMES: SeedGame[] = [
   {
     id: 'seed-1',

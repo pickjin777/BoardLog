@@ -8,8 +8,8 @@ interface LoadingStateProps {
 export const LoadingState: React.FC<LoadingStateProps> = ({ message = '데이터를 불러오는 중입니다...' }) => (
   <div id="loading-state-view" className="flex flex-col items-center justify-center py-16 px-4 text-center">
     <div className="relative mb-4">
-      <div className="w-12 h-12 rounded-2xl bg-[#4834D4]/10 flex items-center justify-center">
-        <Loader2 className="w-6 h-6 text-[#4834D4] animate-spin" />
+      <div className="w-12 h-12 rounded-2xl bg-[#E2B657]/10 flex items-center justify-center">
+        <Loader2 className="w-6 h-6 text-[#E2B657] animate-spin" />
       </div>
     </div>
     <p className="text-sm font-bold text-[#1E272E]">{message}</p>
@@ -31,7 +31,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({ title, description, acti
     className="flex flex-col items-center justify-center py-2 px-4 text-center bg-white rounded-2xl border border-dashed border-[#E9ECEF] my-2 shadow-sm"
   >
     <div className="w-11 h-11 rounded-2xl bg-[#F8F9FA] border border-[#E9ECEF] flex items-center justify-center mb-2 text-[#636E72]">
-      {icon || <PackageOpen className="w-6 h-6 text-[#4834D4]" />}
+      {icon || <PackageOpen className="w-6 h-6 text-[#E2B657]" />}
     </div>
     <h3 className="text-sm font-black text-[#1E272E] mb-1">{title}</h3>
     <p id="empty-state-description" className="text-xs text-[#636E72] max-w-xs mb-2 leading-relaxed">
@@ -42,7 +42,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({ title, description, acti
         id="empty-state-action-btn"
         type="button"
         onClick={onAction}
-        className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#4834D4] hover:bg-[#3c2ab9] text-white rounded-full text-xs font-bold transition-colors"
+        className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#E2B657] hover:bg-[#C9A24A] text-white rounded-full text-xs font-bold transition-colors"
       >
         <Plus className="w-4 h-4 stroke-[2.5]" />
         <span>{actionText}</span>
@@ -66,7 +66,7 @@ export const NoSearchResultState: React.FC<NoSearchResultStateProps> = ({ query,
       <SearchX className="w-6 h-6" />
     </div>
     <h3 className="text-base font-black text-[#1E272E] mb-1">
-      <span className="text-[#4834D4]">'{query}'</span> 검색 결과가 없습니다
+      <span className="text-[#E2B657]">'{query}'</span> 검색 결과가 없습니다
     </h3>
     <p className="text-xs text-[#636E72] max-w-xs mb-5 leading-relaxed">
       시드 목록에 없는 게임인가요? 필요한 정보만 쏙 입력하여 직접 등록할 수 있습니다.
@@ -86,7 +86,7 @@ export const NoSearchResultState: React.FC<NoSearchResultStateProps> = ({ query,
           id="direct-add-from-search-btn"
           type="button"
           onClick={onDirectAdd}
-          className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#4834D4] hover:bg-[#3c2ab9] text-white rounded-full text-xs font-bold transition-colors"
+          className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#E2B657] hover:bg-[#C9A24A] text-white rounded-full text-xs font-bold transition-colors"
         >
           <Plus className="w-3.5 h-3.5" />
           <span>'{query}' 직접 등록하기</span>

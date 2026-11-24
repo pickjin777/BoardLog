@@ -294,7 +294,7 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
           {/* Header */}
           <div className="p-4 sm:p-5 border-b border-[#898B8D] flex items-center justify-between bg-white">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-[#4834D4] text-white flex items-center justify-center font-bold">
+              <div className="w-8 h-8 rounded-full bg-[#E2B657] text-white flex items-center justify-center font-bold">
                 <Plus className="w-4.5 h-4.5" />
               </div>
               <div>
@@ -351,7 +351,7 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                     id="game-form-pick-photo-btn"
                     type="button"
                     onClick={onPickPhoto}
-                    className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-2 text-[11px] font-bold text-[#1E272E] border border-[#898B8D] hover:border-[#4834D4]"
+                    className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-2 text-[11px] font-bold text-[#1E272E] border border-[#898B8D] hover:border-[#E2B657]"
                   >
                     <Camera className="w-3.5 h-3.5" />
                     사진 선택
@@ -380,7 +380,7 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                     placeholder="예: 스플렌더, 카탄, 루미큐브, 윙스팬, 테라포밍 마스..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 bg-white border border-[#898B8D] rounded-2xl text-xs text-[#1E272E] focus:outline-hidden focus:border-[#4834D4] transition-colors"
+                    className="w-full pl-9 pr-3 py-2 bg-white border border-[#898B8D] rounded-2xl text-xs text-[#1E272E] focus:outline-hidden focus:border-[#E2B657] transition-colors"
                   />
                 </div>
 
@@ -394,7 +394,7 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                           type="button"
                           onClick={() => handleSelectSeed(seed)}
                           className={`w-full p-2.5 flex items-center gap-3 text-left hover:bg-[#F1F3F5] transition-colors ${
-                            selectedSeed?.id === seed.id ? 'bg-[#4834D4]/10 font-bold' : ''
+                            selectedSeed?.id === seed.id ? 'bg-[#E2B657]/10 font-bold' : ''
                           }`}
                         >
                           <CoverImage
@@ -412,7 +412,7 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                               {seed.genre.join(', ')} • {seed.minPlayers}~{seed.maxPlayers}인 • {seed.playTime}분
                             </p>
                           </div>
-                          <span className="text-[11px] font-bold text-[#4834D4] shrink-0 bg-[#4834D4]/10 px-2.5 py-1 rounded-full">
+                          <span className="text-[11px] font-bold text-[#E2B657] shrink-0 bg-[#E2B657]/10 px-2.5 py-1 rounded-full">
                             선택
                           </span>
                         </button>
@@ -423,7 +423,7 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                         <button
                           type="button"
                           onClick={() => setTitle(searchQuery)}
-                          className="text-[#4834D4] font-bold underline ml-1"
+                          className="text-[#E2B657] font-bold underline ml-1"
                         >
                           직접 입력으로 등록
                         </button>
@@ -456,7 +456,7 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                   placeholder="예: 스플렌더"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-[#F1F3F5] border border-[#898B8D] rounded-2xl text-xs font-medium text-[#1E272E] focus:bg-white focus:outline-hidden focus:border-[#4834D4] transition-colors"
+                  className="w-full px-4 py-2.5 bg-[#F1F3F5] border border-[#898B8D] rounded-2xl text-xs font-medium text-[#1E272E] focus:bg-white focus:outline-hidden focus:border-[#E2B657] transition-colors"
                 />
               </div>
 
@@ -472,7 +472,7 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                     placeholder="예: Splendor"
                     value={titleEn}
                     onChange={(e) => setTitleEn(e.target.value)}
-                    className="w-full px-3 py-2 bg-[#F1F3F5] border border-[#898B8D] rounded-2xl text-xs text-[#1E272E] focus:bg-white focus:outline-hidden focus:border-[#4834D4] transition-colors"
+                    className="w-full px-3 py-2 bg-[#F1F3F5] border border-[#898B8D] rounded-2xl text-xs text-[#1E272E] focus:bg-white focus:outline-hidden focus:border-[#E2B657] transition-colors"
                   />
                 </div>
                 <div>
@@ -485,7 +485,7 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                     placeholder="예: 코리아보드게임즈"
                     value={publisher}
                     onChange={(e) => setPublisher(e.target.value)}
-                    className="w-full px-3 py-2 bg-[#F1F3F5] border border-[#898B8D] rounded-2xl text-xs text-[#1E272E] focus:bg-white focus:outline-hidden focus:border-[#4834D4] transition-colors"
+                    className="w-full px-3 py-2 bg-[#F1F3F5] border border-[#898B8D] rounded-2xl text-xs text-[#1E272E] focus:bg-white focus:outline-hidden focus:border-[#E2B657] transition-colors"
                   />
                 </div>
               </div>
@@ -508,7 +508,7 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                       placeholder="https://..."
                       value={imageUrl}
                       onChange={(e) => setImageUrl(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2 bg-[#F1F3F5] border border-[#898B8D] rounded-2xl text-xs text-[#1E272E] focus:bg-white focus:outline-hidden focus:border-[#4834D4] transition-colors"
+                      className="w-full pl-9 pr-3 py-2 bg-[#F1F3F5] border border-[#898B8D] rounded-2xl text-xs text-[#1E272E] focus:bg-white focus:outline-hidden focus:border-[#E2B657] transition-colors"
                     />
                   </div>
                   {imageUrl && (
@@ -544,7 +544,7 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                     id="game-select-ownership"
                     value={ownershipStatus}
                     onChange={(e) => setOwnershipStatus(e.target.value as GameOwnershipStatus)}
-                    className="w-full px-3 py-2 bg-[#F1F3F5] border border-[#898B8D] rounded-2xl text-xs font-bold text-[#1E272E] focus:bg-white focus:outline-hidden focus:border-[#4834D4] transition-colors"
+                    className="w-full px-3 py-2 bg-[#F1F3F5] border border-[#898B8D] rounded-2xl text-xs font-bold text-[#1E272E] focus:bg-white focus:outline-hidden focus:border-[#E2B657] transition-colors"
                   >
                     {OWNERSHIP_OPTIONS.map((opt) => (
                       <option key={opt} value={opt}>
@@ -561,7 +561,7 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                     id="game-select-condition"
                     value={condition}
                     onChange={(e) => setCondition(e.target.value as GameCondition)}
-                    className="w-full px-3 py-2 bg-[#F1F3F5] border border-[#898B8D] rounded-2xl text-xs font-medium text-[#1E272E] focus:bg-white focus:outline-hidden focus:border-[#4834D4] transition-colors"
+                    className="w-full px-3 py-2 bg-[#F1F3F5] border border-[#898B8D] rounded-2xl text-xs font-medium text-[#1E272E] focus:bg-white focus:outline-hidden focus:border-[#E2B657] transition-colors"
                   >
                     {CONDITION_OPTIONS.map((opt) => (
                       <option key={opt} value={opt}>
@@ -580,13 +580,13 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                       htmlFor="game-input-purchase-date"
                       className="text-xs font-bold text-[#1E272E] flex items-center gap-1"
                     >
-                      <Calendar className="w-3.5 h-3.5 text-[#4834D4]" />
+                      <Calendar className="w-3.5 h-3.5 text-[#E2B657]" />
                       <span>구매 일시 (구매일자)</span>
                     </label>
                     <button
                       type="button"
                       onClick={() => setPurchaseDate(formatDate())}
-                      className="text-[10px] text-[#4834D4] hover:underline font-bold"
+                      className="text-[10px] text-[#E2B657] hover:underline font-bold"
                     >
                       오늘
                     </button>
@@ -597,7 +597,7 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                     placeholder="YYYY.MM.DD"
                     value={purchaseDate}
                     onChange={(e) => setPurchaseDate(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-[#898B8D] rounded-2xl text-xs font-bold text-[#1E272E] focus:outline-hidden focus:border-[#4834D4] transition-colors"
+                    className="w-full px-3 py-2 bg-white border border-[#898B8D] rounded-2xl text-xs font-bold text-[#1E272E] focus:outline-hidden focus:border-[#E2B657] transition-colors"
                   />
                   {/* Quick date presets */}
                   <div className="flex items-center gap-1 mt-1.5 overflow-x-auto pb-0.5">
@@ -645,7 +645,7 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                     placeholder="예: 거실 수납장 1열, 서재 책장"
                     value={storageLocation}
                     onChange={(e) => setStorageLocation(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-[#898B8D] rounded-2xl text-xs text-[#1E272E] focus:outline-hidden focus:border-[#4834D4] transition-colors"
+                    className="w-full px-3 py-2 bg-white border border-[#898B8D] rounded-2xl text-xs text-[#1E272E] focus:outline-hidden focus:border-[#E2B657] transition-colors"
                   />
                   <p className="text-[10px] text-[#636E72] mt-1.5">어디에 보관되어 있는지 메모해두세요</p>
                 </div>
@@ -668,7 +668,7 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                         onClick={() => toggleGenre(g)}
                         className={`px-3 py-1 rounded-full text-[11px] font-bold transition-colors ${
                           isSelected
-                            ? 'bg-[#4834D4] text-white shadow-xs'
+                            ? 'bg-[#E2B657] text-white shadow-xs'
                             : 'bg-white text-[#636E72] hover:bg-[#E9ECEF] border border-[#898B8D]'
                         }`}
                       >
@@ -692,7 +692,7 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                     max="30"
                     value={minPlayers}
                     onChange={(e) => setMinPlayers(Number(e.target.value))}
-                    className="w-full px-2.5 py-2 bg-[#F1F3F5] border border-[#898B8D] rounded-2xl text-xs font-bold text-center focus:bg-white focus:outline-hidden focus:border-[#4834D4]"
+                    className="w-full px-2.5 py-2 bg-[#F1F3F5] border border-[#898B8D] rounded-2xl text-xs font-bold text-center focus:bg-white focus:outline-hidden focus:border-[#E2B657]"
                   />
                 </div>
                 <div>
@@ -706,7 +706,7 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                     max="30"
                     value={maxPlayers}
                     onChange={(e) => setMaxPlayers(Number(e.target.value))}
-                    className="w-full px-2.5 py-2 bg-[#F1F3F5] border border-[#898B8D] rounded-2xl text-xs font-bold text-center focus:bg-white focus:outline-hidden focus:border-[#4834D4]"
+                    className="w-full px-2.5 py-2 bg-[#F1F3F5] border border-[#898B8D] rounded-2xl text-xs font-bold text-center focus:bg-white focus:outline-hidden focus:border-[#E2B657]"
                   />
                 </div>
                 <div>
@@ -720,7 +720,7 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                     min="5"
                     value={playTime}
                     onChange={(e) => setPlayTime(Number(e.target.value))}
-                    className="w-full px-2.5 py-2 bg-[#F1F3F5] border border-[#898B8D] rounded-2xl text-xs font-bold text-center focus:bg-white focus:outline-hidden focus:border-[#4834D4]"
+                    className="w-full px-2.5 py-2 bg-[#F1F3F5] border border-[#898B8D] rounded-2xl text-xs font-bold text-center focus:bg-white focus:outline-hidden focus:border-[#E2B657]"
                   />
                 </div>
               </div>
@@ -732,7 +732,7 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                 type="button"
                 aria-expanded={showAdvanced}
                 onClick={() => setShowAdvanced(!showAdvanced)}
-                className="w-full flex items-center justify-between py-2 text-xs font-bold text-[#1E272E] hover:text-[#4834D4] transition-colors"
+                className="w-full flex items-center justify-between py-2 text-xs font-bold text-[#1E272E] hover:text-[#E2B657] transition-colors"
               >
                 <span>상세 정보 & 구매 가격 입력 (선택)</span>
                 {showAdvanced ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -778,7 +778,7 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                   {/* Price info (manual entry disclaimer) */}
                   <div className="p-4 bg-white rounded-2xl border border-[#898B8D] space-y-2 shadow-sm">
                     <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#1E272E]">
-                      <HelpCircle className="w-3.5 h-3.5 text-[#4834D4]" />
+                      <HelpCircle className="w-3.5 h-3.5 text-[#E2B657]" />
                       <span>가격 데이터 정직성 안내</span>
                     </div>
                     <p className="text-[10px] text-[#636E72] leading-relaxed">
@@ -890,7 +890,7 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
               type="button"
               disabled={isSubmitting}
               onClick={handleSubmit}
-              className="inline-flex items-center gap-1.5 px-6 py-3 bg-[#4834D4] hover:bg-[#3c2ab9] active:bg-[#3c2ab9] text-white text-xs font-bold rounded-full transition-colors disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-6 py-3 bg-[#E2B657] hover:bg-[#C9A24A] active:bg-[#C9A24A] text-white text-xs font-bold rounded-full transition-colors disabled:opacity-50"
             >
               <Save className="w-4 h-4" />
               <span>{isSubmitting ? '저장 중...' : initialGame ? '수정 완료' : '내 게임에 등록'}</span>

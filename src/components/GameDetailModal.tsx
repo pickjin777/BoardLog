@@ -127,7 +127,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
               <button
                 type="button"
                 onClick={() => onEdit(game)}
-                className="w-8 h-8 rounded-full bg-black/40 text-white hover:bg-[#4834D4] flex items-center justify-center transition-colors"
+                className="w-8 h-8 rounded-full bg-black/40 text-white hover:bg-[#E2B657] flex items-center justify-center transition-colors"
                 aria-label="수정하기"
                 title="수정하기"
               >
@@ -189,7 +189,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
                     : `${game.minPlayers}~${game.maxPlayers}인`}
                 </p>
                 {game.bestPlayers && (
-                  <span className="text-[9px] text-[#4834D4] font-bold">(추천 {game.bestPlayers})</span>
+                  <span className="text-[9px] text-[#E2B657] font-bold">(추천 {game.bestPlayers})</span>
                 )}
               </div>
 
@@ -204,7 +204,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
 
               <div>
                 <div className="flex items-center justify-center gap-1 text-[#636E72] mb-0.5">
-                  <Flame className="w-3.5 h-3.5 text-[#4834D4]" />
+                  <Flame className="w-3.5 h-3.5 text-[#E2B657]" />
                   <span className="text-[10px] font-bold">난이도</span>
                 </div>
                 <p className="text-xs font-black text-[#1E272E]">{game.weight.toFixed(1)} / 5.0</p>
@@ -279,7 +279,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
             {/* Play Count Banner */}
             <div className="p-4 bg-white rounded-2xl border border-[#E9ECEF] shadow-sm flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-xl bg-[#4834D4] text-white flex items-center justify-center">
+                <div className="w-9 h-9 rounded-xl bg-[#E2B657] text-white flex items-center justify-center">
                   <CheckSquare className="w-4.5 h-4.5" />
                 </div>
                 <div>
@@ -292,7 +292,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
                 id="game-detail-record-cta"
                 type="button"
                 onClick={() => onStartPlay(game)}
-                className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-[#4834D4] hover:bg-[#3c2ab9] text-white rounded-full text-xs font-bold transition-colors"
+                className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-[#E2B657] hover:bg-[#C9A24A] text-white rounded-full text-xs font-bold transition-colors"
               >
                 <PlusCircle className="w-3.5 h-3.5" />
                 <span>기록 추가</span>
@@ -323,7 +323,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
                               : ''}
                           </span>
                         </span>
-                        <span className="shrink-0 text-[10px] font-bold text-[#4834D4]">{play.myResult}</span>
+                        <span className="shrink-0 text-[10px] font-bold text-[#E2B657]">{play.myResult}</span>
                       </button>
                     </li>
                   ))}
@@ -356,14 +356,14 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
               <div className="p-3 bg-[#F8F9FA] rounded-2xl border border-[#E9ECEF]">
                 <span className="text-[10px] text-[#636E72] block mb-0.5">구매일시</span>
                 <span className="font-bold text-[#1E272E] flex items-center gap-1 text-[11px]">
-                  <Calendar className="w-3 h-3 text-[#4834D4] shrink-0" />
+                  <Calendar className="w-3 h-3 text-[#E2B657] shrink-0" />
                   <span className="truncate">{game.purchaseDate || '미지정'}</span>
                 </span>
               </div>
               <div className="p-3 bg-[#F8F9FA] rounded-2xl border border-[#E9ECEF]">
                 <span className="text-[10px] text-[#636E72] block mb-0.5">보관 장소</span>
                 <span className="font-bold text-[#1E272E] flex items-center gap-1 text-[11px]">
-                  <MapPin className="w-3 h-3 text-[#4834D4] shrink-0" />
+                  <MapPin className="w-3 h-3 text-[#E2B657] shrink-0" />
                   <span className="truncate">{game.storageLocation || '미지정'}</span>
                 </span>
               </div>
@@ -380,7 +380,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
               <div className="p-4 bg-white rounded-2xl border border-[#E9ECEF] shadow-sm space-y-2">
                 <div className="flex items-center justify-between text-xs font-bold text-[#1E272E]">
                   <span>가격 정보</span>
-                  <span className="text-[10px] font-bold text-[#4834D4] bg-[#4834D4]/10 px-2 py-0.5 rounded-full flex items-center gap-0.5">
+                  <span className="text-[10px] font-bold text-[#E2B657] bg-[#E2B657]/10 px-2 py-0.5 rounded-full flex items-center gap-0.5">
                     <HelpCircle className="w-2.5 h-2.5" />
                     수동 입력 ({game.priceMeta?.verifiedDate || game.purchaseDate})
                   </span>
@@ -437,7 +437,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
               id="game-detail-start-play-btn"
               type="button"
               onClick={() => onStartPlay(game)}
-              className="flex-2 py-3 bg-[#4834D4] hover:bg-[#3c2ab9] active:bg-[#3c2ab9] text-white text-xs font-bold rounded-full transition-colors text-center flex items-center justify-center gap-1.5"
+              className="flex-2 py-3 bg-[#E2B657] hover:bg-[#C9A24A] active:bg-[#C9A24A] text-white text-xs font-bold rounded-full transition-colors text-center flex items-center justify-center gap-1.5"
             >
               <PlusCircle className="w-4 h-4" />
               <span>플레이 기록</span>

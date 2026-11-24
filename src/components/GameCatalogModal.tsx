@@ -282,7 +282,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                 type="button"
                 disabled={isGeneratingPdf}
                 onClick={handleSavePdf}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-[#4834D4] hover:bg-[#3c2ab9] text-white text-xs font-bold rounded-full transition-colors disabled:opacity-60"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-[#E2B657] hover:bg-[#C9A24A] text-white text-xs font-bold rounded-full transition-colors disabled:opacity-60"
               >
                 {isGeneratingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                 <span>{isGeneratingPdf ? 'PDF 생성 중...' : 'PDF로 저장'}</span>
@@ -309,7 +309,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                   type="button"
                   onClick={() => setViewMode('table')}
                   className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-xl font-bold transition-colors ${
-                    viewMode === 'table' ? 'bg-[#4834D4] text-white shadow-xs' : 'text-[#636E72] hover:text-[#1E272E]'
+                    viewMode === 'table' ? 'bg-[#E2B657] text-white shadow-xs' : 'text-[#636E72] hover:text-[#1E272E]'
                   }`}
                 >
                   <List className="w-3.5 h-3.5" />
@@ -320,7 +320,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                   aria-pressed={viewMode === 'cards'}
                   onClick={() => setViewMode('cards')}
                   className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-xl font-bold transition-colors ${
-                    viewMode === 'cards' ? 'bg-[#4834D4] text-white shadow-xs' : 'text-[#636E72] hover:text-[#1E272E]'
+                    viewMode === 'cards' ? 'bg-[#E2B657] text-white shadow-xs' : 'text-[#636E72] hover:text-[#1E272E]'
                   }`}
                 >
                   <LayoutGrid className="w-3.5 h-3.5" />
@@ -331,7 +331,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                   aria-pressed={viewMode === 'index'}
                   onClick={() => setViewMode('index')}
                   className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-xl font-bold transition-colors ${
-                    viewMode === 'index' ? 'bg-[#4834D4] text-white shadow-xs' : 'text-[#636E72] hover:text-[#1E272E]'
+                    viewMode === 'index' ? 'bg-[#E2B657] text-white shadow-xs' : 'text-[#636E72] hover:text-[#1E272E]'
                   }`}
                 >
                   <BookOpen className="w-3.5 h-3.5" />
@@ -355,7 +355,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                     placeholder="검색"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-8 pr-3 py-1.5 bg-white border border-[#E9ECEF] rounded-full text-xs text-[#1E272E] focus:outline-hidden focus:border-[#4834D4]"
+                    className="w-full pl-8 pr-3 py-1.5 bg-white border border-[#E9ECEF] rounded-full text-xs text-[#1E272E] focus:outline-hidden focus:border-[#E2B657]"
                   />
                 </div>
 
@@ -366,7 +366,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                   id="catalog-status-filter"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as GameOwnershipStatus | '전체')}
-                  className="px-2.5 py-1.5 bg-white border border-[#E9ECEF] rounded-full text-xs font-bold text-[#1E272E] focus:outline-hidden focus:border-[#4834D4]"
+                  className="px-2.5 py-1.5 bg-white border border-[#E9ECEF] rounded-full text-xs font-bold text-[#1E272E] focus:outline-hidden focus:border-[#E2B657]"
                 >
                   <option value="전체">전체 상태</option>
                   <option value="보유중">보유중만</option>
@@ -414,7 +414,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                     type="checkbox"
                     checked={showImages}
                     onChange={(e) => setShowImages(e.target.checked)}
-                    className="rounded text-[#4834D4]"
+                    className="rounded text-[#E2B657]"
                   />
                   <span>사진 표시</span>
                 </label>
@@ -423,7 +423,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                     type="checkbox"
                     checked={showLocations}
                     onChange={(e) => setShowLocations(e.target.checked)}
-                    className="rounded text-[#4834D4]"
+                    className="rounded text-[#E2B657]"
                   />
                   <span>보관위치 강조</span>
                 </label>
@@ -432,7 +432,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                     type="checkbox"
                     checked={showStatsCover}
                     onChange={(e) => setShowStatsCover(e.target.checked)}
-                    className="rounded text-[#4834D4]"
+                    className="rounded text-[#E2B657]"
                   />
                   <span>표지/통계 포함</span>
                 </label>
@@ -485,7 +485,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                   </div>
                   <div className="p-3 bg-white rounded-2xl border border-[#E9ECEF] text-center">
                     <span className="text-[10px] text-[#636E72] font-bold block">총 누적 플레이</span>
-                    <span className="text-xl font-black text-[#4834D4]">{stats.totalPlays}</span>
+                    <span className="text-xl font-black text-[#E2B657]">{stats.totalPlays}</span>
                     <span className="text-[10px] text-[#636E72] font-semibold"> 회</span>
                   </div>
                   <div className="p-3 bg-white rounded-2xl border border-[#E9ECEF] text-center">
@@ -591,7 +591,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                           {showLocations && (
                             <td className="p-2.5">
                               {game.storageLocation ? (
-                                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#4834D4] bg-[#4834D4]/10 px-2 py-0.5 rounded-md">
+                                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#E2B657] bg-[#E2B657]/10 px-2 py-0.5 rounded-md">
                                   <MapPin className="w-3 h-3 shrink-0" />
                                   <span>{game.storageLocation}</span>
                                 </span>
@@ -659,7 +659,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                           {game.ownershipStatus}
                         </span>
                         {game.storageLocation && showLocations && (
-                          <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-[#4834D4] bg-[#4834D4]/10 px-2 py-0.5 rounded-full">
+                          <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-[#E2B657] bg-[#E2B657]/10 px-2 py-0.5 rounded-full">
                             <MapPin className="w-2.5 h-2.5" />
                             <span>{game.storageLocation}</span>
                           </span>
@@ -687,7 +687,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                         </div>
                         <div>
                           <span className="text-[#636E72] block text-[9px]">난이도</span>
-                          <span className="font-bold text-[#4834D4]">{game.weight.toFixed(1)}</span>
+                          <span className="font-bold text-[#E2B657]">{game.weight.toFixed(1)}</span>
                         </div>
                       </div>
 
@@ -751,13 +751,13 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                                 {game.storageLocation && (
                                   <>
                                     <span>•</span>
-                                    <span className="text-[#4834D4] font-bold">{game.storageLocation}</span>
+                                    <span className="text-[#E2B657] font-bold">{game.storageLocation}</span>
                                   </>
                                 )}
                               </div>
                             </div>
 
-                            <span className="text-[10px] font-black text-[#4834D4] px-2 py-0.5 rounded-md bg-white border border-[#E9ECEF] shrink-0">
+                            <span className="text-[10px] font-black text-[#E2B657] px-2 py-0.5 rounded-md bg-white border border-[#E9ECEF] shrink-0">
                               {game.weight.toFixed(1)}
                             </span>
                           </div>
@@ -781,7 +781,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
           {/* Interactive Modal Bottom Bar (Hidden on Print) */}
           <div className="no-print p-4 border-t border-[#E9ECEF] bg-[#F8F9FA] flex flex-col sm:flex-row items-center justify-between gap-3">
             <div className="flex items-center gap-2 text-xs text-[#636E72]">
-              <Info className="w-4 h-4 text-[#4834D4] shrink-0" />
+              <Info className="w-4 h-4 text-[#E2B657] shrink-0" />
               <span>
                 <strong>'PDF로 저장'</strong>을 누르면 즉시 도록이 PDF 파일로 저장되며, <strong>'인쇄'</strong> 버튼으로
                 실물 출력이 가능합니다.
@@ -809,7 +809,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                 type="button"
                 disabled={isGeneratingPdf}
                 onClick={handleSavePdf}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#4834D4] hover:bg-[#3c2ab9] text-white text-xs font-bold rounded-full transition-colors disabled:opacity-60"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#E2B657] hover:bg-[#C9A24A] text-white text-xs font-bold rounded-full transition-colors disabled:opacity-60"
               >
                 {isGeneratingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                 <span>{isGeneratingPdf ? 'PDF 생성 중...' : 'PDF로 저장'}</span>

@@ -15,7 +15,7 @@ same PR.
 | `npm run typecheck` | now | `tsc --noEmit` with `strict` |
 | `npm run lint` | now | `npm run typecheck` + `biome check --error-on-warnings` (code files only; Markdown and CSS are not formatted) |
 | `npm run build:ga` | now | Build into `dist-ga/` with a fake GA4 id, used by the analytics E2E spec |
-| `npm run check:secrets` | now | Scan `dist/` and `android/` for server secrets, and check the Play id, sample ad ids, `#4834D4` splash, and that the shipping package strips `AD_ID` and `BILLING` (D-037, D-046, D-048) |
+| `npm run check:secrets` | now | Scan `dist/` and `android/` for server secrets, and check the Play id, sample ad ids, `#0E1628` splash, and that the shipping package strips `AD_ID` and `BILLING` (D-037, D-046, D-048) |
 | `npm run android:debug` | local | Bundles `dist` and builds a debug APK. No release key |
 | `npm run format` | now | `biome format --write` |
 | `npm test` | now | Vitest unit tests with coverage; 100% branch coverage required for `sharedPlay.ts`, `backupImport.ts`, `analyticsEvents.ts` (D-030). `storage.ts` runs on `fake-indexeddb` |

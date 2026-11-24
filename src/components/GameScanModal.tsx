@@ -229,7 +229,7 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
           >
             <div className="flex items-start justify-between p-4 sm:p-6 border-b border-[#E9ECEF] shrink-0">
               <div className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-2xl bg-[#4834D4]/10 text-[#4834D4] flex items-center justify-center">
+                <div className="w-9 h-9 rounded-2xl bg-[#E2B657]/10 text-[#E2B657] flex items-center justify-center">
                   <Camera className="w-4.5 h-4.5" />
                 </div>
                 <div>
@@ -315,7 +315,7 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
                   id="scan-pick-photos-btn"
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-full py-10 border-2 border-dashed border-[#E9ECEF] hover:border-[#4834D4] rounded-2xl flex flex-col items-center gap-2 transition-colors"
+                  className="w-full py-10 border-2 border-dashed border-[#E9ECEF] hover:border-[#E2B657] rounded-2xl flex flex-col items-center gap-2 transition-colors"
                 >
                   <Camera className="w-7 h-7 text-[#636E72]" />
                   <span className="text-xs font-bold text-[#1E272E]">사진 선택 (최대 {MAX_SCAN_IMAGES}장)</span>
@@ -338,7 +338,7 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
                     id="scan-manual-entry-btn"
                     type="button"
                     onClick={onManualEntry}
-                    className="mt-3 inline-flex rounded-full bg-[#4834D4] px-4 py-2.5 text-[11px] font-bold text-white"
+                    className="mt-3 inline-flex rounded-full bg-[#E2B657] px-4 py-2.5 text-[11px] font-bold text-white"
                   >
                     직접 입력으로 등록
                   </button>
@@ -347,7 +347,7 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
 
               {isScanning && (
                 <div className="py-12 flex flex-col items-center gap-3">
-                  <Loader2 className="w-7 h-7 text-[#4834D4] animate-spin" />
+                  <Loader2 className="w-7 h-7 text-[#E2B657] animate-spin" />
                   <span className="text-xs font-bold text-[#1E272E]">사진에서 게임 이름을 읽는 중…</span>
                   <span className="text-[11px] text-[#636E72]">10초 정도 걸릴 수 있습니다</span>
                 </div>
@@ -370,7 +370,7 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
                       id="scan-rescan-btn"
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="text-[11px] font-bold text-[#4834D4] hover:underline"
+                      className="text-[11px] font-bold text-[#E2B657] hover:underline"
                     >
                       다시 찍기
                     </button>
@@ -396,7 +396,7 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
                               aria-label={isOff ? '등록 포함' : '등록 제외'}
                               onClick={() => setExcluded((prev) => ({ ...prev, [candidate.id]: !prev[candidate.id] }))}
                               className={`w-5 h-5 mt-0.5 rounded-lg flex items-center justify-center shrink-0 border transition-colors ${
-                                isOff ? 'border-[#CED4DA] bg-white' : 'border-[#4834D4] bg-[#4834D4] text-white'
+                                isOff ? 'border-[#CED4DA] bg-white' : 'border-[#E2B657] bg-[#E2B657] text-white'
                               }`}
                             >
                               {!isOff && <Check className="w-3 h-3 stroke-[3]" />}
@@ -408,7 +408,7 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
                                 type="text"
                                 value={title}
                                 onChange={(e) => setTitles((prev) => ({ ...prev, [candidate.id]: e.target.value }))}
-                                className="w-full px-2.5 py-1.5 bg-[#F8F9FA] border border-[#E9ECEF] rounded-xl text-xs font-bold text-[#1E272E] focus:outline-hidden focus:border-[#4834D4] transition-colors"
+                                className="w-full px-2.5 py-1.5 bg-[#F8F9FA] border border-[#E9ECEF] rounded-xl text-xs font-bold text-[#1E272E] focus:outline-hidden focus:border-[#E2B657] transition-colors"
                               />
 
                               <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
@@ -463,7 +463,7 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
                   type="button"
                   onClick={handleRegister}
                   disabled={isSaving || selected.length === 0}
-                  className="flex-1 py-3 bg-[#4834D4] text-white rounded-full text-xs font-bold transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-2"
+                  className="flex-1 py-3 bg-[#E2B657] text-white rounded-full text-xs font-bold transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-2"
                 >
                   {isSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   <span>{isSaving ? '등록 중…' : `${selected.length}개 등록하기`}</span>

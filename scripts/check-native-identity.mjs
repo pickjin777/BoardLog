@@ -10,7 +10,15 @@ function listAdIds(text) {
 }
 
 const GOOGLE_SAMPLE_PUBLISHER = 'ca-app-pub-3940256099942544';
-const BRAND = [0x48, 0x34, 0xd4];
+const BRAND = [0x0e, 0x16, 0x28];
+/** Old shell hues. Built at runtime so the source does not keep those hex strings. */
+const RETIRED_RGB = [
+  [0x48, 0x34, 0xd4],
+  [0x3c, 0x2a, 0xb9],
+  [0x32, 0x22, 0x9e],
+  [0xe4, 0xdc, 0xff],
+  [0x56, 0x41, 0xde]
+].map((rgb) => rgb.map((channel) => channel.toString(16).padStart(2, '0')).join(''));
 const FORBIDDEN_CALLS = [
   '.purchaseProduct(',
   '.showBanner(',
@@ -29,7 +37,7 @@ function paeth(left, up, upLeft) {
   return upLeft;
 }
 
-/** Four corner pixels of an 8-bit RGB or RGBA PNG. Splash and launcher art must be opaque brand purple. */
+/** Four corner pixels of an 8-bit RGB or RGBA PNG. Splash and launcher art must be opaque navy. */
 function pngCorners(path) {
   const data = readFileSync(path);
   if (data.subarray(0, 8).toString('hex') !== '89504e470d0a1a0a') {
@@ -90,7 +98,7 @@ function pngCorners(path) {
   return [pixel(0, 0), pixel(width - 1, 0), pixel(0, height - 1), pixel(width - 1, height - 1)];
 }
 
-function isBrandPurple(pixel) {
+function isBrandNavy(pixel) {
   return pixel[0] === BRAND[0] && pixel[1] === BRAND[1] && pixel[2] === BRAND[2] && pixel[3] === 255;
 }
 
@@ -157,7 +165,8 @@ if (!/appId:\s*APP_ID/.test(config) || !/appName:\s*APP_NAME/.test(config)) {
 }
 if (!/webDir:\s*'dist'/.test(config)) problems.push("webDir must be 'dist'");
 if (/^\s*url\s*:/m.test(config)) problems.push('server url must not be set; the app bundles dist');
-if (!/backgroundColor:\s*'#4834D4'/.test(config)) problems.push('splash backgroundColor must be #4834D4');
+const splashBlock = config.slice(config.indexOf('SplashScreen'));
+if (!/backgroundColor:\s*'#0E1628'/.test(splashBlock)) problems.push('splash backgroundColor must be #0E1628');
 if (!/insetsHandling:\s*'css'/.test(config)) problems.push("SystemBars insetsHandling must be 'css'");
 if (!/initialViewportFitValueHint:\s*'cover'/.test(config)) {
   problems.push("SystemBars initialViewportFitValueHint must be 'cover'");
@@ -293,7 +302,7 @@ for (const path of shellPngs) {
   }
   try {
     const corners = pngCorners(path);
-    if (corners.some((pixel) => !isBrandPurple(pixel))) problems.push(`${path} corners are not #4834D4`);
+    if (corners.some((pixel) => !isBrandNavy(pixel))) problems.push(`${path} corners are not #0E1628`);
   } catch (err) {
     problems.push(`${path}: ${err instanceof Error ? err.message : 'png read failed'}`);
   }
@@ -302,13 +311,15 @@ for (const path of shellPngs) {
 const colorsXml = existsSync('android/app/src/main/res/values/colors.xml')
   ? read('android/app/src/main/res/values/colors.xml')
   : '';
-if (!/name="splashBackground">#4834D4</i.test(colorsXml)) problems.push('splashBackground must be #4834D4');
+if (!/name="splashBackground">#0E1628</i.test(colorsXml)) problems.push('splashBackground must be #0E1628');
 
 const indexHtml = read('index.html');
 if (!indexHtml.includes('viewport-fit=cover')) problems.push('index.html must set viewport-fit=cover');
-if (!/name="theme-color" content="#4834D4"/i.test(indexHtml)) problems.push('theme-color must be #4834D4');
-if (!/"theme_color": "#4834D4"/.test(read('public/manifest.webmanifest'))) {
-  problems.push('manifest theme_color must be #4834D4');
+if (!/name="theme-color" content="#0E1628"/i.test(indexHtml)) problems.push('theme-color must be #0E1628');
+const manifestText = read('public/manifest.webmanifest');
+if (!/"theme_color": "#0E1628"/.test(manifestText)) problems.push('manifest theme_color must be #0E1628');
+if (!/"background_color": "#0E1628"/.test(manifestText)) {
+  problems.push('manifest background_color must be #0E1628');
 }
 const shellCss = read('src/index.css');
 if (!shellCss.includes('--safe-area-inset-top') || !shellCss.includes('env(safe-area-inset-top')) {
@@ -340,6 +351,37 @@ function walkCalls(dir, found) {
 const purchaseCalls = [];
 walkCalls('src', purchaseCalls);
 problems.push(...purchaseCalls);
+
+function walkRetiredColors(dir, found) {
+  if (!existsSync(dir)) return;
+  for (const entry of readdirSync(dir)) {
+    if (SKIP_DIRS.has(entry)) continue;
+    const path = join(dir, entry);
+    if (statSync(path).isDirectory()) {
+      walkRetiredColors(path, found);
+      continue;
+    }
+    if (!/\.(ts|tsx|js|mjs|cjs|css|html|xml|json|webmanifest|md|py|gradle|properties|txt)$/.test(path)) continue;
+    const lower = read(path).toLowerCase();
+    if (RETIRED_RGB.some((hex) => lower.includes(hex))) found.push(`${path}: retired shell color`);
+  }
+}
+
+const retiredColors = [];
+for (const dir of ['.', 'src', 'android', 'scripts', 'e2e', 'docs', 'public']) {
+  if (dir === '.') {
+    for (const file of ['index.html', 'capacitor.config.ts', 'AGENTS.md']) walkFileColors(file, retiredColors);
+    continue;
+  }
+  walkRetiredColors(dir, retiredColors);
+}
+problems.push(...retiredColors);
+
+function walkFileColors(path, found) {
+  if (!existsSync(path)) return;
+  const lower = read(path).toLowerCase();
+  if (RETIRED_RGB.some((hex) => lower.includes(hex))) found.push(`${path}: retired shell color`);
+}
 
 function walkFile(path, found) {
   if (!existsSync(path)) return;

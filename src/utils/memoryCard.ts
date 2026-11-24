@@ -104,11 +104,24 @@ export function playsOnDate<T extends { date: string; startTime?: string }>(play
     .sort((a, b) => startKey(b).localeCompare(startKey(a)));
 }
 
-/** Latest play that day that actually has an attached photo. Game art is not a calendar thumbnail. */
+/** Latest play that day that actually has an attached photo. A temporary cover is not a photo. */
 export function dayPhotoUrl(plays: readonly MemorySource[], dateKey: string): string | null {
   for (const play of playsOnDate(plays, dateKey)) {
     const photoUrl = firstPhotoUrl(play.photos);
     if (photoUrl) return photoUrl;
+  }
+  return null;
+}
+
+/**
+ * Name for the temporary cover on a day that has plays and no attached photo.
+ * Photos stay on the day. The cover is the same chest used on the list and the detail.
+ */
+export function dayCoverTitle(plays: readonly MemorySource[], dateKey: string): string | null {
+  if (dayPhotoUrl(plays, dateKey)) return null;
+  for (const play of playsOnDate(plays, dateKey)) {
+    const title = play.gameTitle.trim();
+    if (title) return title;
   }
   return null;
 }

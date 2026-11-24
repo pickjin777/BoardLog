@@ -68,7 +68,7 @@ export const PrivacyNoticeModal: React.FC<PrivacyNoticeModalProps> = ({ isOpen, 
       <div className="w-full max-w-sm max-h-[85vh] overflow-y-auto bg-white rounded-2xl p-6 shadow-2xl border border-[#E9ECEF]">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-2xl bg-[#4834D4]/10 text-[#4834D4] flex items-center justify-center">
+            <div className="w-10 h-10 rounded-2xl bg-[#E2B657]/10 text-[#E2B657] flex items-center justify-center">
               <ShieldCheck className="w-5 h-5" />
             </div>
             <h3 id="privacy-notice-title" className="text-base font-black text-[#1E272E]">

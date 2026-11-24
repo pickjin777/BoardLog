@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { PlayRecord } from '../types';
+import { CoverPlaceholder } from './CoverPlaceholder';
 import {
   anchorMonth,
   countPlaysByDate,
   dayAriaLabel,
+  dayCoverTitle,
   dayPhotoUrl,
   monthGrid,
   parsePlayDate,
@@ -108,6 +110,8 @@ export function PlayCalendar({ plays, selectedDate, onSelectDate }: PlayCalendar
           const selected = selectedDate === cell.key;
           const isToday = cell.year === today.year && cell.month === today.month && cell.day === today.day;
           const photo = cell.playCount > 0 ? dayPhotoUrl(plays, cell.key) : null;
+          const coverTitle = photo ? null : dayCoverTitle(plays, cell.key);
+          const filled = Boolean(photo || coverTitle);
           return (
             <button
               key={cell.key}
@@ -116,14 +120,15 @@ export function PlayCalendar({ plays, selectedDate, onSelectDate }: PlayCalendar
               aria-pressed={selected}
               aria-current={isToday ? 'date' : undefined}
               onClick={() => onSelectDate(cell.key)}
-              className={dayClass(cell, selected, isToday, Boolean(photo))}
+              className={dayClass(cell, selected, isToday, filled)}
             >
               <DayThumb url={photo} />
-              {cell.playCount > 0 && !photo && <span className="calendar-day-mark" aria-hidden="true" />}
+              {coverTitle && <CoverPlaceholder title={coverTitle} className="absolute inset-0" />}
+              {cell.playCount > 0 && !photo && !coverTitle && <span className="calendar-day-mark" aria-hidden="true" />}
               <span
                 aria-hidden="true"
                 className={
-                  photo
+                  filled
                     ? 'absolute inset-x-0 bottom-0 bg-[#F6EBD4] py-0.5 text-center text-[11px] font-medium text-[#1C160E]'
                     : 'relative'
                 }

@@ -156,12 +156,12 @@ export const MyPageView: React.FC<MyPageViewProps> = ({ onOpenAuth, onOpenCatalo
                     aria-label="닉네임"
                     value={nickInput}
                     onChange={(e) => setNickInput(e.target.value)}
-                    className="min-w-0 px-2.5 py-1 bg-[#F1F3F5] border border-[#E9ECEF] rounded-xl text-xs font-bold text-[#1E272E] focus:outline-hidden focus:border-[#4834D4]"
+                    className="min-w-0 px-2.5 py-1 bg-[#F1F3F5] border border-[#E9ECEF] rounded-xl text-xs font-bold text-[#1E272E] focus:outline-hidden focus:border-[#E2B657]"
                   />
                   <button
                     type="button"
                     onClick={handleSaveNickname}
-                    className="px-3 py-1 bg-[#4834D4] text-white rounded-xl text-xs font-bold"
+                    className="px-3 py-1 bg-[#E2B657] text-white rounded-xl text-xs font-bold"
                   >
                     저장
                   </button>
@@ -175,7 +175,7 @@ export const MyPageView: React.FC<MyPageViewProps> = ({ onOpenAuth, onOpenCatalo
                       setNickInput(user?.nickname || '');
                       setIsEditingNick(true);
                     }}
-                    className="text-[10px] text-[#636E72] hover:text-[#4834D4] underline"
+                    className="text-[10px] text-[#636E72] hover:text-[#E2B657] underline"
                   >
                     수정
                   </button>
@@ -210,7 +210,7 @@ export const MyPageView: React.FC<MyPageViewProps> = ({ onOpenAuth, onOpenCatalo
       {/* External Data Honesty & Database Status Card */}
       <div className="p-4 bg-white rounded-2xl border border-[#E9ECEF] shadow-sm space-y-2 text-xs">
         <div className="flex items-center gap-2 font-bold text-[#1E272E]">
-          <Database className="w-4 h-4 text-[#4834D4]" />
+          <Database className="w-4 h-4 text-[#E2B657]" />
           <span>저장</span>
         </div>
         <p className="text-[11px] text-[#636E72] leading-relaxed">
@@ -294,7 +294,7 @@ export const MyPageView: React.FC<MyPageViewProps> = ({ onOpenAuth, onOpenCatalo
       {/* Backup / Export Section */}
       <div className="p-4 bg-white rounded-2xl border border-[#E9ECEF] shadow-sm space-y-3">
         <h3 className="text-xs font-bold text-[#1E272E] flex items-center gap-1.5">
-          <Download className="w-4 h-4 text-[#4834D4]" />
+          <Download className="w-4 h-4 text-[#E2B657]" />
           <span>백업과 도록</span>
         </h3>
         <p className="text-[11px] text-[#636E72] leading-relaxed">
@@ -308,7 +308,7 @@ export const MyPageView: React.FC<MyPageViewProps> = ({ onOpenAuth, onOpenCatalo
               id="mypage-open-catalog-btn"
               type="button"
               onClick={onOpenCatalog}
-              className="w-full py-2.5 bg-[#4834D4] hover:bg-[#3c2ab9] text-white rounded-2xl text-xs font-bold flex items-center justify-center gap-2 transition-colors"
+              className="w-full py-2.5 bg-[#E2B657] hover:bg-[#C9A24A] text-white rounded-2xl text-xs font-bold flex items-center justify-center gap-2 transition-colors"
             >
               <Download className="w-4 h-4" />
               <span>PDF 도록</span>
@@ -322,7 +322,7 @@ export const MyPageView: React.FC<MyPageViewProps> = ({ onOpenAuth, onOpenCatalo
             onClick={handleExportData}
             className="w-full py-2.5 bg-[#F1F3F5] hover:bg-[#E9ECEF] text-[#2D3436] rounded-2xl text-xs font-bold flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
           >
-            <Download className="w-4 h-4 text-[#4834D4]" />
+            <Download className="w-4 h-4 text-[#E2B657]" />
             <span>{isExporting ? '파일 생성 중...' : 'JSON 백업'}</span>
           </button>
 
@@ -333,7 +333,7 @@ export const MyPageView: React.FC<MyPageViewProps> = ({ onOpenAuth, onOpenCatalo
             onClick={() => fileInputRef.current?.click()}
             className="w-full py-2.5 bg-[#F1F3F5] hover:bg-[#E9ECEF] text-[#2D3436] rounded-2xl text-xs font-bold flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
           >
-            <Upload className="w-4 h-4 text-[#4834D4]" />
+            <Upload className="w-4 h-4 text-[#E2B657]" />
             <span>{isImporting ? '백업 확인 중...' : '백업 파일로 복원'}</span>
           </button>
           <input

@@ -136,7 +136,7 @@ test('new accounts start empty, sample data is removed per account, the app is i
     'maskable 아이콘 포함',
     manifest.body.icons.some((i) => i.purpose === 'maskable')
   );
-  check('theme-color 메타', (await page.locator('meta[name="theme-color"]').getAttribute('content')) === '#4834D4');
+  check('theme-color 메타', (await page.locator('meta[name="theme-color"]').getAttribute('content')) === '#0E1628');
 
   check('같은 출처 요청 중 4xx/5xx 없음 (favicon 404 해소)', failedRequests.length === 0, failedRequests.join(' | '));
   check('페이지 런타임 에러 없음', pageErrors.length === 0, pageErrors.join(' | '));
