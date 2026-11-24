@@ -9,7 +9,7 @@ test('deleting the account asks first and clears only this device account', asyn
   await page.reload({ waitUntil: 'networkidle' });
 
   await page.locator('#nav-tab-games').click();
-  await visible('삭제 전 게임', page.getByText('지울게임'));
+  await visible('삭제 전 게임', page.getByRole('heading', { name: '지울게임' }));
 
   await page.locator('#nav-tab-mypage').click();
   await page.locator('#mypage-delete-account-btn').click();
@@ -20,7 +20,7 @@ test('deleting the account asks first and clears only this device account', asyn
   await hidden('확인을 닫음', dialog);
 
   await page.locator('#nav-tab-games').click();
-  await visible('취소 후에는 게임이 남음', page.getByText('지울게임'));
+  await visible('취소 후에는 게임이 남음', page.getByRole('heading', { name: '지울게임' }));
 
   await page.locator('#nav-tab-mypage').click();
   await page.locator('#mypage-delete-account-btn').click();

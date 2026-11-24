@@ -33,6 +33,7 @@ import { LocalStorageNotice } from './components/LocalStorageNotice';
 import { LoadingState, EmptyState, ErrorState } from './components/StateViews';
 import { TreasureReveal, type TreasureMoment } from './components/TreasureReveal';
 import { dayHeading } from './utils/memoryCard';
+import { labelsForGameTitle } from './utils/temporaryCover';
 import { cleanMemo, mostPlayed } from './utils/shelf';
 import {
   didLevelUp,
@@ -501,7 +502,7 @@ const MainApp: React.FC = () => {
   };
 
   return (
-    <div className="treasure-shell min-h-screen bg-[#F1F3F5] text-[#2D3436] flex flex-col font-sans selection:bg-[#4834D4]/20 selection:text-[#4834D4] lg:pl-60">
+    <div className="treasure-shell min-h-screen bg-[#F1F3F5] text-[#2D3436] flex flex-col font-sans selection:bg-[#E2B657]/20 selection:text-[#E2B657] lg:pl-60">
       {treasure && !sharingPlay && (
         <TreasureReveal kind={treasure} variant={progress?.chestVariant} onDone={() => setTreasure(null)} />
       )}
@@ -603,7 +604,7 @@ const MainApp: React.FC = () => {
                       className="inline-flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-[#F8F9FA] text-[#1E272E] rounded-2xl text-xs font-bold border border-[#E9ECEF] shadow-sm transition-colors"
                       title="소장 도록 PDF 저장 및 인쇄"
                     >
-                      <Download className="w-3.5 h-3.5 text-[#4834D4]" />
+                      <Download className="w-3.5 h-3.5 text-[#E2B657]" />
                       <span className="hidden sm:inline">PDF 도록 / 인쇄</span>
                       <span className="sm:hidden">PDF</span>
                     </button>
@@ -646,7 +647,7 @@ const MainApp: React.FC = () => {
                     placeholder="게임, 장르, 보관 장소"
                     value={gameSearch}
                     onChange={(e) => setGameSearch(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E9ECEF] rounded-full text-xs text-[#1E272E] focus:outline-hidden focus:ring-2 focus:ring-[#4834D4]/20 focus:border-[#4834D4] shadow-sm transition-colors"
+                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E9ECEF] rounded-full text-xs text-[#1E272E] focus:outline-hidden focus:ring-2 focus:ring-[#E2B657]/20 focus:border-[#E2B657] shadow-sm transition-colors"
                   />
                 </div>
 
@@ -702,16 +703,7 @@ const MainApp: React.FC = () => {
                   gameViewMode === 'grid' ? (
                     <div className="game-shelf grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
                       {filteredGames.map((game) => (
-                        <GameCard
-                          key={game.id}
-                          dense
-                          game={game}
-                          onClick={() => setViewingGame(game)}
-                          onDelete={(e) => {
-                            e.stopPropagation();
-                            setDeletingGame(game);
-                          }}
-                        />
+                        <GameCard key={game.id} dense game={game} onClick={() => setViewingGame(game)} />
                       ))}
                     </div>
                   ) : (
@@ -748,7 +740,7 @@ const MainApp: React.FC = () => {
                         setEditingGame(null);
                         setIsGameFormOpen(true);
                       }}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#4834D4] hover:bg-[#3c2ab9] text-white text-xs font-bold rounded-full transition-colors"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#E2B657] hover:bg-[#C9A24A] text-white text-xs font-bold rounded-full transition-colors"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       <span>'{gameSearch}' 직접 등록하기</span>
@@ -793,6 +785,7 @@ const MainApp: React.FC = () => {
                   >
                     <PlayCalendar
                       plays={plays}
+                      games={games}
                       selectedDate={selectedPlayDate}
                       onSelectDate={(dateKey) =>
                         setSelectedPlayDate((current) => (current === dateKey ? null : dateKey))
@@ -828,7 +821,7 @@ const MainApp: React.FC = () => {
                     placeholder="게임, 참여자, 장소"
                     value={playSearch}
                     onChange={(e) => setPlaySearch(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E9ECEF] rounded-full text-xs text-[#1E272E] focus:outline-hidden focus:ring-2 focus:ring-[#4834D4]/20 focus:border-[#4834D4] shadow-sm transition-colors"
+                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E9ECEF] rounded-full text-xs text-[#1E272E] focus:outline-hidden focus:ring-2 focus:ring-[#E2B657]/20 focus:border-[#E2B657] shadow-sm transition-colors"
                   />
                 </div>
 
@@ -853,7 +846,7 @@ const MainApp: React.FC = () => {
                 {filteredPlays.length > 0 ? (
                   <div id="memory-card-list" className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {filteredPlays.map((play) => (
-                      <PlayCard key={play.id} play={play} onClick={() => setViewingPlay(play)} />
+                      <PlayCard key={play.id} play={play} games={games} onClick={() => setViewingPlay(play)} />
                     ))}
                   </div>
                 ) : plays.length === 0 ? (
@@ -1033,6 +1026,7 @@ const MainApp: React.FC = () => {
       <PlayDetailModal
         isOpen={!!viewingPlay}
         play={viewingPlay}
+        labels={viewingPlay ? labelsForGameTitle(viewingPlay.gameTitle, viewingPlay.gameId, games) : undefined}
         onClose={() => setViewingPlay(null)}
         onEdit={(play) => {
           setViewingPlay(null);
@@ -1046,6 +1040,7 @@ const MainApp: React.FC = () => {
 
       <PlayShareSheet
         play={sharingPlay}
+        games={games}
         onClose={() => setSharingPlay(null)}
         onShared={(playId) =>
           syncProgress(games, plays, (state) => ({

@@ -50,7 +50,7 @@
  * Tailwind marks focused fields outline-style:none, and Chrome's own ring is easy to miss on
  * this gray page. !important keeps a 2px brand ring on keyboard focus.
  */
-/* Focus is gold on navy and ink on cream. Brand purple is not used in the app UI.
+/* Focus is gold on navy and ink on cream.
    Brass plates set their own double ring later so it stays visible on both grounds. */
 :where(button, a, input, select, textarea, [tabindex]):focus-visible {
   outline: 2px solid #f3d48a !important;
@@ -169,11 +169,11 @@ textarea {
 
 /* Vault theme. Component utilities keep their names; these unlayered rules repaint them.
    Normative values live in docs/design/DESIGN.md. Kakao yellow and photo scrims stay. */
-.accent-\[\#4834D4\] { accent-color: #E2B657; }
+.accent-\[\#E2B657\] { accent-color: #E2B657; }
 .active\:bg-\[\#DFE4EA\]:active { background-color: #2C3C56; }
 .bg-\[\#1B7A43\]\/10 { background-color: #9BE7B833; }
-.bg-\[\#4834D4\]\/10 { background-color: #E2B6572E; }
-.bg-\[\#4834D4\]\/5 { background-color: #E2B6572E; }
+.bg-\[\#E2B657\]\/10 { background-color: #E2B6572E; }
+.bg-\[\#E2B657\]\/5 { background-color: #E2B6572E; }
 .bg-\[\#636E72\] { background-color: #5C5144; }
 .bg-\[\#E67E22\]\/10 { background-color: #FFC58A33; }
 .bg-\[\#E8F3ED\] { background-color: #163028; }
@@ -202,10 +202,10 @@ textarea {
 .border-\[\#1B7A43\]\/30 { border-color: #9BE7B8; }
 .border-\[\#1E272E\] { border-color: #C9A24A; }
 .border-\[\#1E272E\]\/10 { border-color: #2C3C56; }
-.border-\[\#4834D4\] { border-color: #E2B657; }
-.border-\[\#4834D4\]\/20 { border-color: #E2B657; }
-.border-\[\#4834D4\]\/30 { border-color: #E2B657; }
-.border-\[\#4834D4\]\/40 { border-color: #E2B657; }
+.border-\[\#E2B657\] { border-color: #E2B657; }
+.border-\[\#E2B657\]\/20 { border-color: #E2B657; }
+.border-\[\#E2B657\]\/30 { border-color: #E2B657; }
+.border-\[\#E2B657\]\/40 { border-color: #E2B657; }
 .border-\[\#636E72\] { border-color: #E4D3B4; }
 .border-\[\#898B8D\] { border-color: #C6A36A; }
 .border-\[\#CBD5E1\] { border-color: #C6A36A; }
@@ -225,12 +225,12 @@ textarea {
 .divide-\[\#E9ECEF\] > :not(:last-child) { border-color: #2C3C56; }
 .fill-\[\#B8860B\] { fill: #F3D48A; }
 .focus\:bg-white:focus { background-color: #172033; }
-.focus\:border-\[\#4834D4\]:focus { border-color: #E2B657; }
-.focus\:ring-\[\#4834D4\]\/10:focus { --tw-ring-color: #E2B65755; }
-.focus\:ring-\[\#4834D4\]\/20:focus { --tw-ring-color: #E2B65766; }
-@media (hover: hover) { .group-hover\:text-\[\#4834D4\]:is(:where(.group):hover *) { color: #E2B657; } }
-@media (hover: hover) { .hover\:bg-\[\#4834D4\]\/20:hover { background-color: #E2B6572E; } }
-@media (hover: hover) { .hover\:bg-\[\#4834D4\]\/5:hover { background-color: #E2B6572E; } }
+.focus\:border-\[\#E2B657\]:focus { border-color: #E2B657; }
+.focus\:ring-\[\#E2B657\]\/10:focus { --tw-ring-color: #E2B65755; }
+.focus\:ring-\[\#E2B657\]\/20:focus { --tw-ring-color: #E2B65766; }
+@media (hover: hover) { .group-hover\:text-\[\#E2B657\]:is(:where(.group):hover *) { color: #E2B657; } }
+@media (hover: hover) { .hover\:bg-\[\#E2B657\]\/20:hover { background-color: #E2B6572E; } }
+@media (hover: hover) { .hover\:bg-\[\#E2B657\]\/5:hover { background-color: #E2B6572E; } }
 @media (hover: hover) { .hover\:bg-\[\#E9ECEF\]:hover { background-color: #2C3C56; } }
 @media (hover: hover) { .hover\:bg-\[\#EB4D4B\]:hover { background-color: #C4453C; } }
 @media (hover: hover) { .hover\:bg-\[\#F1F3F5\]:hover { background-color: #243044; } }
@@ -239,27 +239,27 @@ textarea {
 @media (hover: hover) { .hover\:bg-\[\#FEEBEC\]:hover { background-color: #3A221F; } }
 @media (hover: hover) { .hover\:bg-amber-100:hover { background-color: #3A2E16; } }
 @media (hover: hover) { .hover\:bg-white:hover { background-color: #172033; } }
-@media (hover: hover) { .hover\:border-\[\#4834D4\]:hover { border-color: #E2B657; } }
-@media (hover: hover) { .hover\:border-\[\#4834D4\]\/30:hover { border-color: #E2B657; } }
-@media (hover: hover) { .hover\:border-\[\#4834D4\]\/40:hover { border-color: #E2B657; } }
+@media (hover: hover) { .hover\:border-\[\#E2B657\]:hover { border-color: #E2B657; } }
+@media (hover: hover) { .hover\:border-\[\#E2B657\]\/30:hover { border-color: #E2B657; } }
+@media (hover: hover) { .hover\:border-\[\#E2B657\]\/40:hover { border-color: #E2B657; } }
 @media (hover: hover) { .hover\:text-\[\#1E272E\]:hover { color: #F6EBD4; } }
 @media (hover: hover) { .hover\:text-\[\#2D3436\]:hover { color: #F6EBD4; } }
-@media (hover: hover) { .hover\:text-\[\#3c2ab9\]:hover { color: #E2B657; } }
-@media (hover: hover) { .hover\:text-\[\#4834D4\]:hover { color: #E2B657; } }
+@media (hover: hover) { .hover\:text-\[\#C9A24A\]:hover { color: #E2B657; } }
+@media (hover: hover) { .hover\:text-\[\#E2B657\]:hover { color: #E2B657; } }
 @media (hover: hover) { .hover\:text-\[\#B8860B\]:hover { color: #F3D48A; } }
 @media (hover: hover) { .hover\:text-\[\#EB4D4B\]:hover { color: #FFC2BC; } }
-@media (min-width: 64rem) { .lg\:bg-\[\#4834D4\]\/10 { background-color: #E2B6572E; } }
+@media (min-width: 64rem) { .lg\:bg-\[\#E2B657\]\/10 { background-color: #E2B6572E; } }
 @media (min-width: 64rem) { @media (hover: hover) { .lg\:hover\:bg-\[\#F8F9FA\]:hover { background-color: #243044; } } }
 .placeholder-stone-400::placeholder { color: #E4D3B4; }
-.ring-\[\#4834D4\]\/20 { --tw-ring-color: #E2B65766; }
+.ring-\[\#E2B657\]\/20 { --tw-ring-color: #E2B65766; }
 .ring-white { --tw-ring-color: #172033; }
-.selection\:bg-\[\#4834D4\]\/20::selection, .selection\:bg-\[\#4834D4\]\/20 ::selection { background-color: #E2B6572E; }
-.selection\:text-\[\#4834D4\]::selection, .selection\:text-\[\#4834D4\] ::selection { color: #E2B657; }
+.selection\:bg-\[\#E2B657\]\/20::selection, .selection\:bg-\[\#E2B657\]\/20 ::selection { background-color: #E2B6572E; }
+.selection\:text-\[\#E2B657\]::selection, .selection\:text-\[\#E2B657\] ::selection { color: #E2B657; }
 .text-\[\#1B6B43\] { color: #9BE7B8; }
 .text-\[\#1B7A43\] { color: #9BE7B8; }
 .text-\[\#1E272E\] { color: #F6EBD4; }
 .text-\[\#2D3436\] { color: #F6EBD4; }
-.text-\[\#4834D4\] { color: #E2B657; }
+.text-\[\#E2B657\] { color: #E2B657; }
 .text-\[\#636E72\] { color: #E4D3B4; }
 .text-\[\#856404\] { color: #F3D48A; }
 .text-\[\#8A6516\] { color: #F3D48A; }
@@ -434,27 +434,27 @@ textarea {
 }
 
 /* Filled brand utilities become gold with dark ink, including tiles that are not buttons. */
-.bg-\[\#4834D4\] {
+.bg-\[\#E2B657\] {
   background-color: #e2b657;
   color: #1a1408;
 }
 
-.hover\:bg-\[\#4834D4\]:hover,
-.hover\:bg-\[\#3c2ab9\]:hover,
-.active\:bg-\[\#3c2ab9\]:active,
-.active\:bg-\[\#32229e\]:active {
+.hover\:bg-\[\#E2B657\]:hover,
+.hover\:bg-\[\#C9A24A\]:hover,
+.active\:bg-\[\#C9A24A\]:active,
+.active\:bg-\[\#A07C32\]:active {
   background-color: #c9a24a;
   color: #1a1408;
 }
 
-button.bg-\[\#4834D4\],
-a.bg-\[\#4834D4\] {
+button.bg-\[\#E2B657\],
+a.bg-\[\#E2B657\] {
   background-color: #e2b657;
   color: #0e1628;
 }
 
-button.bg-\[\#4834D4\]:hover,
-a.bg-\[\#4834D4\]:hover {
+button.bg-\[\#E2B657\]:hover,
+a.bg-\[\#E2B657\]:hover {
   background-color: #c9a24a;
   color: #0e1628;
 }
@@ -489,8 +489,8 @@ textarea.border-\[\#E9ECEF\] {
 
 :is(
   .btn-gold,
-  button.bg-\[\#4834D4\]:not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(.py-1\.5):not(.shadow-xs):not(.shadow-2xs):not([aria-pressed]),
-  a.bg-\[\#4834D4\],
+  button.bg-\[\#E2B657\]:not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(.py-1\.5):not(.shadow-xs):not(.shadow-2xs):not([aria-pressed]),
+  a.bg-\[\#E2B657\],
   button.bg-\[\#E2B657\],
   a.bg-\[\#E2B657\]
 ) {
@@ -530,7 +530,7 @@ textarea.border-\[\#E9ECEF\] {
   .btn-quiet,
   button.bg-\[\#F1F3F5\]:not([aria-pressed]):not(.calendar-day):not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(:has(img)),
   button.rounded-2xl.bg-white:not([class*='EB4D4B']):not(:has(img)),
-  button.rounded-full.font-bold.hover\:bg-\[\#F1F3F5\]:not(.bg-white):not(.bg-\[\#F1F3F5\]):not([class*='4834D4']):not(
+  button.rounded-full.font-bold.hover\:bg-\[\#F1F3F5\]:not(.bg-white):not(.bg-\[\#F1F3F5\]):not([class*='E2B657']):not(
       [class*='FEE500']
     ):not([class*='EB4D4B'])
 ) {
@@ -559,17 +559,17 @@ textarea.border-\[\#E9ECEF\] {
 
 :is(
     .btn-gold,
-    button.bg-\[\#4834D4\]:not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(.py-1\.5):not(.shadow-xs):not(
+    button.bg-\[\#E2B657\]:not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(.py-1\.5):not(.shadow-xs):not(
         .shadow-2xs
       ):not([aria-pressed]),
-    a.bg-\[\#4834D4\],
+    a.bg-\[\#E2B657\],
     button.bg-\[\#E2B657\],
     a.bg-\[\#E2B657\],
     .btn-cream,
     .btn-quiet,
     button.bg-\[\#F1F3F5\]:not([aria-pressed]):not(.calendar-day):not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(:has(img)),
     button.rounded-2xl.bg-white:not([class*='EB4D4B']):not(:has(img)),
-    button.rounded-full.font-bold.hover\:bg-\[\#F1F3F5\]:not(.bg-white):not(.bg-\[\#F1F3F5\]):not([class*='4834D4']):not(
+    button.rounded-full.font-bold.hover\:bg-\[\#F1F3F5\]:not(.bg-white):not(.bg-\[\#F1F3F5\]):not([class*='E2B657']):not(
         [class*='FEE500']
       ):not([class*='EB4D4B'])
   )
@@ -579,17 +579,17 @@ textarea.border-\[\#E9ECEF\] {
 
 :is(
     .btn-gold,
-    button.bg-\[\#4834D4\]:not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(.py-1\.5):not(.shadow-xs):not(
+    button.bg-\[\#E2B657\]:not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(.py-1\.5):not(.shadow-xs):not(
         .shadow-2xs
       ):not([aria-pressed]),
-    a.bg-\[\#4834D4\],
+    a.bg-\[\#E2B657\],
     button.bg-\[\#E2B657\],
     a.bg-\[\#E2B657\],
     .btn-cream,
     .btn-quiet,
     button.bg-\[\#F1F3F5\]:not([aria-pressed]):not(.calendar-day):not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(:has(img)),
     button.rounded-2xl.bg-white:not([class*='EB4D4B']):not(:has(img)),
-    button.rounded-full.font-bold.hover\:bg-\[\#F1F3F5\]:not(.bg-white):not(.bg-\[\#F1F3F5\]):not([class*='4834D4']):not(
+    button.rounded-full.font-bold.hover\:bg-\[\#F1F3F5\]:not(.bg-white):not(.bg-\[\#F1F3F5\]):not([class*='E2B657']):not(
         [class*='FEE500']
       ):not([class*='EB4D4B'])
   ):not(:has(> svg:only-child)):not(.px-2)::before {
@@ -618,10 +618,10 @@ textarea.border-\[\#E9ECEF\] {
 @media (hover: hover) {
   :is(
     .btn-gold,
-    button.bg-\[\#4834D4\]:not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(.py-1\.5):not(.shadow-xs):not(
+    button.bg-\[\#E2B657\]:not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(.py-1\.5):not(.shadow-xs):not(
         .shadow-2xs
       ):not([aria-pressed]),
-    a.bg-\[\#4834D4\],
+    a.bg-\[\#E2B657\],
     button.bg-\[\#E2B657\],
     a.bg-\[\#E2B657\]
   ):hover:not(:disabled) {
@@ -633,7 +633,7 @@ textarea.border-\[\#E9ECEF\] {
     .btn-quiet,
     button.bg-\[\#F1F3F5\]:not([aria-pressed]):not(.calendar-day):not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(:has(img)),
     button.rounded-2xl.bg-white:not([class*='EB4D4B']):not(:has(img)),
-    button.rounded-full.font-bold.hover\:bg-\[\#F1F3F5\]:not(.bg-white):not(.bg-\[\#F1F3F5\]):not([class*='4834D4']):not(
+    button.rounded-full.font-bold.hover\:bg-\[\#F1F3F5\]:not(.bg-white):not(.bg-\[\#F1F3F5\]):not([class*='E2B657']):not(
         [class*='FEE500']
       ):not([class*='EB4D4B'])
   ):hover:not(:disabled) {
@@ -643,8 +643,8 @@ textarea.border-\[\#E9ECEF\] {
 
 :is(
   .btn-gold,
-  button.bg-\[\#4834D4\]:not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(.py-1\.5):not(.shadow-xs):not(.shadow-2xs):not([aria-pressed]),
-  a.bg-\[\#4834D4\],
+  button.bg-\[\#E2B657\]:not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(.py-1\.5):not(.shadow-xs):not(.shadow-2xs):not([aria-pressed]),
+  a.bg-\[\#E2B657\],
   button.bg-\[\#E2B657\],
   a.bg-\[\#E2B657\]
 ):active:not(:disabled) {
@@ -660,7 +660,7 @@ textarea.border-\[\#E9ECEF\] {
   .btn-quiet,
   button.bg-\[\#F1F3F5\]:not([aria-pressed]):not(.calendar-day):not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(:has(img)),
   button.rounded-2xl.bg-white:not([class*='EB4D4B']):not(:has(img)),
-  button.rounded-full.font-bold.hover\:bg-\[\#F1F3F5\]:not(.bg-white):not(.bg-\[\#F1F3F5\]):not([class*='4834D4']):not(
+  button.rounded-full.font-bold.hover\:bg-\[\#F1F3F5\]:not(.bg-white):not(.bg-\[\#F1F3F5\]):not([class*='E2B657']):not(
       [class*='FEE500']
     ):not([class*='EB4D4B'])
 ):active:not(:disabled) {
@@ -673,25 +673,25 @@ textarea.border-\[\#E9ECEF\] {
 
 :is(
   .btn-gold,
-  button.bg-\[\#4834D4\]:not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(.py-1\.5):not(.shadow-xs):not(.shadow-2xs):not([aria-pressed]),
-  a.bg-\[\#4834D4\],
+  button.bg-\[\#E2B657\]:not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(.py-1\.5):not(.shadow-xs):not(.shadow-2xs):not([aria-pressed]),
+  a.bg-\[\#E2B657\],
   button.bg-\[\#E2B657\],
   a.bg-\[\#E2B657\],
   .btn-cream,
   .btn-quiet,
   button.bg-\[\#F1F3F5\]:not([aria-pressed]):not(.calendar-day):not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(:has(img)),
   button.rounded-2xl.bg-white:not([class*='EB4D4B']):not(:has(img)),
-  button.rounded-full.font-bold.hover\:bg-\[\#F1F3F5\]:not(.bg-white):not(.bg-\[\#F1F3F5\]):not([class*='4834D4']):not(
+  button.rounded-full.font-bold.hover\:bg-\[\#F1F3F5\]:not(.bg-white):not(.bg-\[\#F1F3F5\]):not([class*='E2B657']):not(
       [class*='FEE500']
     ):not([class*='EB4D4B']),
   .chip-on,
   .chip-off,
-  button.shadow-xs.bg-\[\#4834D4\],
-  button.shadow-2xs.bg-\[\#4834D4\],
-  button.py-1.bg-\[\#4834D4\],
-  button.py-1\.5.bg-\[\#4834D4\],
-  button.text-\[10px\].bg-\[\#4834D4\],
-  button.text-\[11px\].bg-\[\#4834D4\],
+  button.shadow-xs.bg-\[\#E2B657\],
+  button.shadow-2xs.bg-\[\#E2B657\],
+  button.py-1.bg-\[\#E2B657\],
+  button.py-1\.5.bg-\[\#E2B657\],
+  button.text-\[10px\].bg-\[\#E2B657\],
+  button.text-\[11px\].bg-\[\#E2B657\],
   button.bg-\[\#1B7A43\],
   button:has(> svg:only-child):not([aria-pressed]):not([class*='EB4D4B']):not([class*='FEE500']):not(.calendar-day):not(
       .chip-on
@@ -707,15 +707,15 @@ textarea.border-\[\#E9ECEF\] {
 
 :is(
   .btn-gold,
-  button.bg-\[\#4834D4\]:not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(.py-1\.5):not(.shadow-xs):not(.shadow-2xs):not([aria-pressed]),
-  a.bg-\[\#4834D4\],
+  button.bg-\[\#E2B657\]:not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(.py-1\.5):not(.shadow-xs):not(.shadow-2xs):not([aria-pressed]),
+  a.bg-\[\#E2B657\],
   button.bg-\[\#E2B657\],
   a.bg-\[\#E2B657\],
   .btn-cream,
   .btn-quiet,
   button.bg-\[\#F1F3F5\]:not([aria-pressed]):not(.calendar-day):not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(:has(img)),
   button.rounded-2xl.bg-white:not([class*='EB4D4B']):not(:has(img)),
-  button.rounded-full.font-bold.hover\:bg-\[\#F1F3F5\]:not(.bg-white):not(.bg-\[\#F1F3F5\]):not([class*='4834D4']):not(
+  button.rounded-full.font-bold.hover\:bg-\[\#F1F3F5\]:not(.bg-white):not(.bg-\[\#F1F3F5\]):not([class*='E2B657']):not(
       [class*='FEE500']
     ):not([class*='EB4D4B'])
 ):disabled {
@@ -727,15 +727,15 @@ textarea.border-\[\#E9ECEF\] {
 
 :is(
   .btn-gold,
-  button.bg-\[\#4834D4\]:not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(.py-1\.5):not(.shadow-xs):not(.shadow-2xs):not([aria-pressed]),
-  a.bg-\[\#4834D4\],
+  button.bg-\[\#E2B657\]:not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(.py-1\.5):not(.shadow-xs):not(.shadow-2xs):not([aria-pressed]),
+  a.bg-\[\#E2B657\],
   button.bg-\[\#E2B657\],
   a.bg-\[\#E2B657\],
   .btn-cream,
   .btn-quiet,
   button.bg-\[\#F1F3F5\]:not([aria-pressed]):not(.calendar-day):not(.text-\[10px\]):not(.text-\[11px\]):not(.py-1):not(:has(img)),
   button.rounded-2xl.bg-white:not([class*='EB4D4B']):not(:has(img)),
-  button.rounded-full.font-bold.hover\:bg-\[\#F1F3F5\]:not(.bg-white):not(.bg-\[\#F1F3F5\]):not([class*='4834D4']):not(
+  button.rounded-full.font-bold.hover\:bg-\[\#F1F3F5\]:not(.bg-white):not(.bg-\[\#F1F3F5\]):not([class*='E2B657']):not(
       [class*='FEE500']
     ):not([class*='EB4D4B'])
 ):disabled::before {
@@ -743,12 +743,12 @@ textarea.border-\[\#E9ECEF\] {
 }
 
 .chip-on,
-button.shadow-xs.bg-\[\#4834D4\],
-button.shadow-2xs.bg-\[\#4834D4\],
-button.py-1.bg-\[\#4834D4\],
-button.py-1\.5.bg-\[\#4834D4\],
-button.text-\[10px\].bg-\[\#4834D4\],
-button.text-\[11px\].bg-\[\#4834D4\],
+button.shadow-xs.bg-\[\#E2B657\],
+button.shadow-2xs.bg-\[\#E2B657\],
+button.py-1.bg-\[\#E2B657\],
+button.py-1\.5.bg-\[\#E2B657\],
+button.text-\[10px\].bg-\[\#E2B657\],
+button.text-\[11px\].bg-\[\#E2B657\],
 button.bg-\[\#1B7A43\] {
   border: 1px solid var(--brass-edge);
   border-radius: 999px;
@@ -800,8 +800,8 @@ button:has(> svg:only-child):not([aria-pressed]):not([class*='EB4D4B']):not([cla
     .btn-gold,
     .btn-cream,
     .btn-quiet,
-    button.bg-\[\#4834D4\],
-    a.bg-\[\#4834D4\],
+    button.bg-\[\#E2B657\],
+    a.bg-\[\#E2B657\],
     button.bg-\[\#E2B657\],
     a.bg-\[\#E2B657\],
     button.bg-\[\#F1F3F5\],
@@ -814,7 +814,7 @@ button:has(> svg:only-child):not([aria-pressed]):not([class*='EB4D4B']):not([cla
     animation: none !important;
   }
 
-  :is(.btn-gold, .btn-cream, .btn-quiet, button.bg-\[\#4834D4\], button.bg-\[\#E2B657\], button.bg-\[\#F1F3F5\]):active,
+  :is(.btn-gold, .btn-cream, .btn-quiet, button.bg-\[\#E2B657\], button.bg-\[\#E2B657\], button.bg-\[\#F1F3F5\]):active,
   button:has(> svg:only-child):active {
     transform: none;
   }
@@ -846,12 +846,12 @@ button:has(> svg:only-child):not([aria-pressed]):not([class*='EB4D4B']):not([cla
 }
 
 /* Gold text fails on cream. Use bronze there. */
-.paper .text-\[\#4834D4\] {
+.paper .text-\[\#E2B657\] {
   color: #6b4423;
 }
 
 @media (hover: hover) {
-  .paper .group-hover\:text-\[\#4834D4\]:is(:where(.group):hover *) {
+  .paper .group-hover\:text-\[\#E2B657\]:is(:where(.group):hover *) {
     color: #6b4423;
   }
 }
@@ -873,27 +873,18 @@ button:has(> svg:only-child):not([aria-pressed]):not([class*='EB4D4B']):not([cla
 
 .cover-placeholder {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
   overflow: hidden;
-  background: #172033;
+  background: #0e1628;
   color: #f6ebd4;
+  container-type: size;
 }
 
-.cover-motif {
+.cover-art {
   position: absolute;
-  inset: 12% 18%;
-  width: 64%;
-  height: 76%;
-}
-
-.cover-initials {
-  position: relative;
-  font-size: 1.25rem;
-  font-weight: 600;
-  letter-spacing: 0;
-  color: #f6ebd4;
+  inset: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .home-chest {

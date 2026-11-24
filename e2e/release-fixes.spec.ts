@@ -469,10 +469,16 @@ test('game and play cards open from the keyboard without pressing delete', async
   await visible('키보드로 연 게임 상세', page.locator('#game-detail-modal-overlay'));
   await page.locator('#game-detail-modal-overlay').getByRole('button', { name: '닫기' }).click();
 
-  await page.locator('#game-card-key_game').getByRole('button', { name: '게임 삭제' }).click();
-  await visible('삭제는 상세를 열지 않음', page.getByRole('heading', { name: '보드게임 삭제' }));
-  await hidden('삭제 중에는 상세가 없음', page.locator('#game-detail-modal-overlay'));
+  check(
+    '표지 카드에는 삭제 버튼이 없음',
+    (await page.locator('#game-card-key_game').getByRole('button', { name: '게임 삭제' }).count()) === 0
+  );
+  await page.getByRole('button', { name: '키보드게임 열기' }).click();
+  await visible('삭제는 상세에서 연다', page.locator('#game-detail-modal-overlay'));
+  await page.locator('#game-detail-delete-btn').click();
+  await visible('삭제 확인', page.getByRole('heading', { name: '보드게임 삭제' }));
   await page.getByRole('button', { name: '취소' }).click();
+  await page.locator('#game-detail-modal-overlay').getByRole('button', { name: '닫기' }).click();
 
   await page.locator('#nav-tab-plays').click();
   await page.locator('#play-card-key_play').focus();
@@ -487,7 +493,7 @@ test('play photos open from the keyboard and the header clears the actions', asy
   const photo =
     'data:image/svg+xml,' +
     encodeURIComponent(
-      '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" fill="#4834D4"/></svg>'
+      '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" fill="#E2B657"/></svg>'
     );
   await putRows(page, [
     {
@@ -610,16 +616,18 @@ test('broken catalog, seed, and play-form photos use the same fallback', async (
 
   await page.locator('#nav-tab-games').click();
   await page.locator('#games-print-catalog-btn').click();
-  await usesFallback('도록 표 표지', '#printable-catalog-document img');
+  await expect(page.locator('#printable-catalog-document [data-cover="temporary"]').first()).toContainText('깨진표지');
+  check('도록 표 표지는 임시 표지', true);
   await page.getByRole('button', { name: '수록 카드형' }).click();
-  await usesFallback('도록 카드 표지', '#printable-catalog-document img');
+  await expect(page.locator('#printable-catalog-document [data-cover="temporary"]').first()).toContainText('깨진표지');
+  check('도록 카드 표지는 임시 표지', true);
   await page.locator('#game-catalog-modal-overlay button[aria-label="닫기"]').click();
 
   await page.locator('#games-add-game-btn').click();
   await page.locator('#seed-game-search-input').fill('카탄');
   await visible(
     '시드 검색은 외부 사진 없이 자리 표시',
-    page.locator('#game-form-modal-overlay [data-cover="placeholder"]')
+    page.locator('#game-form-modal-overlay [data-cover="temporary"]')
   );
   check(
     '시드 검색이 이미지를 요청하지 않음',

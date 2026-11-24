@@ -1,7 +1,8 @@
 import type React from 'react';
 
 /**
- * Meeple and die on a navy box. Inline so a missing cover never requests a remote image.
+ * Meeple and die on a navy box. Used when a photo URL fails.
+ * An empty game cover is not this image: it is the temporary chest in CoverPlaceholder.
  * A remote placeholder re-fires `onError` when it fails too, which loops.
  */
 export const PLACEHOLDER_IMAGE =

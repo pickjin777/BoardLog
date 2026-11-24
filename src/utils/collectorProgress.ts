@@ -337,7 +337,7 @@ export function reconcileCollector(input: ReconcileInput): CollectorState {
   };
 }
 
-/** The purple lock shipped briefly. Keep its unlock as bronze. */
+/** A retired saved lock id. Keep its unlock as bronze. */
 export function normalizeChestVariant(variantId: string): string {
   return variantId === 'lock-purple' ? 'lock-bronze' : variantId;
 }

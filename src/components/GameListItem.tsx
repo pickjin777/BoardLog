@@ -2,6 +2,7 @@ import type React from 'react';
 import { Users, Clock, Flame, CheckSquare, Trash2 } from 'lucide-react';
 import type { UserGame } from '../types';
 import { getOwnershipBadgeColor } from './GameCard';
+import { coverLabels } from '../utils/temporaryCover';
 import { CoverImage } from './CoverPlaceholder';
 
 interface GameListItemProps {
@@ -14,7 +15,7 @@ export const GameListItem: React.FC<GameListItemProps> = ({ game, onClick, onDel
   return (
     <div
       id={`game-list-item-${game.id}`}
-      className="group relative bg-white rounded-2xl border border-[#E9ECEF] p-4 shadow-sm hover:border-[#4834D4]/30 transition-colors flex items-center gap-4"
+      className="group relative bg-white rounded-2xl border border-[#E9ECEF] p-4 shadow-sm hover:border-[#E2B657]/30 transition-colors flex items-center gap-4"
     >
       <button
         type="button"
@@ -28,7 +29,8 @@ export const GameListItem: React.FC<GameListItemProps> = ({ game, onClick, onDel
           <CoverImage
             title={game.title}
             imageUrl={game.imageUrl}
-            alt={game.title}
+            labels={coverLabels(game)}
+            alt=""
             className="h-full w-full object-cover"
           />
         </div>
@@ -43,7 +45,7 @@ export const GameListItem: React.FC<GameListItemProps> = ({ game, onClick, onDel
             >
               {game.ownershipStatus}
             </span>
-            <h4 className="text-xs font-black text-[#1E272E] truncate group-hover:text-[#4834D4] transition-colors">
+            <h4 className="text-xs font-black text-[#1E272E] truncate group-hover:text-[#E2B657] transition-colors">
               {game.title}
             </h4>
           </div>
@@ -61,7 +63,7 @@ export const GameListItem: React.FC<GameListItemProps> = ({ game, onClick, onDel
             {game.weight > 0 && (
               <>
                 <span>•</span>
-                <span className="flex items-center gap-0.5 text-[#4834D4] font-bold">
+                <span className="flex items-center gap-0.5 text-[#E2B657] font-bold">
                   <Flame className="w-3 h-3" />
                   {game.weight.toFixed(1)}
                 </span>
@@ -75,7 +77,7 @@ export const GameListItem: React.FC<GameListItemProps> = ({ game, onClick, onDel
         {/* Right stats & Actions */}
         <div className="text-right shrink-0 flex items-center gap-2">
           <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#636E72] bg-[#F1F3F5] px-2.5 py-1 rounded-full border border-[#E9ECEF]">
-            <CheckSquare className="w-3 h-3 text-[#4834D4]" />
+            <CheckSquare className="w-3 h-3 text-[#E2B657]" />
             {game.playCount || 0}회
           </span>
 

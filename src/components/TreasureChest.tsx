@@ -4,7 +4,7 @@ const LOCK_FILL: Record<string, string> = {
   'lock-gold': '#E2B657',
   'lock-cream': '#F6EBD4',
   'lock-bronze': '#C9956A',
-  /** Saved before the purple lock was retired. */
+  /** Retired saved id. Opens as the bronze lock. */
   'lock-purple': '#C9956A'
 };
 

@@ -25,7 +25,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, chestVariant }) => {
           <div>
             <div className="flex items-center gap-1.5">
               <h1 className="text-lg font-black  text-[#1E272E]">보드로그</h1>
-              <span className="hidden rounded-full border border-[#E9ECEF] bg-[#F1F3F5] px-2 py-0.5 text-[10px] font-bold text-[#4834D4] sm:inline">
+              <span className="hidden rounded-full border border-[#E9ECEF] bg-[#F1F3F5] px-2 py-0.5 text-[10px] font-bold text-[#E2B657] sm:inline">
                 Board Log
               </span>
             </div>
@@ -68,7 +68,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, chestVariant }) => {
               </>
             ) : (
               <>
-                <UserCheck className="w-3.5 h-3.5 text-[#4834D4]" />
+                <UserCheck className="w-3.5 h-3.5 text-[#E2B657]" />
                 <span className="max-w-[80px] truncate">{user?.nickname || '내 계정'}</span>
               </>
             )}

@@ -51,7 +51,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
             <div className="flex items-center gap-2">
               <div
                 className={`w-10 h-10 rounded-2xl flex items-center justify-center ${
-                  isDestructive ? 'bg-[#FEEBEC] text-[#EB4D4B]' : 'bg-[#4834D4]/10 text-[#4834D4]'
+                  isDestructive ? 'bg-[#FEEBEC] text-[#EB4D4B]' : 'bg-[#E2B657]/10 text-[#E2B657]'
                 }`}
               >
                 <AlertTriangle className="w-5 h-5" />
@@ -86,7 +86,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
               type="button"
               onClick={onConfirm}
               className={`px-5 py-2 text-xs font-bold text-white rounded-full transition-colors ${
-                isDestructive ? 'bg-[#EB4D4B] hover:bg-[#d63b39]' : 'bg-[#4834D4] hover:bg-[#3c2ab9]'
+                isDestructive ? 'bg-[#EB4D4B] hover:bg-[#d63b39]' : 'bg-[#E2B657] hover:bg-[#C9A24A]'
               }`}
             >
               {confirmText}

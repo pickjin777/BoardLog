@@ -105,7 +105,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-[#4834D4]/10 text-[#4834D4] flex items-center justify-center">
+              <div className="w-8 h-8 rounded-xl bg-[#E2B657]/10 text-[#E2B657] flex items-center justify-center">
                 <ShieldCheck className="w-4.5 h-4.5" />
               </div>
               <h2 id="auth-modal-title" className="text-base font-black text-[#1E272E]">
@@ -128,7 +128,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             <div className="space-y-4">
               <div className="p-4 rounded-2xl bg-[#F8F9FA] border border-[#E9ECEF]">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 rounded-full bg-[#4834D4] text-white font-black flex items-center justify-center text-sm">
+                  <div className="w-10 h-10 rounded-full bg-[#E2B657] text-white font-black flex items-center justify-center text-sm">
                     {user.nickname.slice(0, 1).toUpperCase()}
                   </div>
                   <div>
@@ -212,7 +212,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                         placeholder="예: 보드게임마스터"
                         value={nickname}
                         onChange={(e) => setNickname(e.target.value)}
-                        className="w-full pl-9 pr-3 py-2 bg-[#F1F3F5] border border-[#E9ECEF] rounded-2xl text-xs text-[#1E272E] focus:bg-white focus:outline-hidden focus:border-[#4834D4] transition-colors font-medium"
+                        className="w-full pl-9 pr-3 py-2 bg-[#F1F3F5] border border-[#E9ECEF] rounded-2xl text-xs text-[#1E272E] focus:bg-white focus:outline-hidden focus:border-[#E2B657] transition-colors font-medium"
                       />
                     </div>
                   </div>
@@ -231,7 +231,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                       placeholder="name@example.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2 bg-[#F1F3F5] border border-[#E9ECEF] rounded-2xl text-xs text-[#1E272E] focus:bg-white focus:outline-hidden focus:border-[#4834D4] transition-colors font-medium"
+                      className="w-full pl-9 pr-3 py-2 bg-[#F1F3F5] border border-[#E9ECEF] rounded-2xl text-xs text-[#1E272E] focus:bg-white focus:outline-hidden focus:border-[#E2B657] transition-colors font-medium"
                     />
                   </div>
                 </div>
@@ -249,7 +249,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                       placeholder="6자리 이상 입력"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2 bg-[#F1F3F5] border border-[#E9ECEF] rounded-2xl text-xs text-[#1E272E] focus:bg-white focus:outline-hidden focus:border-[#4834D4] transition-colors font-medium"
+                      className="w-full pl-9 pr-3 py-2 bg-[#F1F3F5] border border-[#E9ECEF] rounded-2xl text-xs text-[#1E272E] focus:bg-white focus:outline-hidden focus:border-[#E2B657] transition-colors font-medium"
                     />
                   </div>
                 </div>
@@ -258,7 +258,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   id="auth-submit-btn"
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full mt-2 py-2.5 bg-[#4834D4] hover:bg-[#3c2ab9] text-white rounded-full text-xs font-bold transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="w-full mt-2 py-2.5 bg-[#E2B657] hover:bg-[#C9A24A] text-white rounded-full text-xs font-bold transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {mode === 'login' ? <LogIn className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
                   <span>{isSubmitting ? '처리 중...' : mode === 'login' ? '로그인하기' : '회원가입 완료'}</span>

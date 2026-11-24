@@ -3,6 +3,7 @@ import {
   anchorMonth,
   countPlaysByDate,
   dayAriaLabel,
+  dayCoverTitle,
   dayHeading,
   dayPhotoUrl,
   memoryFace,
@@ -136,5 +137,17 @@ describe('calendar days', () => {
     expect(dayPhotoUrl(plays, '2026.11.12')).toBe('data:early');
     expect(dayPhotoUrl(plays, '2026.11.03')).toBeNull();
     expect(dayPhotoUrl([play({ photos: [{ url: 'data:only' }] })], '2026.11.12')).toBe('data:only');
+  });
+
+  it('uses the game name on a day with no photo', () => {
+    const plain = play({ photos: [], gameImageUrl: '', gameTitle: '도미니언', date: '2026.11.02' });
+    expect(dayCoverTitle([plain], '2026.11.02')).toBe('도미니언');
+    expect(dayCoverTitle([play({ photos: [{ url: 'data:photo' }] })], '2026.11.12')).toBeNull();
+    expect(dayCoverTitle([], '2026.11.02')).toBeNull();
+    const blankThenNamed = [
+      play({ startTime: '21:00', photos: [], gameImageUrl: '', gameTitle: '   ' }),
+      play({ startTime: '18:00', photos: [], gameImageUrl: '', gameTitle: '카탄' })
+    ];
+    expect(dayCoverTitle(blankThenNamed, '2026.11.12')).toBe('카탄');
   });
 });
