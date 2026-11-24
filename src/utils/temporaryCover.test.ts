@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { SEED_GAMES } from '../data/seedGames';
 import {
+  CHEST_CATALOG,
   CHEST_KINDS,
   COVER_CREAM,
   COVER_INK,
@@ -10,6 +11,7 @@ import {
   chestKindFor,
   coverLabels,
   coverDisplayName,
+  isForbiddenPurple,
   labelsForGameTitle,
   estimatedCoverWidth,
   layoutCoverTitle
@@ -95,10 +97,13 @@ describe('temporary cover names', () => {
 
   it('picks a chest from genre labels and leaves unknown labels on the default', () => {
     expect(chestKindFor(['파티'])).toBe('party');
-    expect(chestKindFor(['사회적추리'])).toBe('mystery');
+    expect(chestKindFor(['사회적추리'])).toBe('social');
     expect(chestKindFor(['헤비전략'])).toBe('strategy');
     expect(chestKindFor(['협력'])).toBe('cooperative');
-    expect(chestKindFor(['덱빌딩'])).toBe('card');
+    expect(chestKindFor(['덱빌딩'])).toBe('deck');
+    expect(chestKindFor(['일꾼배치'])).toBe('worker');
+    expect(chestKindFor(['던전크롤러'])).toBe('dungeon');
+    expect(chestKindFor(['철도'])).toBe('train');
     expect(chestKindFor(['가족', '전략'])).toBe('family');
     expect(chestKindFor(['타일배치'])).toBe('abstract');
     expect(chestKindFor(['주사위'])).toBe('dice');
@@ -107,9 +112,22 @@ describe('temporary cover names', () => {
     expect(chestKindFor(['공포'])).toBe('horror');
     expect(coverLabels({ genre: ['협력'], tags: ['캠페인'] })).toEqual(['협력', '캠페인']);
     expect(labelsForGameTitle('팬데믹', 'g1', [{ id: 'g1', title: '다른 이름', genre: ['협력'] }])).toEqual(['협력']);
-    expect(chestKindFor(['고양이'])).toBe('default');
+    expect(chestKindFor(['고양이'])).toBe('animal');
+    expect(chestKindFor(['정치'])).toBe('default');
     expect(chestKindFor([])).toBe('default');
     expect(chestKindFor(undefined)).toBe('default');
+    expect(contrast(COVER_INK, COVER_CREAM)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it('keeps chest colors out of purple and gives each genre its own emblem', () => {
+    const emblems = new Set<string>();
+    for (const spec of CHEST_CATALOG) {
+      emblems.add(spec.emblem);
+      for (const hex of [spec.body, spec.lid, spec.accent]) {
+        expect(isForbiddenPurple(hex), `${spec.id} ${hex}`).toBe(false);
+      }
+    }
+    expect(emblems.size).toBe(CHEST_CATALOG.length);
     expect(contrast(COVER_INK, COVER_CREAM)).toBeGreaterThanOrEqual(4.5);
   });
 
