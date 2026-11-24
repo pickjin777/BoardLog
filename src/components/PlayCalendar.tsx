@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import type { PlayRecord } from '../types';
+import type { PlayRecord, UserGame } from '../types';
+import { labelsForGameTitle } from '../utils/temporaryCover';
 import { CoverPlaceholder } from './CoverPlaceholder';
 import {
   anchorMonth,
@@ -8,6 +9,7 @@ import {
   dayAriaLabel,
   dayCoverTitle,
   dayPhotoUrl,
+  playsOnDate,
   monthGrid,
   parsePlayDate,
   shiftMonth,
@@ -17,6 +19,7 @@ import { canDownscaleLocally, downscaleDataUrl } from '../utils/thumbnail';
 
 interface PlayCalendarProps {
   plays: PlayRecord[];
+  games?: readonly Pick<UserGame, 'id' | 'title' | 'genre' | 'tags'>[];
   selectedDate: string | null;
   onSelectDate: (dateKey: string) => void;
 }
@@ -55,7 +58,7 @@ function dayClass(cell: MonthCell, selected: boolean, today: boolean, hasPhoto: 
   return `${base}${todayMark}${selectedMark} bg-[#F6EBD4] text-[#1C160E]`;
 }
 
-export function PlayCalendar({ plays, selectedDate, onSelectDate }: PlayCalendarProps) {
+export function PlayCalendar({ plays, games = [], selectedDate, onSelectDate }: PlayCalendarProps) {
   const [cursor, setCursor] = useState(() => {
     const now = new Date();
     return anchorMonth(plays, { year: now.getFullYear(), month: now.getMonth() + 1 });
@@ -111,6 +114,9 @@ export function PlayCalendar({ plays, selectedDate, onSelectDate }: PlayCalendar
           const isToday = cell.year === today.year && cell.month === today.month && cell.day === today.day;
           const photo = cell.playCount > 0 ? dayPhotoUrl(plays, cell.key) : null;
           const coverTitle = photo ? null : dayCoverTitle(plays, cell.key);
+          const coverPlay = coverTitle
+            ? playsOnDate(plays, cell.key).find((play) => play.gameTitle.trim() === coverTitle)
+            : undefined;
           const filled = Boolean(photo || coverTitle);
           return (
             <button
@@ -123,7 +129,13 @@ export function PlayCalendar({ plays, selectedDate, onSelectDate }: PlayCalendar
               className={dayClass(cell, selected, isToday, filled)}
             >
               <DayThumb url={photo} />
-              {coverTitle && <CoverPlaceholder title={coverTitle} className="absolute inset-0" />}
+              {coverTitle && (
+                <CoverPlaceholder
+                  title={coverTitle}
+                  labels={labelsForGameTitle(coverTitle, coverPlay?.gameId, games)}
+                  className="absolute inset-0"
+                />
+              )}
               {cell.playCount > 0 && !photo && !coverTitle && <span className="calendar-day-mark" aria-hidden="true" />}
               <span
                 aria-hidden="true"

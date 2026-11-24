@@ -33,6 +33,7 @@ import { LocalStorageNotice } from './components/LocalStorageNotice';
 import { LoadingState, EmptyState, ErrorState } from './components/StateViews';
 import { TreasureReveal, type TreasureMoment } from './components/TreasureReveal';
 import { dayHeading } from './utils/memoryCard';
+import { labelsForGameTitle } from './utils/temporaryCover';
 import { cleanMemo, mostPlayed } from './utils/shelf';
 import {
   didLevelUp,
@@ -702,16 +703,7 @@ const MainApp: React.FC = () => {
                   gameViewMode === 'grid' ? (
                     <div className="game-shelf grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
                       {filteredGames.map((game) => (
-                        <GameCard
-                          key={game.id}
-                          dense
-                          game={game}
-                          onClick={() => setViewingGame(game)}
-                          onDelete={(e) => {
-                            e.stopPropagation();
-                            setDeletingGame(game);
-                          }}
-                        />
+                        <GameCard key={game.id} dense game={game} onClick={() => setViewingGame(game)} />
                       ))}
                     </div>
                   ) : (
@@ -793,6 +785,7 @@ const MainApp: React.FC = () => {
                   >
                     <PlayCalendar
                       plays={plays}
+                      games={games}
                       selectedDate={selectedPlayDate}
                       onSelectDate={(dateKey) =>
                         setSelectedPlayDate((current) => (current === dateKey ? null : dateKey))
@@ -853,7 +846,7 @@ const MainApp: React.FC = () => {
                 {filteredPlays.length > 0 ? (
                   <div id="memory-card-list" className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {filteredPlays.map((play) => (
-                      <PlayCard key={play.id} play={play} onClick={() => setViewingPlay(play)} />
+                      <PlayCard key={play.id} play={play} games={games} onClick={() => setViewingPlay(play)} />
                     ))}
                   </div>
                 ) : plays.length === 0 ? (
@@ -1033,6 +1026,7 @@ const MainApp: React.FC = () => {
       <PlayDetailModal
         isOpen={!!viewingPlay}
         play={viewingPlay}
+        labels={viewingPlay ? labelsForGameTitle(viewingPlay.gameTitle, viewingPlay.gameId, games) : undefined}
         onClose={() => setViewingPlay(null)}
         onEdit={(play) => {
           setViewingPlay(null);
@@ -1046,6 +1040,7 @@ const MainApp: React.FC = () => {
 
       <PlayShareSheet
         play={sharingPlay}
+        games={games}
         onClose={() => setSharingPlay(null)}
         onShared={(playId) =>
           syncProgress(games, plays, (state) => ({

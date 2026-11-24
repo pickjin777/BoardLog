@@ -24,6 +24,7 @@ import { SEED_GAMES } from '../data/seedGames';
 import { formatDate, formatCurrentTime, calculateDurationMinutes, formatDuration } from '../utils/formatters';
 import { compressImage, rotateDataUrl } from '../utils/imageCompressor';
 import { applyImageFallback } from '../utils/imageFallback';
+import { coverLabels } from '../utils/temporaryCover';
 import { CoverImage } from './CoverPlaceholder';
 import { useDialogA11y } from './useDialogA11y';
 
@@ -583,7 +584,11 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                     <CoverImage
                       title={gameTitle}
                       imageUrl={gameImageUrl}
-                      alt={gameTitle}
+                      labels={coverLabels(
+                        userGames.find((game) => game.id === gameId) ??
+                          SEED_GAMES.find((game) => game.title === gameTitle)
+                      )}
+                      alt=""
                       className="h-12 w-12 shrink-0 rounded-xl border border-[#E9ECEF] object-cover"
                     />
                     <div className="min-w-0">
@@ -724,6 +729,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
                             <CoverImage
                               title={game.title}
                               imageUrl={game.imageUrl}
+                              labels={coverLabels(game)}
                               alt=""
                               className="h-9 w-9 shrink-0 rounded-lg border border-[#E9ECEF] object-cover"
                             />

@@ -1,11 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { SEED_GAMES } from '../data/seedGames';
 import {
+  CHEST_KINDS,
   COVER_CREAM,
+  COVER_INK,
   COVER_NAVY,
   COVER_TEXT_WIDTH,
   TEMPORARY_COVER_NOTICE,
+  chestKindFor,
+  coverLabels,
   coverDisplayName,
+  labelsForGameTitle,
   estimatedCoverWidth,
   layoutCoverTitle
 } from './temporaryCover';
@@ -45,14 +50,18 @@ describe('temporary cover names', () => {
     expect(contrast(COVER_CREAM, '#3A2C22')).toBeGreaterThanOrEqual(4.5);
   });
 
-  it('wraps long names onto two or three lines and shrinks the type', () => {
+  it('wraps long names onto one or two lines and shrinks the type', () => {
     const short = layoutCoverTitle('카탄');
     const long = layoutCoverTitle('로빈슨 크루소: 저주받은 섬의 모험');
     expect(short.lines).toEqual(['카탄']);
     expect(short.fontSize).toBeGreaterThan(long.fontSize);
-    expect(long.lines.length).toBeGreaterThanOrEqual(2);
-    expect(long.lines.length).toBeLessThanOrEqual(3);
-    expect(long.lines.join(' ')).toBe('로빈슨 크루소: 저주받은 섬의 모험');
+    expect(long.lines.length).toBeGreaterThanOrEqual(1);
+    expect(long.lines.length).toBeLessThanOrEqual(2);
+    const rebuilt = long.lines.join(' ').replace('…', '');
+    expect(
+      long.lines.join(' ') === '로빈슨 크루소: 저주받은 섬의 모험' ||
+        rebuilt.length < '로빈슨 크루소: 저주받은 섬의 모험'.length
+    ).toBe(true);
     for (const line of long.lines) {
       expect(estimatedCoverWidth(line, long.fontSize)).toBeLessThanOrEqual(COVER_TEXT_WIDTH);
     }
@@ -62,7 +71,7 @@ describe('temporary cover names', () => {
     expect(SEED_GAMES).toHaveLength(300);
     for (const game of SEED_GAMES) {
       const layout = layoutCoverTitle(game.title);
-      expect(layout.lines.length, game.title).toBeLessThanOrEqual(3);
+      expect(layout.lines.length, game.title).toBeLessThanOrEqual(2);
       expect(layout.lines.length, game.title).toBeGreaterThan(0);
       const shown = layout.lines.join('').replace(/\s/g, '');
       const compact = game.title.replace(/\s/g, '');
@@ -77,10 +86,42 @@ describe('temporary cover names', () => {
     }
   });
 
-  it('clips a single very long token onto three lines', () => {
+  it('clips a single very long token onto two lines', () => {
     const layout = layoutCoverTitle('가'.repeat(80));
-    expect(layout.lines).toHaveLength(3);
-    expect(layout.lines[2].endsWith('…')).toBe(true);
-    expect(layout.fontSize).toBe(15);
+    expect(layout.lines).toHaveLength(2);
+    expect(layout.lines[1].endsWith('…')).toBe(true);
+    expect(layout.fontSize).toBe(12);
+  });
+
+  it('picks a chest from genre labels and leaves unknown labels on the default', () => {
+    expect(chestKindFor(['파티'])).toBe('party');
+    expect(chestKindFor(['사회적추리'])).toBe('mystery');
+    expect(chestKindFor(['헤비전략'])).toBe('strategy');
+    expect(chestKindFor(['협력'])).toBe('cooperative');
+    expect(chestKindFor(['덱빌딩'])).toBe('card');
+    expect(chestKindFor(['가족', '전략'])).toBe('family');
+    expect(chestKindFor(['타일배치'])).toBe('abstract');
+    expect(chestKindFor(['주사위'])).toBe('dice');
+    expect(chestKindFor(['단어'])).toBe('word');
+    expect(chestKindFor(['경제'])).toBe('economic');
+    expect(chestKindFor(['공포'])).toBe('horror');
+    expect(coverLabels({ genre: ['협력'], tags: ['캠페인'] })).toEqual(['협력', '캠페인']);
+    expect(labelsForGameTitle('팬데믹', 'g1', [{ id: 'g1', title: '다른 이름', genre: ['협력'] }])).toEqual(['협력']);
+    expect(chestKindFor(['고양이'])).toBe('default');
+    expect(chestKindFor([])).toBe('default');
+    expect(chestKindFor(undefined)).toBe('default');
+    expect(contrast(COVER_INK, COVER_CREAM)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it('assigns every seed game a known chest', () => {
+    const counts = new Map<string, number>();
+    for (const game of SEED_GAMES) {
+      const kind = chestKindFor(game.genre);
+      expect(CHEST_KINDS).toContain(kind);
+      counts.set(kind, (counts.get(kind) ?? 0) + 1);
+    }
+    expect([...counts.values()].reduce((sum, n) => sum + n, 0)).toBe(300);
+    expect(counts.get('default')).toBeGreaterThan(0);
+    expect(counts.get('strategy')).toBeGreaterThan(0);
   });
 });

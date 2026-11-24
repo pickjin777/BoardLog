@@ -7,6 +7,7 @@ import { LevelTrack } from './LevelTrack';
 import { formatDuration } from '../utils/formatters';
 import { findRemovableSampleData } from '../services/storage';
 import { activitySummary, neglectedGames, recentPlayRail, todaysTreasure } from '../utils/shelf';
+import { coverLabels } from '../utils/temporaryCover';
 import { CoverImage } from './CoverPlaceholder';
 
 export interface QuestTeaser {
@@ -88,6 +89,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
               <CoverImage
                 title={treasure.title}
                 imageUrl={treasure.imageUrl}
+                labels={coverLabels(treasure)}
                 className="home-chest rounded-xl object-cover"
               />
             </button>
@@ -212,6 +214,9 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                 <CoverImage
                   title={item.title}
                   imageUrl={item.imageUrl}
+                  labels={coverLabels(
+                    games.find((entry) => entry.id === item.gameId) ?? games.find((entry) => entry.title === item.title)
+                  )}
                   className="aspect-[3/4] w-full rounded-lg object-cover"
                 />
                 <span className="mt-1 block text-xs text-[#F6EBD4]">{item.title}</span>
@@ -235,6 +240,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                 <CoverImage
                   title={game.title}
                   imageUrl={game.imageUrl}
+                  labels={coverLabels(game)}
                   className="aspect-[3/4] w-full rounded-lg object-cover"
                 />
                 <span className="mt-1 block text-xs text-[#F6EBD4]">{game.title}</span>
@@ -260,7 +266,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         {recentPlays.length > 0 ? (
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {recentPlays.map((p) => (
-              <PlayCard key={p.id} play={p} onClick={() => onSelectPlay(p)} />
+              <PlayCard key={p.id} play={p} games={games} onClick={() => onSelectPlay(p)} />
             ))}
           </div>
         ) : (

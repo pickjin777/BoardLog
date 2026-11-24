@@ -1,18 +1,20 @@
 import type React from 'react';
-import type { PlayRecord } from '../types';
+import type { PlayRecord, UserGame } from '../types';
 import { applyImageFallback } from '../utils/imageFallback';
 import { memoryFace } from '../utils/memoryCard';
+import { labelsForGameTitle } from '../utils/temporaryCover';
 import { CoverPlaceholder } from './CoverPlaceholder';
 
 interface PlayCardProps {
   play: PlayRecord;
+  games?: readonly Pick<UserGame, 'id' | 'title' | 'genre' | 'tags'>[];
   onClick?: () => void;
   variant?: 'list' | 'sheet';
 }
 
-function MemoryPhoto({ url, title }: { url: string | null; title: string }) {
+function MemoryPhoto({ url, title, labels }: { url: string | null; title: string; labels: readonly string[] }) {
   if (!url) {
-    return <CoverPlaceholder title={title} className="h-full w-full" />;
+    return <CoverPlaceholder title={title} labels={labels} className="h-full w-full" />;
   }
   return (
     <img
@@ -25,8 +27,9 @@ function MemoryPhoto({ url, title }: { url: string | null; title: string }) {
   );
 }
 
-export const PlayCard: React.FC<PlayCardProps> = ({ play, onClick, variant = 'list' }) => {
+export const PlayCard: React.FC<PlayCardProps> = ({ play, games = [], onClick, variant = 'list' }) => {
   const face = memoryFace(play);
+  const labels = labelsForGameTitle(play.gameTitle, play.gameId, games);
   const body = (
     <>
       <div
@@ -36,7 +39,7 @@ export const PlayCard: React.FC<PlayCardProps> = ({ play, onClick, variant = 'li
             : 'h-40 w-full overflow-hidden rounded-lg bg-[#172033]'
         }
       >
-        <MemoryPhoto url={face.imageUrl} title={play.gameTitle} />
+        <MemoryPhoto url={face.imageUrl} title={play.gameTitle} labels={labels} />
       </div>
       <div className={variant === 'sheet' ? 'min-w-0 flex-1 space-y-1' : 'mt-3 min-w-0 space-y-1.5'}>
         <p className="text-xs font-medium text-[#1C160E]">추억 카드</p>

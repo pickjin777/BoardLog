@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import type { UserGame, GameOwnershipStatus } from '../types';
 import { formatDate } from '../utils/formatters';
+import { coverLabels } from '../utils/temporaryCover';
 import { CoverImage } from './CoverPlaceholder';
 import { useDialogA11y } from './useDialogA11y';
 import { getGameIndexKey, KOREAN_INDEX_KEYS } from '../utils/koreanIndex';
@@ -548,6 +549,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                               <CoverImage
                                 title={game.title}
                                 imageUrl={game.imageUrl}
+                                labels={coverLabels(game)}
                                 className="mx-auto h-9 w-9 rounded-lg border border-[#E9ECEF] object-cover"
                               />
                             </td>
@@ -643,6 +645,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                       <CoverImage
                         title={game.title}
                         imageUrl={game.imageUrl}
+                        labels={coverLabels(game)}
                         className="h-20 w-20 shrink-0 rounded-xl border border-[#E9ECEF] object-cover shadow-xs sm:h-24 sm:w-24"
                       />
                     )}

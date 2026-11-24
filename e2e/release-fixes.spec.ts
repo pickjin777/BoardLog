@@ -469,10 +469,16 @@ test('game and play cards open from the keyboard without pressing delete', async
   await visible('키보드로 연 게임 상세', page.locator('#game-detail-modal-overlay'));
   await page.locator('#game-detail-modal-overlay').getByRole('button', { name: '닫기' }).click();
 
-  await page.locator('#game-card-key_game').getByRole('button', { name: '게임 삭제' }).click();
-  await visible('삭제는 상세를 열지 않음', page.getByRole('heading', { name: '보드게임 삭제' }));
-  await hidden('삭제 중에는 상세가 없음', page.locator('#game-detail-modal-overlay'));
+  check(
+    '표지 카드에는 삭제 버튼이 없음',
+    (await page.locator('#game-card-key_game').getByRole('button', { name: '게임 삭제' }).count()) === 0
+  );
+  await page.getByRole('button', { name: '키보드게임 열기' }).click();
+  await visible('삭제는 상세에서 연다', page.locator('#game-detail-modal-overlay'));
+  await page.locator('#game-detail-delete-btn').click();
+  await visible('삭제 확인', page.getByRole('heading', { name: '보드게임 삭제' }));
   await page.getByRole('button', { name: '취소' }).click();
+  await page.locator('#game-detail-modal-overlay').getByRole('button', { name: '닫기' }).click();
 
   await page.locator('#nav-tab-plays').click();
   await page.locator('#play-card-key_play').focus();

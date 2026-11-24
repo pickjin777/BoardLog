@@ -2,7 +2,7 @@ import type React from 'react';
 import { useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Share2, Copy, X } from 'lucide-react';
-import type { PlayRecord } from '../types';
+import type { PlayRecord, UserGame } from '../types';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 import { storage } from '../services/storage';
@@ -13,11 +13,12 @@ import { useDialogA11y } from './useDialogA11y';
 
 interface PlayShareSheetProps {
   play: PlayRecord | null;
+  games?: readonly Pick<UserGame, 'id' | 'title' | 'genre' | 'tags'>[];
   onClose: () => void;
   onShared?: (playId: string) => void;
 }
 
-export const PlayShareSheet: React.FC<PlayShareSheetProps> = ({ play, onClose, onShared }) => {
+export const PlayShareSheet: React.FC<PlayShareSheetProps> = ({ play, games, onClose, onShared }) => {
   const { showToast } = useToast();
   const dialogRef = useRef<HTMLDivElement>(null);
   useDialogA11y(!!play, onClose, dialogRef);
@@ -83,7 +84,7 @@ export const PlayShareSheet: React.FC<PlayShareSheetProps> = ({ play, onClose, o
             transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
             onClick={(e) => e.stopPropagation()}
           >
-            <PlayCard play={play} variant="sheet" />
+            <PlayCard play={play} games={games} variant="sheet" />
             <div className="mb-3 flex items-center justify-between">
               <h3 className="text-sm font-medium text-[#F6EBD4]">결과 공유</h3>
               <button

@@ -887,33 +887,6 @@ button:has(> svg:only-child):not([aria-pressed]):not([class*='EB4D4B']):not([cla
   height: 100%;
 }
 
-.cover-name {
-  position: absolute;
-  left: 14%;
-  width: 72%;
-  top: 40%;
-  margin: 0;
-  display: flex;
-  max-height: 36%;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  background: #0e1628;
-  color: #f6ebd4;
-  font-weight: 700;
-  text-align: center;
-  word-break: keep-all;
-}
-
-.cover-name span {
-  display: block;
-  max-width: 100%;
-  overflow: hidden;
-  color: #f6ebd4;
-  white-space: nowrap;
-}
-
 .home-chest {
   width: min(28vw, 96px);
   height: auto;

@@ -21,6 +21,7 @@ import { storage } from '../services/storage';
 import { formatDate } from '../utils/formatters';
 import { applyImageFallback } from '../utils/imageFallback';
 import { cleanMemo, cleanTags } from '../utils/shelf';
+import { coverLabels } from '../utils/temporaryCover';
 import { CoverImage } from './CoverPlaceholder';
 import { useDialogA11y } from './useDialogA11y';
 
@@ -400,6 +401,7 @@ export const GameFormModal: React.FC<GameFormModalProps> = ({
                           <CoverImage
                             title={seed.title}
                             imageUrl={seed.imageUrl}
+                            labels={coverLabels(seed)}
                             alt=""
                             className="w-10 h-10 rounded-xl object-cover bg-stone-100 shrink-0"
                           />

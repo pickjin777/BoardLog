@@ -22,6 +22,7 @@ import { formatWon } from '../utils/formatters';
 import { getOwnershipBadgeColor } from './GameCard';
 import { useToast } from '../context/ToastContext';
 import { formatDuration } from '../utils/formatters';
+import { coverLabels } from '../utils/temporaryCover';
 import { CoverImage } from './CoverPlaceholder';
 import { useDialogA11y } from './useDialogA11y';
 import { cleanMemo } from '../utils/shelf';
@@ -108,10 +109,10 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
             <CoverImage
               title={game.title}
               imageUrl={game.imageUrl}
-              alt={game.title}
+              labels={coverLabels(game)}
+              alt=""
               className="h-full w-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
             {/* Top Close & Actions */}
             <div className="absolute top-4 right-3.5 flex items-center gap-1.5">
@@ -135,15 +136,6 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
               </button>
               <button
                 type="button"
-                onClick={() => onDelete(game)}
-                className="w-8 h-8 rounded-full bg-black/40 text-white hover:bg-[#EB4D4B] flex items-center justify-center transition-colors"
-                aria-label="삭제하기"
-                title="삭제하기"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
-              <button
-                type="button"
                 onClick={onClose}
                 className="w-8 h-8 rounded-full bg-black/40 text-white hover:bg-black/60 flex items-center justify-center transition-colors"
                 aria-label="닫기"
@@ -152,30 +144,31 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
                 <X className="w-4 h-4" />
               </button>
             </div>
-
-            {/* Bottom Title on Image */}
-            <div className="absolute bottom-3.5 left-4.5 right-4.5 text-white">
-              <div className="flex items-center gap-2 mb-1">
-                <span
-                  className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${getOwnershipBadgeColor(
-                    game.ownershipStatus
-                  )}`}
-                >
-                  {game.ownershipStatus}
-                </span>
-                {game.condition && (
-                  <span className="px-2 py-0.5 rounded-full bg-white/20 text-white text-[10px] font-bold">
-                    상태: {game.condition}
-                  </span>
-                )}
-              </div>
-              <h2 className="text-xl font-black text-white leading-tight drop-shadow-sm">{game.title}</h2>
-              {game.titleEn && <p className="text-xs text-white/80 drop-shadow-xs">{game.titleEn}</p>}
-            </div>
           </div>
 
           {/* Details Scroll Area */}
           <div className="p-4 sm:p-5 overflow-y-auto flex-1 space-y-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h2 className="text-xl font-black text-[#1E272E] leading-tight">{game.title}</h2>
+                {game.titleEn && <p className="text-xs text-[#636E72]">{game.titleEn}</p>}
+              </div>
+              <span className="shrink-0 text-xs font-bold text-[#5C4632]">{game.playCount || 0}회</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span
+                className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${getOwnershipBadgeColor(
+                  game.ownershipStatus
+                )}`}
+              >
+                {game.ownershipStatus}
+              </span>
+              {game.condition && (
+                <span className="px-2 py-0.5 rounded-full bg-[#F1F3F5] text-[#636E72] text-[10px] font-bold">
+                  상태: {game.condition}
+                </span>
+              )}
+            </div>
             {/* Quick Meta Grid */}
             <div className="grid grid-cols-3 gap-2 p-4 bg-[#F8F9FA] rounded-2xl border border-[#E9ECEF] text-center">
               <div>
@@ -421,6 +414,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
               type="button"
               onClick={() => onDelete(game)}
               className="px-4 py-3 bg-[#FEEBEC] hover:bg-[#FCD7D7] text-[#EB4D4B] text-xs font-bold rounded-full transition-colors flex items-center justify-center gap-1 shrink-0"
+              aria-label="삭제하기"
               title="게임 삭제"
             >
               <Trash2 className="w-4 h-4" />

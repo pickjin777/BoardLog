@@ -2,6 +2,7 @@ import type React from 'react';
 import { Users, Clock, Flame, CheckSquare, Trash2 } from 'lucide-react';
 import type { UserGame } from '../types';
 import { getOwnershipBadgeColor } from './GameCard';
+import { coverLabels } from '../utils/temporaryCover';
 import { CoverImage } from './CoverPlaceholder';
 
 interface GameListItemProps {
@@ -28,7 +29,8 @@ export const GameListItem: React.FC<GameListItemProps> = ({ game, onClick, onDel
           <CoverImage
             title={game.title}
             imageUrl={game.imageUrl}
-            alt={game.title}
+            labels={coverLabels(game)}
+            alt=""
             className="h-full w-full object-cover"
           />
         </div>

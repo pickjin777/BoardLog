@@ -1,6 +1,7 @@
 import type React from 'react';
-import { Users, Clock, Flame, MapPin, CheckSquare, Trash2 } from 'lucide-react';
+import { Users, Clock, Flame, MapPin } from 'lucide-react';
 import type { UserGame, GameOwnershipStatus } from '../types';
+import { coverLabels } from '../utils/temporaryCover';
 import { CoverImage } from './CoverPlaceholder';
 
 export const getOwnershipBadgeColor = (status: GameOwnershipStatus): string => {
@@ -29,12 +30,11 @@ interface GameCardProps {
   game: UserGame;
   onClick: () => void;
   onEdit?: (e: React.MouseEvent) => void;
-  onDelete?: (e: React.MouseEvent) => void;
   onQuickRecord?: (e: React.MouseEvent) => void;
   dense?: boolean;
 }
 
-export const GameCard: React.FC<GameCardProps> = ({ game, onClick, onDelete, dense = false }) => {
+export const GameCard: React.FC<GameCardProps> = ({ game, onClick, dense = false }) => {
   return (
     <div id={`game-card-${game.id}`} className="game-box group relative flex flex-col rounded-2xl">
       <button
@@ -51,52 +51,25 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onClick, onDelete, den
           <CoverImage
             title={game.title}
             imageUrl={game.imageUrl}
-            alt={game.title}
+            labels={coverLabels(game)}
+            alt=""
             className="h-full w-full object-cover"
           />
-
-          {/* Ownership Status Pill */}
-          <div className="absolute top-2.5 left-2.5">
-            <span
-              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border shadow-xs ${getOwnershipBadgeColor(
-                game.ownershipStatus
-              )}`}
-            >
-              {game.ownershipStatus}
-            </span>
-          </div>
-
-          {/* Play count badge & Action overlay */}
-          <div className="absolute top-2.5 right-2.5 flex items-center gap-1">
-            <div className="bg-black/60 text-white px-2 py-0.5 rounded-full text-[10px] font-semibold flex items-center gap-1">
-              <CheckSquare className="h-4 w-4" strokeWidth={1.5} />
-              <span>{game.playCount || 0}회</span>
-            </div>
-
-            {onDelete && (
-              <button
-                type="button"
-                aria-label="게임 삭제"
-                title="게임 삭제"
-                onClick={onDelete}
-                className="pointer-events-auto relative z-20 w-6 h-6 rounded-full bg-black/60 hover:bg-[#EB4D4B] text-white flex items-center justify-center transition-colors shadow-xs"
-              >
-                <Trash2 className="w-3 h-3" />
-              </button>
-            )}
-          </div>
-
-          {/* Condition pill */}
-          {game.condition && (
-            <div className="absolute bottom-2.5 left-2.5 bg-white/90 text-[#2D3436] px-2 py-0.5 rounded-full text-[9px] font-bold border border-[#E9ECEF]">
-              상태: {game.condition}
-            </div>
-          )}
         </div>
 
         {/* Info Container */}
         <div className={`paper flex flex-1 flex-col justify-between rounded-b-2xl ${dense ? 'px-2 py-1.5' : 'p-3'}`}>
           <div>
+            <div className="mb-1 flex items-center justify-between gap-1">
+              <span
+                className={`inline-flex max-w-[70%] items-center truncate rounded-full border px-1.5 py-0.5 text-[10px] font-bold ${getOwnershipBadgeColor(
+                  game.ownershipStatus
+                )}`}
+              >
+                {game.ownershipStatus}
+              </span>
+              <span className="shrink-0 text-[10px] font-bold text-[#5C4632]">{game.playCount || 0}회</span>
+            </div>
             <div className="flex items-baseline gap-1.5 mb-1">
               <h3 className="text-sm font-black text-[#1E272E] line-clamp-1 group-hover:text-[#E2B657] transition-colors">
                 {game.title}

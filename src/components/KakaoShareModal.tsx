@@ -6,6 +6,7 @@ import type { UserGame } from '../types';
 import { useToast } from '../context/ToastContext';
 import { track } from '../services/analytics';
 import { KAKAO_APP_KEY, kakaoSharerUrl } from '../config/kakao';
+import { coverLabels } from '../utils/temporaryCover';
 import { CoverImage } from './CoverPlaceholder';
 import { useDialogA11y } from './useDialogA11y';
 import { safePageLocation } from '../utils/analyticsEvents';
@@ -605,7 +606,8 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
                                 <CoverImage
                                   title={game.title}
                                   imageUrl={game.imageUrl}
-                                  alt={game.title}
+                                  labels={coverLabels(game)}
+                                  alt=""
                                   className="h-10 w-10 shrink-0 rounded-lg border border-[#E9ECEF] object-cover"
                                 />
 
@@ -761,7 +763,8 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
                               <CoverImage
                                 title={g.title}
                                 imageUrl={g.imageUrl}
-                                alt={g.title}
+                                labels={coverLabels(g)}
+                                alt=""
                                 className="h-8 w-8 shrink-0 rounded-lg object-cover"
                               />
                               <div className="min-w-0 flex-1">

@@ -19,9 +19,17 @@ interface PlayDetailModalProps {
   onClose: () => void;
   onEdit: (play: PlayRecord) => void;
   onDelete: (play: PlayRecord) => void;
+  labels?: readonly string[];
 }
 
-export const PlayDetailModal: React.FC<PlayDetailModalProps> = ({ play, isOpen, onClose, onEdit, onDelete }) => {
+export const PlayDetailModal: React.FC<PlayDetailModalProps> = ({
+  play,
+  isOpen,
+  onClose,
+  onEdit,
+  onDelete,
+  labels
+}) => {
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
   const photoButtons = useRef<Array<HTMLButtonElement | null>>([]);
   const lightboxCloseRef = useRef<HTMLButtonElement | null>(null);
@@ -75,7 +83,8 @@ export const PlayDetailModal: React.FC<PlayDetailModalProps> = ({ play, isOpen, 
               <CoverImage
                 title={play.gameTitle}
                 imageUrl={play.gameImageUrl}
-                alt={play.gameTitle}
+                labels={labels}
+                alt=""
                 className="row-span-2 h-12 w-12 rounded-2xl object-cover border border-[#E9ECEF] shadow-sm"
               />
               <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
