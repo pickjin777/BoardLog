@@ -5,7 +5,9 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { track } from '../services/analytics';
 import { storage, type ImportPlan } from '../services/storage';
+import { AgeBandDialog } from './AgeBandDialog';
 import { CONTACT, contactHref } from '../config/contact';
+import { ageBandLabel } from '../utils/ageGate';
 import { parseBackup, MAX_BACKUP_BYTES } from '../utils/backupImport';
 import { isNativeShell } from '../utils/nativeShell';
 import { storagePlace } from '../utils/storageNotice';
@@ -32,9 +34,19 @@ export const MyPageView: React.FC<MyPageViewProps> = ({ onOpenAuth, onOpenCatalo
   const [isDeleting, setIsDeleting] = useState(false);
   const [scanOn, setScanOn] = useState(() => storage.isPhotoRecognitionEnabled());
   const [scanConsent, setScanConsent] = useState(() => storage.hasPhotoScanConsent());
+  const [ageBand, setAgeBand] = useState(() => storage.getAgeBand());
+  const [isAgeOpen, setIsAgeOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const place = storagePlace(isNativeShell(), navigator.userAgent);
   const contactLink = contactHref(CONTACT);
+  const under14 = ageBand === 'under_14';
+
+  const refreshAge = () => {
+    setAgeBand(storage.getAgeBand());
+    setScanOn(storage.isPhotoRecognitionEnabled());
+    setScanConsent(storage.hasPhotoScanConsent());
+    setIsAgeOpen(false);
+  };
 
   const handleBackupChosen = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -219,6 +231,22 @@ export const MyPageView: React.FC<MyPageViewProps> = ({ onOpenAuth, onOpenCatalo
         </p>
       </div>
 
+      <section id="settings-age-card" className="space-y-3 rounded-2xl bg-[#F6EBD4] p-4 text-[#1C160E]">
+        <h3 className="text-xs font-semibold">나이</h3>
+        <p id="settings-age-status" className="text-sm leading-relaxed">
+          {ageBandLabel(ageBand)}. 만 14세 미만은 사진 인식과 이용 통계를 쓰지 않습니다.
+        </p>
+        <button
+          id="settings-age-open"
+          type="button"
+          onClick={() => setIsAgeOpen(true)}
+          className="btn-gold min-h-12 w-full px-3 text-xs"
+        >
+          {ageBand === 'unset' ? '나이 선택' : '나이 다시 선택'}
+        </button>
+      </section>
+      <AgeBandDialog isOpen={isAgeOpen} onClose={refreshAge} />
+
       <div
         id="settings-photo-recognition"
         className="space-y-3 rounded-2xl border border-[#E9ECEF] bg-white p-4 shadow-sm"
@@ -227,25 +255,33 @@ export const MyPageView: React.FC<MyPageViewProps> = ({ onOpenAuth, onOpenCatalo
           <div>
             <h3 className="text-xs font-bold text-[#1E272E]">사진 인식</h3>
             <p className="mt-1 text-[11px] leading-relaxed text-[#636E72]">
-              끄면 사진을 서버로 보내지 않습니다. 동의는 미리 체크되지 않습니다.
+              {under14
+                ? '만 14세 미만은 사진 인식이 꺼져 있습니다. 사진은 서버로 나가지 않습니다.'
+                : '끄면 사진을 서버로 보내지 않습니다. 동의는 미리 체크되지 않습니다.'}
             </p>
           </div>
-          <button
-            id="settings-photo-recognition-toggle"
-            type="button"
-            role="switch"
-            aria-checked={scanOn}
-            onClick={() => {
-              const next = !scanOn;
-              storage.setPhotoRecognitionEnabled(next);
-              setScanOn(next);
-            }}
-            className={`min-h-12 shrink-0 rounded-full px-4 text-xs font-bold ${
-              scanOn ? 'bg-[#E2B657] text-[#1A1408]' : 'bg-[#F1F3F5] text-[#1C160E]'
-            }`}
-          >
-            {scanOn ? '켜짐' : '꺼짐'}
-          </button>
+          {under14 ? (
+            <p id="settings-photo-under14" className="shrink-0 text-xs font-bold text-[#1C160E]">
+              꺼짐
+            </p>
+          ) : (
+            <button
+              id="settings-photo-recognition-toggle"
+              type="button"
+              role="switch"
+              aria-checked={scanOn}
+              onClick={() => {
+                const next = !scanOn;
+                storage.setPhotoRecognitionEnabled(next);
+                setScanOn(next);
+              }}
+              className={`min-h-12 shrink-0 rounded-full px-4 text-xs font-bold ${
+                scanOn ? 'bg-[#E2B657] text-[#1A1408]' : 'bg-[#F1F3F5] text-[#1C160E]'
+              }`}
+            >
+              {scanOn ? '켜짐' : '꺼짐'}
+            </button>
+          )}
         </div>
         {scanConsent ? (
           <button
@@ -264,31 +300,36 @@ export const MyPageView: React.FC<MyPageViewProps> = ({ onOpenAuth, onOpenCatalo
         )}
       </div>
 
-      <div id="settings-contact-card" className="space-y-2 rounded-2xl border border-[#E9ECEF] bg-white p-4 shadow-sm">
-        <h3 className="text-xs font-bold text-[#1E272E]">문의</h3>
+      <div id="settings-contact-card" className="space-y-3 rounded-2xl bg-[#F6EBD4] p-4 text-[#1C160E]">
+        <h3 className="text-xs font-semibold">문의</h3>
+        <p className="text-sm leading-relaxed">
+          {CONTACT.developerName} ({CONTACT.businessName})
+          <br />
+          {CONTACT.address}
+        </p>
         {contactLink ? (
           <a
             id="settings-contact"
             href={contactLink}
-            className="flex min-h-12 items-center justify-center rounded-full bg-[#E2B657] text-xs font-bold text-[#1A1408]"
+            className="btn-gold flex min-h-12 items-center justify-center px-3 text-xs"
           >
-            문의하기
+            {CONTACT.email}
           </a>
-        ) : (
-          <button
-            id="settings-contact"
-            type="button"
-            disabled
-            className="min-h-12 w-full rounded-full bg-[#F1F3F5] text-xs font-bold text-[#636E72]"
-          >
-            문의
-          </button>
-        )}
-        {!contactLink && (
-          <p className="text-[11px] leading-relaxed text-[#636E72]">
-            개발자 이름, 메일, 공개 주소는 아직 정해지지 않았습니다.
-          </p>
-        )}
+        ) : null}
+        <a
+          id="mypage-privacy-policy-link"
+          href="/privacy.html"
+          className="btn-cream flex min-h-12 items-center justify-center px-3 text-xs"
+        >
+          개인정보처리방침
+        </a>
+        <a
+          id="mypage-terms-link"
+          href="/terms.html"
+          className="btn-cream flex min-h-12 items-center justify-center px-3 text-xs"
+        >
+          이용약관
+        </a>
       </div>
 
       {/* Backup / Export Section */}

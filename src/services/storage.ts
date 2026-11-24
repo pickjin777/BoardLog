@@ -2,6 +2,11 @@ import type { UserGame, PlayRecord, UserProfile } from '../types';
 import { formatDate } from '../utils/formatters';
 import { type ParsedBackup, gameDedupKey, playDedupKey } from '../utils/backupImport';
 import { parseCollectorState, remapCollectorIds, type CollectorState } from '../utils/collectorProgress';
+import {
+  type AgeBand,
+  allowsOffDeviceCollection as ageAllowsOffDeviceCollection,
+  parseAgeBand
+} from '../utils/ageGate';
 import { loginFailureDelayMs, waitMs } from '../utils/loginBackoff';
 
 const DB_NAME = 'board_log_db_v1';
@@ -16,6 +21,8 @@ const LS_GUEST_UID = 'boardlog_guest_uid';
 const LS_SHARE_NAME = 'boardlog_share_name';
 const LS_SCAN_ENABLED = 'boardlog_scan_enabled';
 const LS_SCAN_CONSENT = 'boardlog_scan_consent';
+const LS_AGE_BAND = 'boardlog_age_band';
+const LS_TERMS_VERSION = 'boardlog_terms_version';
 const LS_LOGIN_FAILURES = 'boardlog_login_failures';
 
 const PBKDF2_ITERATIONS = 210_000;
@@ -739,12 +746,48 @@ class BoardLogStorage {
     this.lsSetQuiet(LS_SHARE_NAME, name.trim());
   }
 
-  /** Missing key means on. Off blocks every scan request, including the availability probe. */
+  /**
+   * Self-declared band. Stays on this device. Under 14 also turns photo recognition off,
+   * because that path is what sends a picture to Gemini.
+   */
+  getAgeBand(): AgeBand {
+    return parseAgeBand(this.lsGet<unknown>(LS_AGE_BAND, null));
+  }
+
+  /** Empty until the person has opened a build. A later terms version can announce itself on launch. */
+  getTermsVersion(): string | null {
+    const value = this.lsGet<unknown>(LS_TERMS_VERSION, null);
+    return typeof value === 'string' && value.length > 0 ? value : null;
+  }
+
+  setTermsVersion(version: string): void {
+    this.lsSetQuiet(LS_TERMS_VERSION, version);
+  }
+
+  setAgeBand(band: Exclude<AgeBand, 'unset'>): void {
+    this.lsSetQuiet(LS_AGE_BAND, band);
+    if (band === 'under_14') {
+      this.lsSetQuiet(LS_SCAN_ENABLED, '0');
+      this.lsSetQuiet(LS_SCAN_CONSENT, '');
+    }
+  }
+
+  /** Photo recognition and visit statistics. False until the person says they are 14 or older. */
+  allowsOffDeviceCollection(): boolean {
+    return ageAllowsOffDeviceCollection(this.getAgeBand());
+  }
+
+  /** Missing key means on, except under 14, where the switch cannot be on. */
   isPhotoRecognitionEnabled(): boolean {
+    if (this.getAgeBand() === 'under_14') return false;
     return this.lsGet<string>(LS_SCAN_ENABLED, '1') !== '0';
   }
 
   setPhotoRecognitionEnabled(enabled: boolean): void {
+    if (enabled && this.getAgeBand() === 'under_14') {
+      this.lsSetQuiet(LS_SCAN_ENABLED, '0');
+      return;
+    }
     this.lsSetQuiet(LS_SCAN_ENABLED, enabled ? '1' : '0');
   }
 
@@ -752,7 +795,9 @@ class BoardLogStorage {
     return this.lsGet<string>(LS_SCAN_CONSENT, '') === '1';
   }
 
+  /** No-op until the age band allows data to leave the device. */
   grantPhotoScanConsent(): void {
+    if (!this.allowsOffDeviceCollection()) return;
     this.lsSetQuiet(LS_SCAN_CONSENT, '1');
   }
 

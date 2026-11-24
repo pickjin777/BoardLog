@@ -30,6 +30,7 @@ import { type SharedPlay, decodeSharedPlay, sharedHashPresent, toRecipientRecord
 import { normalizePlay } from './utils/backupImport';
 import { ConfirmModal } from './components/ConfirmModal';
 import { LocalStorageNotice } from './components/LocalStorageNotice';
+import { TermsChangeNotice } from './components/TermsChangeNotice';
 import { LoadingState, EmptyState, ErrorState } from './components/StateViews';
 import { TreasureReveal, type TreasureMoment } from './components/TreasureReveal';
 import { dayHeading } from './utils/memoryCard';
@@ -502,6 +503,7 @@ const MainApp: React.FC = () => {
 
   return (
     <div className="treasure-shell min-h-screen bg-[#F1F3F5] text-[#2D3436] flex flex-col font-sans selection:bg-[#4834D4]/20 selection:text-[#4834D4] lg:pl-60">
+      <TermsChangeNotice />
       {treasure && !sharingPlay && (
         <TreasureReveal kind={treasure} variant={progress?.chestVariant} onDone={() => setTreasure(null)} />
       )}

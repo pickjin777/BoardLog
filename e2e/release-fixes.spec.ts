@@ -134,6 +134,8 @@ test('photo scan makes no network call before consent', async ({ page }) => {
   await hasText('시드 검색은 그대로', page.locator('#game-form-modal-overlay'), '시드 목록에서 찾기');
   check('게임 폼을 열어도 인식 요청 없음', calls === 0, String(calls));
   await page.locator('#game-form-open-scan-btn').click();
+  await visible('나이 선택', page.locator('#age-band-14-or-over'));
+  await page.locator('#age-band-14-or-over').click();
   await visible('동의 안내', page.locator('#scan-consent-dialog'));
   check('동의 창에서도 인식 요청 없음', calls === 0, String(calls));
   const confirm = page.locator('#scan-consent-confirm');
@@ -160,6 +162,7 @@ test('without a scan key, a chosen photo falls back to manual entry and saves', 
   await page.locator('#nav-tab-games').click();
   await page.locator('#games-add-game-btn').click();
   await page.locator('#game-form-open-scan-btn').click();
+  await page.locator('#age-band-14-or-over').click();
   await page.locator('#scan-consent-check').check();
   await page.locator('#scan-consent-confirm').click();
   await visible('사진 선택 시트', page.locator('#scan-modal-sheet'));
@@ -199,6 +202,7 @@ test('without a scan key, several photos stay on the device and open manual entr
   await page.locator('#nav-tab-games').click();
   await page.locator('#games-add-game-btn').click();
   await page.locator('#game-form-open-scan-btn').click();
+  await page.locator('#age-band-14-or-over').click();
   await page.locator('#scan-consent-check').check();
   await page.locator('#scan-consent-confirm').click();
   await visible('사진 선택 시트', page.locator('#scan-modal-sheet'));

@@ -54,6 +54,9 @@ test('with a measurement id: only listed events are sent and the share fragment 
       gaRequests.push(route.request().url());
       return route.abort();
     });
+    await context.addInitScript(() => {
+      localStorage.setItem('boardlog_age_band', JSON.stringify('14_or_over'));
+    });
     return { context, page: await context.newPage() };
   };
 

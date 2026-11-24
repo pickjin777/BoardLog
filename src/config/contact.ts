@@ -1,20 +1,23 @@
 /**
- * TODO: 개발자 이름, 문의 메일, 공개 URL은 아직 정해지지 않았다.
- * 비어 있는 동안 설정의 문의 항목은 누르지 않는다.
- * 개인정보처리방침과 이용약관, 계정 삭제 안내의 자리표시자도 여기서 채우지 않는다.
+ * Public contact for the settings screen. The street address and email stay here and in
+ * docs/legal, not in other features.
  */
 export const CONTACT = {
-  developerName: '',
-  email: '',
-  privacyPolicyUrl: '',
-  termsUrl: '',
-  accountDeletionUrl: '',
-  websiteUrl: ''
+  developerName: '진상두',
+  businessName: '픽진',
+  email: 'pickjin777@gmail.com',
+  address: '경기도 군포시 번영로 314 4층 공유오피스1호',
+  privacyPolicyUrl: 'https://board-log.vercel.app/privacy.html',
+  termsUrl: 'https://board-log.vercel.app/terms.html',
+  accountDeletionUrl: 'https://board-log.vercel.app/account-deletion/',
+  websiteUrl: 'https://board-log.vercel.app'
 } as const;
 
 export interface ContactChannel {
   developerName: string;
+  businessName: string;
   email: string;
+  address: string;
   privacyPolicyUrl: string;
   termsUrl: string;
   accountDeletionUrl: string;
