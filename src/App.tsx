@@ -1,10 +1,11 @@
 import type React from 'react';
-import { useState, useEffect, useCallback } from 'react';
+import { lazy, Suspense, useState, useEffect, useCallback, useRef } from 'react';
 import { Search, Plus, LayoutGrid, List, Download, MessageCircle } from 'lucide-react';
 import type { UserGame, PlayRecord, GameOwnershipStatus, MyGameResult, TabType } from './types';
 import { ToastProvider, useToast } from './context/ToastContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { track } from './services/analytics';
+import { topOverlay, type OverlayName } from './utils/overlayHistory';
 import { storage } from './services/storage';
 import { Navbar } from './components/Navbar';
 import { BottomNav } from './components/BottomNav';
@@ -13,7 +14,9 @@ import { GameCard } from './components/GameCard';
 import { GameListItem } from './components/GameListItem';
 import { GameFormModal } from './components/GameFormModal';
 import { GameScanModal } from './components/GameScanModal';
-import { GameDetailModal } from './components/GameDetailModal';
+const GameDetailModal = lazy(() =>
+  import('./components/GameDetailModal').then((mod) => ({ default: mod.GameDetailModal }))
+);
 import { GameCatalogModal } from './components/GameCatalogModal';
 import { KakaoShareModal } from './components/KakaoShareModal';
 import { PlayCard } from './components/PlayCard';
@@ -26,11 +29,35 @@ import { SharedPlayModal } from './components/SharedPlayModal';
 import { type SharedPlay, decodeSharedPlay, sharedHashPresent, toRecipientRecord } from './utils/sharedPlay';
 import { normalizePlay } from './utils/backupImport';
 import { ConfirmModal } from './components/ConfirmModal';
+import { LocalStorageNotice } from './components/LocalStorageNotice';
 import { LoadingState, EmptyState, ErrorState } from './components/StateViews';
+import { TreasureReveal, type TreasureMoment } from './components/TreasureReveal';
+import { dayHeading } from './utils/memoryCard';
+import { cleanMemo, mostPlayed } from './utils/shelf';
+import {
+  didLevelUp,
+  emptyCollectorState,
+  levelFromXp,
+  progressGames,
+  progressPlays,
+  questSnapshots,
+  reconcileCollector,
+  selectChestVariant,
+  totalXp,
+  visibleQuestIds,
+  type CollectorState
+} from './utils/collectorProgress';
+import type { CollectorMode } from './components/CollectorBoard';
+
+const PlayCalendar = lazy(() => import('./components/PlayCalendar').then((mod) => ({ default: mod.PlayCalendar })));
+const CollectorBoard = lazy(() =>
+  import('./components/CollectorBoard').then((mod) => ({ default: mod.CollectorBoard }))
+);
 
 const OWNERSHIP_TABS: (GameOwnershipStatus | '전체')[] = [
   '전체',
   '보유중',
+  '하고 싶음',
   '빌려줌',
   '빌림',
   '판매예정',
@@ -57,11 +84,13 @@ const MainApp: React.FC = () => {
   // Search & Filter States for Games tab
   const [gameSearch, setGameSearch] = useState('');
   const [selectedOwnership, setSelectedOwnership] = useState<GameOwnershipStatus | '전체'>('전체');
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [gameViewMode, setGameViewMode] = useState<'grid' | 'list'>('grid');
 
   // Search & Filter States for Plays tab
   const [playSearch, setPlaySearch] = useState('');
   const [selectedPlayResult, setSelectedPlayResult] = useState<MyGameResult | '전체'>('전체');
+  const [selectedPlayDate, setSelectedPlayDate] = useState<string | null>(null);
 
   // Modals Management
   const [isAuthOpen, setIsAuthOpen] = useState(false);
@@ -69,6 +98,7 @@ const MainApp: React.FC = () => {
   const [isKakaoShareOpen, setIsKakaoShareOpen] = useState(false);
   const [isGameFormOpen, setIsGameFormOpen] = useState(false);
   const [isScanOpen, setIsScanOpen] = useState(false);
+  const [scanAllowsRecognition, setScanAllowsRecognition] = useState(true);
   const [editingGame, setEditingGame] = useState<UserGame | null>(null);
   const [viewingGame, setViewingGame] = useState<UserGame | null>(null);
 
@@ -82,6 +112,106 @@ const MainApp: React.FC = () => {
   // Confirm delete modals
   const [deletingGame, setDeletingGame] = useState<UserGame | null>(null);
   const [deletingPlay, setDeletingPlay] = useState<PlayRecord | null>(null);
+  const [treasure, setTreasure] = useState<TreasureMoment | null>('enter');
+  const [progress, setProgress] = useState<CollectorState | null>(null);
+  const [collectorSheet, setCollectorSheet] = useState<Exclude<CollectorMode, 'badges'> | null>(null);
+
+  const overlay = topOverlay({
+    treasure: treasure !== null,
+    auth: isAuthOpen,
+    catalog: isCatalogModalOpen,
+    kakao: isKakaoShareOpen,
+    incoming: incomingShare !== null,
+    share: sharingPlay !== null,
+    collector: collectorSheet !== null,
+    game: viewingGame !== null,
+    play: viewingPlay !== null,
+    playForm: isPlayFormOpen,
+    gameForm: isGameFormOpen,
+    scan: isScanOpen,
+    deleteGame: deletingGame !== null,
+    deletePlay: deletingPlay !== null
+  });
+  const overlayRef = useRef(overlay);
+  overlayRef.current = overlay;
+  const pushedOverlay = useRef(false);
+
+  const closeOverlay = useCallback((name: OverlayName) => {
+    if (name === 'treasure') setTreasure(null);
+    else if (name === 'auth') setIsAuthOpen(false);
+    else if (name === 'catalog') setIsCatalogModalOpen(false);
+    else if (name === 'kakao') setIsKakaoShareOpen(false);
+    else if (name === 'incoming') setIncomingShare(null);
+    else if (name === 'share') setSharingPlay(null);
+    else if (name === 'collector') setCollectorSheet(null);
+    else if (name === 'game') setViewingGame(null);
+    else if (name === 'play') setViewingPlay(null);
+    else if (name === 'playForm') {
+      setIsPlayFormOpen(false);
+      setEditingPlay(null);
+    } else if (name === 'gameForm') {
+      setIsGameFormOpen(false);
+      setEditingGame(null);
+    } else if (name === 'scan') setIsScanOpen(false);
+    else if (name === 'deleteGame') setDeletingGame(null);
+    else setDeletingPlay(null);
+  }, []);
+
+  useEffect(() => {
+    if (!overlay) {
+      if (pushedOverlay.current) {
+        pushedOverlay.current = false;
+        history.back();
+      }
+      return;
+    }
+    if (!pushedOverlay.current) {
+      history.pushState({ boardlogOverlay: overlay }, '');
+      pushedOverlay.current = true;
+    }
+    const onPop = () => {
+      pushedOverlay.current = false;
+      const current = overlayRef.current;
+      if (current) closeOverlay(current);
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, [overlay, closeOverlay]);
+
+  const syncProgress = useCallback(
+    (nextGames: UserGame[], nextPlays: PlayRecord[], patch?: (state: CollectorState) => CollectorState) => {
+      if (!user) return false;
+      const previous = storage.getCollectorProgress(user.uid);
+      const base = patch ? patch(previous ?? emptyCollectorState()) : previous;
+      const now = new Date();
+      const reconciled = reconcileCollector({
+        previous: base,
+        games: progressGames(nextGames),
+        plays: progressPlays(nextPlays),
+        now,
+        nowIso: now.toISOString()
+      });
+      const xp = totalXp(reconciled);
+      const level = levelFromXp(xp).level;
+      let acknowledged = reconciled.acknowledgedLevel;
+      let leveled = false;
+      if (acknowledged == null) acknowledged = level;
+      else if (didLevelUp(acknowledged, xp)) {
+        acknowledged = level;
+        leveled = true;
+        setTreasure('level');
+      }
+      const stored = { ...reconciled, acknowledgedLevel: acknowledged };
+      try {
+        storage.saveCollectorProgress(user.uid, stored);
+      } catch {
+        // The games and plays are already stored. Opening the app again derives this key.
+      }
+      setProgress(stored);
+      return leveled;
+    },
+    [user]
+  );
 
   // Fetch all user data
   const loadData = useCallback(async () => {
@@ -95,13 +225,14 @@ const MainApp: React.FC = () => {
       ]);
       setGames(fetchedGames);
       setPlays(fetchedPlays);
+      syncProgress(fetchedGames, fetchedPlays);
     } catch {
       setLoadError('데이터를 불러오는 중 오류가 발생했습니다.');
       showToast('데이터 불러오기 실패', 'error');
     } finally {
       setIsLoading(false);
     }
-  }, [user, showToast]);
+  }, [user, showToast, syncProgress]);
 
   useEffect(() => {
     loadData();
@@ -117,7 +248,9 @@ const MainApp: React.FC = () => {
       // Update
       const updated = await storage.updateUserGame(user.uid, editingGame.id, gameData);
       if (updated) {
-        setGames((prev) => prev.map((g) => (g.id === updated.id ? updated : g)));
+        const nextGames = games.map((g) => (g.id === updated.id ? updated : g));
+        setGames(nextGames);
+        syncProgress(nextGames, plays);
         if (viewingGame?.id === updated.id) {
           setViewingGame(updated);
         }
@@ -127,11 +260,21 @@ const MainApp: React.FC = () => {
       // Create
       const newGame = await storage.addUserGame(user.uid, gameData);
       track('game_added', { method: source.fromSeed ? 'seed' : 'manual' });
-      setGames((prev) => [newGame, ...prev]);
+      const nextGames = [newGame, ...games];
+      setGames(nextGames);
+      if (!syncProgress(nextGames, plays)) setTreasure('acquire');
       showToast(`'${newGame.title}'이(가) 내 게임에 추가되었습니다!`, 'success');
     }
     setEditingGame(null);
     setIsGameFormOpen(false);
+  };
+
+  const handleSaveMemo = async (memo: string) => {
+    if (!user || !viewingGame) return;
+    const updated = await storage.updateUserGame(user.uid, viewingGame.id, { memo: cleanMemo(memo) });
+    setGames((current) => current.map((game) => (game.id === updated.id ? updated : game)));
+    setViewingGame(updated);
+    showToast('메모를 저장했습니다.', 'success');
   };
 
   const handleRegisterScannedGames = async (scanned: Omit<UserGame, 'id' | 'createdAt' | 'updatedAt'>[]) => {
@@ -145,7 +288,9 @@ const MainApp: React.FC = () => {
     } finally {
       // Whatever was written before a failure is already saved, so reflect it either way.
       if (created.length > 0) {
-        setGames((prev) => [...[...created].reverse(), ...prev]);
+        const nextGames = [...[...created].reverse(), ...games];
+        setGames(nextGames);
+        if (!syncProgress(nextGames, plays)) setTreasure('acquire');
       }
     }
     showToast(`${created.length}개 게임이 등록되었습니다.`, 'success');
@@ -156,7 +301,9 @@ const MainApp: React.FC = () => {
     try {
       const ok = await storage.deleteUserGame(user.uid, deletingGame.id);
       if (ok) {
-        setGames((prev) => prev.filter((g) => g.id !== deletingGame.id));
+        const nextGames = games.filter((g) => g.id !== deletingGame.id);
+        setGames(nextGames);
+        syncProgress(nextGames, plays);
         if (viewingGame?.id === deletingGame.id) {
           setViewingGame(null);
         }
@@ -200,7 +347,12 @@ const MainApp: React.FC = () => {
     }
     try {
       // Same path as backup restore: fresh id, whitelisted fields, duplicate check, ownership.
-      const plan = await storage.planImport(user.uid, { games: [], plays: [imported], invalidCount: 0 });
+      const plan = await storage.planImport(user.uid, {
+        games: [],
+        plays: [imported],
+        invalidCount: 0,
+        progress: null
+      });
       if (plan.newPlays.length === 0) {
         showToast('이미 내 기록에 있는 게임이에요.', 'info');
       } else {
@@ -229,17 +381,20 @@ const MainApp: React.FC = () => {
   // --- Handlers: Play Record CRUD ---
   const handleSavePlay = async (playData: Omit<PlayRecord, 'id' | 'createdAt' | 'updatedAt'>) => {
     if (!user) return;
+    setSelectedPlayDate(null);
     if (editingPlay) {
       // Update
       const updated = await storage.updatePlayRecord(user.uid, editingPlay.id, playData);
       if (updated) {
-        setPlays((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+        const nextPlays = plays.map((p) => (p.id === updated.id ? updated : p));
+        setPlays(nextPlays);
         if (viewingPlay?.id === updated.id) {
           setViewingPlay(updated);
         }
         // Refresh games play counts
         const updatedGames = await storage.getUserGames(user.uid);
         setGames(updatedGames);
+        syncProgress(updatedGames, nextPlays);
         showToast('플레이 기록이 수정되었습니다.', 'success');
       }
     } else {
@@ -247,11 +402,13 @@ const MainApp: React.FC = () => {
       const newPlay = await storage.addPlayRecord(user.uid, playData);
       track('play_saved');
       if (playData.photos.length > 0) track('play_photo_added', { count: playData.photos.length });
-      setPlays((prev) => [newPlay, ...prev]);
+      const nextPlays = [newPlay, ...plays];
+      setPlays(nextPlays);
       // Refresh games to update playCount
       const updatedGames = await storage.getUserGames(user.uid);
       setGames(updatedGames);
-      showToast('새 플레이 기록이 저장되었습니다! 🎲', 'success');
+      syncProgress(updatedGames, nextPlays);
+      showToast('플레이 기록을 저장했습니다', 'success');
       track('share_sheet_opened');
       setSharingPlay(newPlay);
     }
@@ -265,12 +422,14 @@ const MainApp: React.FC = () => {
     try {
       const ok = await storage.deletePlayRecord(user.uid, deletingPlay.id);
       if (ok) {
-        setPlays((prev) => prev.filter((p) => p.id !== deletingPlay.id));
+        const nextPlays = plays.filter((p) => p.id !== deletingPlay.id);
+        setPlays(nextPlays);
         if (viewingPlay?.id === deletingPlay.id) {
           setViewingPlay(null);
         }
         const updatedGames = await storage.getUserGames(user.uid);
         setGames(updatedGames);
+        syncProgress(updatedGames, nextPlays);
         showToast('플레이 기록이 삭제되었습니다.', 'info');
       }
     } catch {
@@ -299,8 +458,9 @@ const MainApp: React.FC = () => {
       g.storageLocation.toLowerCase().includes(gameSearch.toLowerCase());
 
     const matchesOwnership = selectedOwnership === '전체' || g.ownershipStatus === selectedOwnership;
+    const matchesTag = selectedTag === null || (g.tags ?? []).includes(selectedTag);
 
-    return matchesSearch && matchesOwnership;
+    return matchesSearch && matchesOwnership && matchesTag;
   });
 
   // Filtered Plays
@@ -312,17 +472,55 @@ const MainApp: React.FC = () => {
       p.participants.some((part) => part.name.toLowerCase().includes(playSearch.toLowerCase()));
 
     const matchesResult = selectedPlayResult === '전체' || p.myResult === selectedPlayResult;
+    const matchesDate = selectedPlayDate === null || p.date === selectedPlayDate;
 
-    return matchesSearch && matchesResult;
+    return matchesSearch && matchesResult && matchesDate;
   });
 
-  return (
-    <div className="min-h-screen bg-[#F1F3F5] text-[#2D3436] flex flex-col font-sans selection:bg-[#4834D4]/20 selection:text-[#4834D4]">
-      {/* Top Fixed Header */}
-      <Navbar onOpenAuth={() => setIsAuthOpen(true)} />
+  const now = new Date();
+  const sourceGames = progressGames(games);
+  const sourcePlays = progressPlays(plays);
+  const weekIds = new Set(visibleQuestIds(now));
+  const weekQuests = questSnapshots(sourceGames, sourcePlays, now).filter((quest) => weekIds.has(quest.id));
+  const questTeaser = weekQuests.find((quest) => !quest.done) ?? weekQuests[0] ?? null;
+  const xp = progress ? totalXp(progress) : 0;
+  const chooseVariant = (variantId: string) => {
+    if (!user || !progress) return;
+    const done = new Set(
+      questSnapshots(sourceGames, sourcePlays, now)
+        .filter((quest) => quest.done)
+        .map((quest) => quest.id)
+    );
+    const next = selectChestVariant(progress, variantId, done);
+    try {
+      storage.saveCollectorProgress(user.uid, next);
+    } catch {
+      // The choice stays on screen. The next reconcile keeps it when the badge still holds.
+    }
+    setProgress(next);
+  };
 
-      {/* Main Container */}
-      <main className="flex-1 w-full max-w-xl mx-auto px-4 pt-18 pb-24">
+  return (
+    <div className="treasure-shell min-h-screen bg-[#F1F3F5] text-[#2D3436] flex flex-col font-sans selection:bg-[#4834D4]/20 selection:text-[#4834D4] lg:pl-60">
+      {treasure && !sharingPlay && (
+        <TreasureReveal kind={treasure} variant={progress?.chestVariant} onDone={() => setTreasure(null)} />
+      )}
+      {/* Top Fixed Header */}
+      <Navbar onOpenAuth={() => setIsAuthOpen(true)} chestVariant={progress?.chestVariant} />
+
+      {/* Phone stays a single column. Tablet and desktop use the extra width. */}
+      <main
+        id="app-shell-main"
+        className="flex-1 w-full min-w-0 max-w-xl md:max-w-3xl lg:max-w-6xl mx-auto px-4 md:px-6 pt-4 lg:pb-12"
+      >
+        <LocalStorageNotice
+          onBackup={() => {
+            setActiveTab('mypage');
+            window.setTimeout(() => {
+              document.getElementById('export-json-btn')?.scrollIntoView({ block: 'center' });
+            }, 50);
+          }}
+        />
         {isLoading ? (
           <LoadingState message="보드로그 데이터를 불러오는 중입니다..." />
         ) : loadError ? (
@@ -334,6 +532,10 @@ const MainApp: React.FC = () => {
               <HomeDashboard
                 games={games}
                 plays={plays}
+                xp={xp}
+                questTeaser={questTeaser}
+                onOpenLevel={() => setCollectorSheet('track')}
+                onOpenQuests={() => setCollectorSheet('quests')}
                 onRemoveSampleData={handleRemoveSampleData}
                 onOpenAddPlay={() => {
                   setEditingPlay(null);
@@ -354,15 +556,17 @@ const MainApp: React.FC = () => {
 
             {/* 2. GAMES TAB (내 보드게임) */}
             {activeTab === 'games' && (
-              <div className="space-y-4 pb-20">
-                {/* Header & View toggle */}
-                <div className="flex items-center justify-between gap-2">
+              <div className="space-y-4 pb-6">
+                {/* Title stays full width. At 320px a side-by-side row crushed it into "내 보드게 / 임". */}
+                <div className="space-y-3">
                   <div>
-                    <h2 className="text-xl font-black italic text-[#1E272E]">내 보드게임 컬렉션</h2>
+                    <h2 id="games-tab-title" className="text-xl font-black text-[#1E272E]">
+                      내 보드게임 컬렉션
+                    </h2>
                     <p className="text-xs text-[#636E72]">총 {games.length}개의 게임</p>
                   </div>
 
-                  <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 [&>button]:shrink-0">
                     {/* Add Game Button */}
                     <button
                       id="games-add-game-btn"
@@ -371,11 +575,11 @@ const MainApp: React.FC = () => {
                         setEditingGame(null);
                         setIsGameFormOpen(true);
                       }}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#4834D4] hover:bg-[#3c2ab9] text-white rounded-2xl text-xs font-bold shadow-[0_4px_12px_rgba(72,52,212,0.25)] transition-all active:scale-95"
-                      title="새 보드게임 추가하기"
+                      className="btn-gold inline-flex items-center gap-1.5 rounded-full px-4 text-xs font-medium"
+                      title="게임 등록"
                     >
                       <Plus className="w-3.5 h-3.5" />
-                      <span>게임 추가</span>
+                      <span>게임 등록</span>
                     </button>
 
                     {/* KakaoTalk Share Button */}
@@ -383,7 +587,7 @@ const MainApp: React.FC = () => {
                       id="games-kakao-share-btn"
                       type="button"
                       onClick={() => setIsKakaoShareOpen(true)}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#FEE500] hover:bg-[#F5DC00] active:bg-[#E8CE00] text-[#191919] rounded-2xl text-xs font-black shadow-xs transition-all active:scale-95 border border-[#F5DC00]"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#FEE500] hover:bg-[#F5DC00] active:bg-[#E8CE00] text-[#191919] rounded-2xl text-xs font-black shadow-xs transition-colors border border-[#F5DC00]"
                       title="소장 보드게임 목록 카카오톡 공유 (전체 / 4인이하 등 조건 선택)"
                     >
                       <MessageCircle className="w-3.5 h-3.5 fill-[#191919]" />
@@ -396,7 +600,7 @@ const MainApp: React.FC = () => {
                       id="games-print-catalog-btn"
                       type="button"
                       onClick={() => setIsCatalogModalOpen(true)}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-[#F8F9FA] text-[#1E272E] rounded-2xl text-xs font-bold border border-[#E9ECEF] shadow-sm transition-all active:scale-95"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-[#F8F9FA] text-[#1E272E] rounded-2xl text-xs font-bold border border-[#E9ECEF] shadow-sm transition-colors"
                       title="소장 도록 PDF 저장 및 인쇄"
                     >
                       <Download className="w-3.5 h-3.5 text-[#4834D4]" />
@@ -408,24 +612,20 @@ const MainApp: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setGameViewMode('grid')}
-                        className={`p-2 rounded-xl transition-colors ${
-                          gameViewMode === 'grid'
-                            ? 'bg-[#4834D4] text-white shadow-xs'
-                            : 'text-[#A8ABAF] hover:text-[#2D3436]'
-                        }`}
-                        title="그리드 뷰"
+                        className={`rounded-xl ${gameViewMode === 'grid' ? 'chip-on' : 'chip-off'}`}
+                        aria-label="격자 보기"
+                        aria-pressed={gameViewMode === 'grid'}
+                        title="격자 보기"
                       >
                         <LayoutGrid className="w-4 h-4" />
                       </button>
                       <button
                         type="button"
                         onClick={() => setGameViewMode('list')}
-                        className={`p-2 rounded-xl transition-colors ${
-                          gameViewMode === 'list'
-                            ? 'bg-[#4834D4] text-white shadow-xs'
-                            : 'text-[#A8ABAF] hover:text-[#2D3436]'
-                        }`}
-                        title="리스트 뷰"
+                        className={`rounded-xl ${gameViewMode === 'list' ? 'chip-on' : 'chip-off'}`}
+                        aria-label="목록 보기"
+                        aria-pressed={gameViewMode === 'list'}
+                        title="목록 보기"
                       >
                         <List className="w-4 h-4" />
                       </button>
@@ -435,28 +635,31 @@ const MainApp: React.FC = () => {
 
                 {/* Search Bar */}
                 <div className="relative">
-                  <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-[#A8ABAF]" />
+                  <Search
+                    className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-[#636E72]"
+                    aria-hidden="true"
+                  />
                   <input
                     id="games-search-input"
                     type="text"
-                    placeholder="게임명, 영문명, 장르, 보관장소 검색..."
+                    aria-label="게임 검색"
+                    placeholder="게임, 장르, 보관 장소"
                     value={gameSearch}
                     onChange={(e) => setGameSearch(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E9ECEF] rounded-full text-xs text-[#1E272E] focus:outline-hidden focus:ring-2 focus:ring-[#4834D4]/20 focus:border-[#4834D4] shadow-sm transition-all"
+                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E9ECEF] rounded-full text-xs text-[#1E272E] focus:outline-hidden focus:ring-2 focus:ring-[#4834D4]/20 focus:border-[#4834D4] shadow-sm transition-colors"
                   />
                 </div>
 
                 {/* Ownership Filter Pills */}
-                <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
+                <div id="games-ownership-filters" className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
                   {OWNERSHIP_TABS.map((tab) => (
                     <button
                       key={tab}
                       type="button"
                       onClick={() => setSelectedOwnership(tab)}
-                      className={`px-3.5 py-1.5 rounded-full font-bold whitespace-nowrap transition-all ${
-                        selectedOwnership === tab
-                          ? 'bg-[#4834D4] text-white shadow-xs'
-                          : 'bg-white text-[#636E72] border border-[#E9ECEF] hover:bg-[#F8F9FA]'
+                      aria-pressed={selectedOwnership === tab}
+                      className={`shrink-0 whitespace-nowrap rounded-full px-4 ${
+                        selectedOwnership === tab ? 'chip-on' : 'chip-off'
                       }`}
                     >
                       {tab}
@@ -464,13 +667,44 @@ const MainApp: React.FC = () => {
                   ))}
                 </div>
 
+                {(() => {
+                  const tags = [...new Set(games.flatMap((game) => game.tags ?? []))].sort((a, b) =>
+                    a.localeCompare(b, 'ko')
+                  );
+                  if (tags.length === 0) return null;
+                  return (
+                    <div id="games-tag-filters" className="flex gap-1.5 overflow-x-auto pb-1 text-xs">
+                      <button
+                        type="button"
+                        aria-pressed={selectedTag === null}
+                        onClick={() => setSelectedTag(null)}
+                        className={`shrink-0 whitespace-nowrap rounded-full px-4 ${selectedTag === null ? 'chip-on' : 'chip-off'}`}
+                      >
+                        태그 전체
+                      </button>
+                      {tags.map((tag) => (
+                        <button
+                          key={tag}
+                          type="button"
+                          aria-pressed={selectedTag === tag}
+                          onClick={() => setSelectedTag(tag)}
+                          className={`shrink-0 whitespace-nowrap rounded-full px-4 ${selectedTag === tag ? 'chip-on' : 'chip-off'}`}
+                        >
+                          {tag}
+                        </button>
+                      ))}
+                    </div>
+                  );
+                })()}
+
                 {/* Game List / Grid */}
                 {filteredGames.length > 0 ? (
                   gameViewMode === 'grid' ? (
-                    <div className="grid grid-cols-2 gap-3.5">
+                    <div className="game-shelf grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
                       {filteredGames.map((game) => (
                         <GameCard
                           key={game.id}
+                          dense
                           game={game}
                           onClick={() => setViewingGame(game)}
                           onDelete={(e) => {
@@ -481,7 +715,7 @@ const MainApp: React.FC = () => {
                       ))}
                     </div>
                   ) : (
-                    <div className="space-y-2.5">
+                    <div className="space-y-2">
                       {filteredGames.map((game) => (
                         <GameListItem
                           key={game.id}
@@ -497,16 +731,16 @@ const MainApp: React.FC = () => {
                   )
                 ) : games.length === 0 ? (
                   <EmptyState
-                    title="등록된 보드게임이 없습니다"
-                    description="자주 즐기는 보드게임을 등록하고 플레이 기록을 남겨보세요."
-                    actionText="인기 게임 검색해서 추가하기"
+                    title="등록된 게임이 없습니다"
+                    description="게임을 등록하면 플레이를 이 기록에 묶을 수 있습니다."
+                    actionText="게임 등록"
                     onAction={() => {
                       setEditingGame(null);
                       setIsGameFormOpen(true);
                     }}
                   />
                 ) : (
-                  <div className="p-8 bg-white rounded-[28px] border border-[#E9ECEF] text-center space-y-3 shadow-sm">
+                  <div className="p-8 bg-white rounded-2xl border border-[#E9ECEF] text-center space-y-3 shadow-sm">
                     <p className="text-xs text-[#636E72]">'{gameSearch}' 검색 조건에 맞는 게임이 없습니다.</p>
                     <button
                       type="button"
@@ -514,7 +748,7 @@ const MainApp: React.FC = () => {
                         setEditingGame(null);
                         setIsGameFormOpen(true);
                       }}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#4834D4] hover:bg-[#3c2ab9] text-white text-xs font-bold rounded-full shadow-[0_4px_14px_rgba(72,52,212,0.3)] transition-colors"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#4834D4] hover:bg-[#3c2ab9] text-white text-xs font-bold rounded-full transition-colors"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       <span>'{gameSearch}' 직접 등록하기</span>
@@ -528,9 +762,9 @@ const MainApp: React.FC = () => {
             {activeTab === 'plays' && (
               <div className="space-y-4 pb-20">
                 {/* Header */}
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-xl font-black italic text-[#1E272E]">플레이 기록</h2>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <h2 className="text-xl font-black text-[#1E272E]">플레이 기록</h2>
                     <p className="text-xs text-[#636E72]">총 {plays.length}회의 플레이 기록</p>
                   </div>
 
@@ -542,55 +776,90 @@ const MainApp: React.FC = () => {
                       setPreselectedGameForPlay(null);
                       setIsPlayFormOpen(true);
                     }}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#4834D4] hover:bg-[#3c2ab9] text-white rounded-full text-xs font-bold shadow-[0_4px_14px_rgba(72,52,212,0.3)] transition-colors"
+                    className="btn-gold inline-flex items-center gap-1.5 rounded-full px-4 text-xs font-medium"
                   >
                     <Plus className="w-4 h-4" />
                     <span>새 기록</span>
                   </button>
                 </div>
 
+                {plays.length > 0 && (
+                  <Suspense
+                    fallback={
+                      <div role="status" className="paper rounded-3xl px-4 py-6 text-sm text-[#1C160E]">
+                        달력을 불러오는 중
+                      </div>
+                    }
+                  >
+                    <PlayCalendar
+                      plays={plays}
+                      selectedDate={selectedPlayDate}
+                      onSelectDate={(dateKey) =>
+                        setSelectedPlayDate((current) => (current === dateKey ? null : dateKey))
+                      }
+                    />
+                  </Suspense>
+                )}
+
+                {selectedPlayDate && (
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-sm font-bold text-[#F6EBD4]">{dayHeading(selectedPlayDate)}의 추억 카드</p>
+                    <button
+                      id="plays-show-all-btn"
+                      type="button"
+                      onClick={() => setSelectedPlayDate(null)}
+                      className="btn-cream rounded-full px-4 text-sm"
+                    >
+                      전체 기록
+                    </button>
+                  </div>
+                )}
+
                 {/* Search Bar */}
                 <div className="relative">
-                  <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-[#A8ABAF]" />
+                  <Search
+                    className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-[#636E72]"
+                    aria-hidden="true"
+                  />
                   <input
                     id="plays-search-input"
                     type="text"
-                    placeholder="게임명, 참여자 이름, 장소 검색..."
+                    aria-label="플레이 기록 검색"
+                    placeholder="게임, 참여자, 장소"
                     value={playSearch}
                     onChange={(e) => setPlaySearch(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E9ECEF] rounded-full text-xs text-[#1E272E] focus:outline-hidden focus:ring-2 focus:ring-[#4834D4]/20 focus:border-[#4834D4] shadow-sm transition-all"
+                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E9ECEF] rounded-full text-xs text-[#1E272E] focus:outline-hidden focus:ring-2 focus:ring-[#4834D4]/20 focus:border-[#4834D4] shadow-sm transition-colors"
                   />
                 </div>
 
                 {/* Result Filter Tabs */}
-                <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
+                <div id="plays-result-filters" className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
                   {PLAY_RESULT_TABS.map((tab) => (
                     <button
                       key={tab}
                       type="button"
                       onClick={() => setSelectedPlayResult(tab)}
-                      className={`px-3.5 py-1.5 rounded-full font-bold whitespace-nowrap transition-all ${
-                        selectedPlayResult === tab
-                          ? 'bg-[#4834D4] text-white shadow-xs'
-                          : 'bg-white text-[#636E72] border border-[#E9ECEF] hover:bg-[#F8F9FA]'
+                      aria-pressed={selectedPlayResult === tab}
+                      className={`shrink-0 whitespace-nowrap rounded-full px-4 ${
+                        selectedPlayResult === tab ? 'chip-on' : 'chip-off'
                       }`}
                     >
-                      {tab === '승리' ? '👑 승리' : tab}
+                      {tab}
                     </button>
                   ))}
                 </div>
 
                 {/* Plays List */}
                 {filteredPlays.length > 0 ? (
-                  <div className="space-y-3.5">
+                  <div id="memory-card-list" className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {filteredPlays.map((play) => (
                       <PlayCard key={play.id} play={play} onClick={() => setViewingPlay(play)} />
                     ))}
                   </div>
                 ) : plays.length === 0 ? (
                   <EmptyState
-                    title="아직 기록된 플레이가 없습니다"
-                    description="오늘 진행한 보드게임의 참여자, 점수, 순위, 현장 사진을 기록해 보세요."
+                    title="아직 플레이 기록이 없습니다"
+                    description="참여자와 승자만 적어도 한 판이 남습니다."
                     actionText="첫 플레이 기록 남기기"
                     onAction={() => {
                       setEditingPlay(null);
@@ -599,14 +868,47 @@ const MainApp: React.FC = () => {
                     }}
                   />
                 ) : (
-                  <div className="p-8 bg-white rounded-[28px] border border-[#E9ECEF] text-center text-xs text-[#636E72] shadow-sm">
-                    '{playSearch}' 조건에 해당하는 플레이 기록이 없습니다.
+                  <div
+                    id="plays-filter-empty"
+                    className="p-8 bg-white rounded-2xl border border-[#E9ECEF] text-center text-sm text-[#F6EBD4] shadow-sm"
+                  >
+                    {selectedPlayDate
+                      ? `${dayHeading(selectedPlayDate)}의 조건에 맞는 기록이 없습니다.`
+                      : `'${playSearch}' 조건에 해당하는 플레이 기록이 없습니다.`}
                   </div>
                 )}
               </div>
             )}
 
             {/* 4. MY PAGE TAB */}
+            {activeTab === 'mypage' && progress && (
+              <Suspense
+                fallback={
+                  <p role="status" className="paper mb-4 rounded-3xl px-4 py-4 text-sm text-[#1C160E]">
+                    배지를 불러오는 중
+                  </p>
+                }
+              >
+                <CollectorBoard
+                  mode="badges"
+                  games={sourceGames}
+                  plays={sourcePlays}
+                  state={progress}
+                  now={now}
+                  onSelectVariant={chooseVariant}
+                  showcase={{
+                    mostPlayedTitle: mostPlayed(games, plays)?.title ?? null,
+                    mostPlayedCount: (() => {
+                      const favorite = mostPlayed(games, plays);
+                      if (!favorite) return 0;
+                      const linked = plays.filter((play) => play.gameId === favorite.id).length;
+                      return linked || favorite.playCount || 0;
+                    })(),
+                    photos: plays.flatMap((play) => play.photos.map((photo) => photo.url)).slice(0, 8)
+                  }}
+                />
+              </Suspense>
+            )}
             {activeTab === 'mypage' && (
               <MyPageView
                 onOpenAuth={() => setIsAuthOpen(true)}
@@ -657,6 +959,13 @@ const MainApp: React.FC = () => {
         }}
         onSave={handleSaveGame}
         onOpenScan={() => {
+          setScanAllowsRecognition(true);
+          setIsGameFormOpen(false);
+          setEditingGame(null);
+          setIsScanOpen(true);
+        }}
+        onPickPhoto={() => {
+          setScanAllowsRecognition(false);
           setIsGameFormOpen(false);
           setEditingGame(null);
           setIsScanOpen(true);
@@ -666,26 +975,44 @@ const MainApp: React.FC = () => {
       {/* Bulk Registration from Photos */}
       <GameScanModal
         isOpen={isScanOpen}
+        allowRecognition={scanAllowsRecognition}
         onClose={() => setIsScanOpen(false)}
+        onManualEntry={() => {
+          setIsScanOpen(false);
+          setEditingGame(null);
+          setIsGameFormOpen(true);
+        }}
         existingGames={games}
         onRegister={handleRegisterScannedGames}
       />
 
-      {/* Game Details Modal */}
-      <GameDetailModal
-        isOpen={!!viewingGame}
-        game={viewingGame}
-        onClose={() => setViewingGame(null)}
-        onEdit={(game) => {
-          setViewingGame(null);
-          setEditingGame(game);
-          setIsGameFormOpen(true);
-        }}
-        onDelete={(game) => {
-          setDeletingGame(game);
-        }}
-        onStartPlay={handleStartPlayForGame}
-      />
+      {viewingGame && (
+        <Suspense fallback={<p role="status">게임을 여는 중</p>}>
+          <GameDetailModal
+            isOpen
+            game={viewingGame}
+            plays={plays}
+            games={games}
+            onOpenPlay={(play) => {
+              setViewingGame(null);
+              setViewingPlay(play);
+            }}
+            onClose={() => setViewingGame(null)}
+            onEdit={(game) => {
+              setViewingGame(null);
+              setEditingGame(game);
+              setIsGameFormOpen(true);
+            }}
+            onDelete={(game) => {
+              setDeletingGame(game);
+            }}
+            onStartPlay={handleStartPlayForGame}
+            onSaveMemo={(memo) => {
+              void handleSaveMemo(memo);
+            }}
+          />
+        </Suspense>
+      )}
 
       {/* Play Add/Edit Modal */}
       <PlayRecordFormModal
@@ -717,7 +1044,30 @@ const MainApp: React.FC = () => {
         }}
       />
 
-      <PlayShareSheet play={sharingPlay} onClose={() => setSharingPlay(null)} />
+      <PlayShareSheet
+        play={sharingPlay}
+        onClose={() => setSharingPlay(null)}
+        onShared={(playId) =>
+          syncProgress(games, plays, (state) => ({
+            ...state,
+            sharedPlayIds: state.sharedPlayIds.includes(playId) ? state.sharedPlayIds : [...state.sharedPlayIds, playId]
+          }))
+        }
+      />
+      {collectorSheet && progress && (
+        <Suspense fallback={null}>
+          <CollectorBoard
+            mode={collectorSheet}
+            sheet
+            games={sourceGames}
+            plays={sourcePlays}
+            state={progress}
+            now={now}
+            onClose={() => setCollectorSheet(null)}
+            onSelectVariant={chooseVariant}
+          />
+        </Suspense>
+      )}
       <SharedPlayModal shared={incomingShare} onClose={() => setIncomingShare(null)} onAdd={handleAddSharedPlay} />
 
       {/* Auth Modal */}

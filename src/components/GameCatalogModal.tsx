@@ -1,5 +1,5 @@
 import type React from 'react';
-import { useState, useMemo } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Printer,
@@ -15,10 +15,10 @@ import {
   Search,
   Loader2
 } from 'lucide-react';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 import type { UserGame, GameOwnershipStatus } from '../types';
 import { formatDate } from '../utils/formatters';
+import { CoverImage } from './CoverPlaceholder';
+import { useDialogA11y } from './useDialogA11y';
 import { getGameIndexKey, KOREAN_INDEX_KEYS } from '../utils/koreanIndex';
 import { useToast } from '../context/ToastContext';
 import { track } from '../services/analytics';
@@ -125,7 +125,11 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
     showToast('PDF 파일을 생성하고 있습니다. 잠시만 기다려주세요...', 'info');
 
     try {
-      // High quality canvas capture
+      // Loaded here so the PDF libraries stay out of the first screen.
+      // Vite may hand back either the module or the default export itself.
+      const [jspdfLoaded, html2canvasLoaded] = await Promise.all([import('jspdf'), import('html2canvas')]);
+      const jsPDF = jspdfLoaded.default ?? jspdfLoaded;
+      const html2canvas = html2canvasLoaded.default ?? html2canvasLoaded;
       const canvas = await html2canvas(targetElement, {
         scale: 2,
         useCORS: true,
@@ -214,36 +218,40 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
     showToast('엑셀/스프레드시트에 붙여넣을 수 있는 표 데이터가 복사되었습니다.', 'success');
   };
 
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useDialogA11y(isOpen, onClose, dialogRef);
+
   if (!isOpen) return null;
 
   return (
     <AnimatePresence>
       <div
         id="game-catalog-modal-overlay"
-        className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/50 backdrop-blur-xs overflow-y-auto"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        tabIndex={-1}
+        className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/50 overflow-y-auto"
       >
         <motion.div
-          initial={{ opacity: 0, scale: 0.96, y: 15 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.96, y: 15 }}
-          className="printable-catalog-root w-full max-w-4xl bg-white rounded-[32px] shadow-2xl border border-[#E9ECEF] overflow-hidden my-auto max-h-[94vh] flex flex-col"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+          exit={{ opacity: 0, y: 8 }}
+          className="printable-catalog-root w-full max-w-4xl bg-white rounded-2xl shadow-2xl border border-[#E9ECEF] overflow-hidden my-auto max-h-[94vh] flex flex-col"
         >
           {/* Top Interactive Toolbar (Hidden on Print) */}
-          <div className="no-print p-4 sm:p-5 border-b border-[#E9ECEF] flex items-center justify-between bg-white shrink-0">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#4834D4]/10 text-[#4834D4] flex items-center justify-center font-bold">
-                <BookOpen className="w-5 h-5" />
+          <div className="no-print p-4 sm:p-5 border-b border-[#E9ECEF] flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-white shrink-0">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#F1F3F5] text-[#E4D3B4]">
+                <BookOpen className="h-4 w-4" strokeWidth={1.5} />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h2 className="text-base font-black text-[#1E272E]">보드게임 서가 도록 & PDF 저장</h2>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#4834D4]/10 text-[#4834D4] font-bold">
-                    {processedGames.length}종 수록
-                  </span>
+                  <h2 className="text-base font-medium text-[#F6EBD4]">서가 도록</h2>
+                  <span className="text-xs text-[#E4D3B4]">{processedGames.length}종</span>
                 </div>
-                <p className="text-[11px] text-[#636E72]">
-                  서가 색인 대장 및 도록 형태로 PDF 파일을 즉시 다운로드하거나 인쇄할 수 있습니다.
-                </p>
+                <p className="text-[11px] text-[#636E72]">PDF로 저장하거나 인쇄합니다</p>
               </div>
             </div>
 
@@ -251,7 +259,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
               <button
                 type="button"
                 onClick={handleCopyText}
-                className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#F1F3F5] hover:bg-[#E9ECEF] text-[#1E272E] text-xs font-bold rounded-full transition-colors"
+                className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 bg-[#F1F3F5] hover:bg-[#E9ECEF] text-[#1E272E] text-xs font-bold rounded-full transition-colors"
                 title="엑셀용 데이터 복사"
               >
                 <Copy className="w-3.5 h-3.5 text-[#636E72]" />
@@ -261,7 +269,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
               <button
                 type="button"
                 onClick={handlePrint}
-                className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#F1F3F5] hover:bg-[#E9ECEF] text-[#1E272E] text-xs font-bold rounded-full transition-colors"
+                className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 bg-[#F1F3F5] hover:bg-[#E9ECEF] text-[#1E272E] text-xs font-bold rounded-full transition-colors"
                 title="인쇄 미리보기 및 브라우저 인쇄"
               >
                 <Printer className="w-3.5 h-3.5 text-[#636E72]" />
@@ -274,7 +282,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                 type="button"
                 disabled={isGeneratingPdf}
                 onClick={handleSavePdf}
-                className="inline-flex items-center gap-2 px-4.5 py-2 bg-[#4834D4] hover:bg-[#3c2ab9] text-white text-xs font-bold rounded-full shadow-[0_4px_12px_rgba(72,52,212,0.3)] transition-colors active:scale-95 disabled:opacity-60"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-[#4834D4] hover:bg-[#3c2ab9] text-white text-xs font-bold rounded-full transition-colors disabled:opacity-60"
               >
                 {isGeneratingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                 <span>{isGeneratingPdf ? 'PDF 생성 중...' : 'PDF로 저장'}</span>
@@ -282,8 +290,9 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
 
               <button
                 type="button"
+                aria-label="닫기"
                 onClick={onClose}
-                className="p-2 text-[#A8ABAF] hover:text-[#1E272E] rounded-full hover:bg-[#F1F3F5] transition-colors ml-1"
+                className="p-2 text-[#636E72] hover:text-[#1E272E] rounded-full hover:bg-[#F1F3F5] transition-colors ml-1"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -293,13 +302,13 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
           {/* Configuration Controls Bar (Hidden on Print) */}
           <div className="no-print p-3 sm:p-4 bg-[#F8F9FA] border-b border-[#E9ECEF] space-y-3 shrink-0 text-xs">
             {/* Row 1: View Format & Search */}
-            <div className="flex flex-wrap items-center justify-between gap-2.5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               {/* View Format Selector */}
-              <div className="flex items-center gap-1 bg-white p-1 rounded-2xl border border-[#E9ECEF]">
+              <div className="flex max-w-full items-center gap-1 overflow-x-auto bg-white p-1 rounded-2xl border border-[#E9ECEF]">
                 <button
                   type="button"
                   onClick={() => setViewMode('table')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold transition-colors ${
+                  className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-xl font-bold transition-colors ${
                     viewMode === 'table' ? 'bg-[#4834D4] text-white shadow-xs' : 'text-[#636E72] hover:text-[#1E272E]'
                   }`}
                 >
@@ -308,8 +317,9 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                 </button>
                 <button
                   type="button"
+                  aria-pressed={viewMode === 'cards'}
                   onClick={() => setViewMode('cards')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold transition-colors ${
+                  className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-xl font-bold transition-colors ${
                     viewMode === 'cards' ? 'bg-[#4834D4] text-white shadow-xs' : 'text-[#636E72] hover:text-[#1E272E]'
                   }`}
                 >
@@ -318,8 +328,9 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                 </button>
                 <button
                   type="button"
+                  aria-pressed={viewMode === 'index'}
                   onClick={() => setViewMode('index')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold transition-colors ${
+                  className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-xl font-bold transition-colors ${
                     viewMode === 'index' ? 'bg-[#4834D4] text-white shadow-xs' : 'text-[#636E72] hover:text-[#1E272E]'
                   }`}
                 >
@@ -331,17 +342,28 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
               {/* Search & Status Filter */}
               <div className="flex items-center gap-2 flex-1 sm:flex-initial">
                 <div className="relative flex-1 sm:w-48">
-                  <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#A8ABAF]" />
+                  <label htmlFor="catalog-search-input" className="sr-only">
+                    도록 내 검색
+                  </label>
+                  <Search
+                    className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#636E72]"
+                    aria-hidden="true"
+                  />
                   <input
+                    id="catalog-search-input"
                     type="text"
-                    placeholder="도록 내 검색..."
+                    placeholder="검색"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full pl-8 pr-3 py-1.5 bg-white border border-[#E9ECEF] rounded-full text-xs text-[#1E272E] focus:outline-hidden focus:border-[#4834D4]"
                   />
                 </div>
 
+                <label htmlFor="catalog-status-filter" className="sr-only">
+                  소장 상태
+                </label>
                 <select
+                  id="catalog-status-filter"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as GameOwnershipStatus | '전체')}
                   className="px-2.5 py-1.5 bg-white border border-[#E9ECEF] rounded-full text-xs font-bold text-[#1E272E] focus:outline-hidden focus:border-[#4834D4]"
@@ -359,7 +381,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
             {/* Row 2: Sort and Visibility Toggles */}
             <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-[#E9ECEF]/70">
               <div className="flex items-center gap-1.5">
-                <span className="text-[11px] font-bold text-[#A8ABAF]">정렬:</span>
+                <span className="text-[11px] font-bold text-[#636E72]">정렬:</span>
                 {(
                   [
                     { id: 'title', label: '가나다순' },
@@ -372,10 +394,11 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                   <button
                     key={opt.id}
                     type="button"
+                    aria-pressed={sortOption === opt.id}
                     onClick={() => setSortOption(opt.id)}
-                    className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-all ${
+                    className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-colors ${
                       sortOption === opt.id
-                        ? 'bg-[#1E272E] text-white'
+                        ? 'bg-[#E2B657] text-[#1A1408]'
                         : 'bg-white text-[#636E72] border border-[#E9ECEF] hover:bg-[#F1F3F5]'
                     }`}
                   >
@@ -386,7 +409,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
 
               {/* Toggles */}
               <div className="flex items-center gap-3 text-[11px] text-[#636E72]">
-                <label className="flex items-center gap-1 cursor-pointer select-none">
+                <label className="flex min-h-12 items-center gap-1.5 cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={showImages}
@@ -395,7 +418,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                   />
                   <span>사진 표시</span>
                 </label>
-                <label className="flex items-center gap-1 cursor-pointer select-none">
+                <label className="flex min-h-12 items-center gap-1.5 cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={showLocations}
@@ -404,7 +427,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                   />
                   <span>보관위치 강조</span>
                 </label>
-                <label className="flex items-center gap-1 cursor-pointer select-none">
+                <label className="flex min-h-12 items-center gap-1.5 cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={showStatsCover}
@@ -418,8 +441,11 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
           </div>
 
           {/* Printable Document Preview Area */}
-          <div
+          <section
             id="printable-catalog-document"
+            // biome-ignore lint/a11y/noNoninteractiveTabindex: axe requires a keyboard stop so this scroll region can move
+            tabIndex={0}
+            aria-label="도록 미리보기"
             className="printable-catalog-content p-5 sm:p-8 overflow-y-auto flex-1 bg-white space-y-6"
           >
             {/* Document Cover / Header Section */}
@@ -427,21 +453,15 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
               <div className="print-avoid-break p-6 sm:p-7 rounded-3xl bg-[#F8F9FA] border-2 border-[#1E272E]/10 space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b-2 border-[#1E272E]/10 pb-4">
                   <div>
-                    <div className="flex items-center gap-2 text-[#4834D4] font-black text-xs uppercase tracking-widest">
-                      <BookOpen className="w-4 h-4" />
-                      <span>BOARD GAME COLLECTION & SHELF ARCHIVE</span>
-                    </div>
-                    <h1 className="text-2xl sm:text-3xl font-black text-[#1E272E] tracking-tight mt-1">
+                    <h1 className="text-2xl font-medium text-[#1E272E] sm:text-3xl">
                       {ownerName}의 보드게임 서가 도록
                     </h1>
-                    <p className="text-xs text-[#636E72] mt-0.5 font-medium">
-                      소장 보드게임 색인 대장 • 인쇄 및 서가 관리용 카탈로그
-                    </p>
+                    <p className="text-xs text-[#636E72] mt-0.5 font-medium">인쇄용 소장 목록</p>
                   </div>
 
                   <div className="text-right text-xs text-[#636E72] shrink-0">
                     <p className="font-bold text-[#1E272E]">발행일: {formatDate()}</p>
-                    <p className="text-[11px] text-[#A8ABAF]">
+                    <p className="text-[11px] text-[#636E72]">
                       정렬:{' '}
                       {sortOption === 'title'
                         ? '가나다순'
@@ -459,22 +479,22 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                 {/* KPI Metrics */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                   <div className="p-3 bg-white rounded-2xl border border-[#E9ECEF] text-center">
-                    <span className="text-[10px] text-[#A8ABAF] font-bold block">총 수록 게임</span>
+                    <span className="text-[10px] text-[#636E72] font-bold block">총 수록 게임</span>
                     <span className="text-xl font-black text-[#1E272E]">{stats.total}</span>
                     <span className="text-[10px] text-[#636E72] font-semibold"> 종</span>
                   </div>
                   <div className="p-3 bg-white rounded-2xl border border-[#E9ECEF] text-center">
-                    <span className="text-[10px] text-[#A8ABAF] font-bold block">총 누적 플레이</span>
+                    <span className="text-[10px] text-[#636E72] font-bold block">총 누적 플레이</span>
                     <span className="text-xl font-black text-[#4834D4]">{stats.totalPlays}</span>
                     <span className="text-[10px] text-[#636E72] font-semibold"> 회</span>
                   </div>
                   <div className="p-3 bg-white rounded-2xl border border-[#E9ECEF] text-center">
-                    <span className="text-[10px] text-[#A8ABAF] font-bold block">구분된 서가/보관처</span>
+                    <span className="text-[10px] text-[#636E72] font-bold block">구분된 서가/보관처</span>
                     <span className="text-xl font-black text-[#1E272E]">{stats.locationCount}</span>
                     <span className="text-[10px] text-[#636E72] font-semibold"> 곳</span>
                   </div>
                   <div className="p-3 bg-white rounded-2xl border border-[#E9ECEF] text-center">
-                    <span className="text-[10px] text-[#A8ABAF] font-bold block">주요 소장 장르</span>
+                    <span className="text-[10px] text-[#636E72] font-bold block">주요 소장 장르</span>
                     <div className="text-[11px] font-black text-[#1E272E] truncate mt-1">
                       {stats.topGenres.map(([g]) => g).join(', ') || '다양한 장르'}
                     </div>
@@ -486,7 +506,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
             {/* Empty list alert */}
             {processedGames.length === 0 ? (
               <div className="p-12 text-center text-[#636E72] space-y-2 border-2 border-dashed border-[#E9ECEF] rounded-3xl">
-                <Dices className="w-8 h-8 mx-auto text-[#A8ABAF]" />
+                <Dices className="w-8 h-8 mx-auto text-[#636E72]" />
                 <p className="font-bold text-sm text-[#1E272E]">조건에 맞는 보드게임이 없습니다.</p>
                 <p className="text-xs">검색어나 상태 필터를 변경해 보세요.</p>
               </div>
@@ -495,7 +515,12 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
             {/* 1. LIBRARY INDEX TABLE VIEW */}
             {viewMode === 'table' && processedGames.length > 0 && (
               <div className="space-y-3">
-                <div className="overflow-x-auto rounded-2xl border border-[#E9ECEF]">
+                <section
+                  // biome-ignore lint/a11y/noNoninteractiveTabindex: the wide table scrolls sideways and needs a keyboard stop
+                  tabIndex={0}
+                  aria-label="도록 표"
+                  className="overflow-x-auto rounded-2xl border border-[#E9ECEF]"
+                >
                   <table className="print-table w-full text-left text-xs text-[#1E272E] border-collapse">
                     <thead>
                       <tr className="bg-[#F8F9FA] border-b border-[#E9ECEF] text-[11px] font-black text-[#636E72]">
@@ -514,20 +539,16 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                     <tbody className="divide-y divide-[#E9ECEF]">
                       {processedGames.map((game, idx) => (
                         <tr key={game.id} className="print-avoid-break hover:bg-[#F8F9FA] transition-colors">
-                          <td className="p-2.5 text-center font-bold text-[#A8ABAF] text-[11px]">
+                          <td className="p-2.5 text-center font-bold text-[#636E72] text-[11px]">
                             {String(idx + 1).padStart(2, '0')}
                           </td>
 
                           {showImages && (
                             <td className="p-2 text-center">
-                              <img
-                                src={
-                                  game.imageUrl ||
-                                  'https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?auto=format&fit=crop&w=300&q=80'
-                                }
-                                alt=""
-                                referrerPolicy="no-referrer"
-                                className="w-9 h-9 rounded-lg object-cover bg-stone-100 mx-auto border border-[#E9ECEF]"
+                              <CoverImage
+                                title={game.title}
+                                imageUrl={game.imageUrl}
+                                className="mx-auto h-9 w-9 rounded-lg border border-[#E9ECEF] object-cover"
                               />
                             </td>
                           )}
@@ -535,7 +556,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                           <td className="p-2.5">
                             <div className="font-black text-[#1E272E] text-xs">{game.title}</div>
                             {game.titleEn && (
-                              <div className="text-[10px] text-[#A8ABAF] font-medium">{game.titleEn}</div>
+                              <div className="text-[10px] text-[#636E72] font-medium">{game.titleEn}</div>
                             )}
                           </td>
 
@@ -549,7 +570,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
 
                           <td className="p-2.5 text-center">
                             <span className="inline-block px-1.5 py-0.5 rounded-md bg-[#F1F3F5] font-black text-[10px] text-[#1E272E]">
-                              ★ {game.weight.toFixed(1)}
+                              {game.weight.toFixed(1)}
                             </span>
                           </td>
 
@@ -575,7 +596,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                                   <span>{game.storageLocation}</span>
                                 </span>
                               ) : (
-                                <span className="text-[#A8ABAF] text-[11px]">-</span>
+                                <span className="text-[#636E72] text-[11px]">-</span>
                               )}
                             </td>
                           )}
@@ -588,7 +609,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                             <span
                               className={`inline-block text-[10px] px-2 py-0.5 rounded-full font-bold ${
                                 game.ownershipStatus === '보유중'
-                                  ? 'bg-[#27AE60]/10 text-[#27AE60]'
+                                  ? 'bg-[#1B7A43]/10 text-[#1B7A43]'
                                   : game.ownershipStatus === '빌려줌'
                                     ? 'bg-[#E67E22]/10 text-[#E67E22]'
                                     : 'bg-[#F1F3F5] text-[#636E72]'
@@ -601,7 +622,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                       ))}
                     </tbody>
                   </table>
-                </div>
+                </section>
               </div>
             )}
 
@@ -611,22 +632,18 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                 {processedGames.map((game, idx) => (
                   <div
                     key={game.id}
-                    className="print-avoid-break p-4 bg-white rounded-2xl border-2 border-[#E9ECEF] flex gap-3.5 items-start relative"
+                    className="print-avoid-break p-4 bg-white rounded-2xl border-2 border-[#E9ECEF] flex gap-4 items-start relative"
                   >
                     {/* Index call number badge */}
-                    <div className="absolute top-3 right-3 text-[10px] font-black text-[#A8ABAF] bg-[#F1F3F5] px-2 py-0.5 rounded-full">
+                    <div className="absolute top-3 right-3 text-[10px] font-black text-[#636E72] bg-[#F1F3F5] px-2 py-0.5 rounded-full">
                       #{String(idx + 1).padStart(3, '0')}
                     </div>
 
                     {showImages && (
-                      <img
-                        src={
-                          game.imageUrl ||
-                          'https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?auto=format&fit=crop&w=300&q=80'
-                        }
-                        alt=""
-                        referrerPolicy="no-referrer"
-                        className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl object-cover bg-stone-100 shrink-0 border border-[#E9ECEF] shadow-xs"
+                      <CoverImage
+                        title={game.title}
+                        imageUrl={game.imageUrl}
+                        className="h-20 w-20 shrink-0 rounded-xl border border-[#E9ECEF] object-cover shadow-xs sm:h-24 sm:w-24"
                       />
                     )}
 
@@ -635,7 +652,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                         <span
                           className={`text-[9px] px-2 py-0.5 rounded-full font-bold ${
                             game.ownershipStatus === '보유중'
-                              ? 'bg-[#27AE60]/10 text-[#27AE60]'
+                              ? 'bg-[#1B7A43]/10 text-[#1B7A43]'
                               : 'bg-[#F1F3F5] text-[#636E72]'
                           }`}
                         >
@@ -651,13 +668,13 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
 
                       <h3 className="text-sm font-black text-[#1E272E] leading-snug">{game.title}</h3>
                       {game.titleEn && (
-                        <p className="text-[10px] text-[#A8ABAF] font-medium truncate mb-2">{game.titleEn}</p>
+                        <p className="text-[10px] text-[#636E72] font-medium truncate mb-2">{game.titleEn}</p>
                       )}
 
                       {/* Specs */}
                       <div className="grid grid-cols-3 gap-1 py-1.5 my-1.5 border-y border-[#E9ECEF] text-[10px] text-center">
                         <div>
-                          <span className="text-[#A8ABAF] block text-[9px]">인원</span>
+                          <span className="text-[#636E72] block text-[9px]">인원</span>
                           <span className="font-bold text-[#1E272E]">
                             {game.minPlayers === game.maxPlayers
                               ? `${game.minPlayers}인`
@@ -665,12 +682,12 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                           </span>
                         </div>
                         <div>
-                          <span className="text-[#A8ABAF] block text-[9px]">시간</span>
+                          <span className="text-[#636E72] block text-[9px]">시간</span>
                           <span className="font-bold text-[#1E272E]">{game.playTime}분</span>
                         </div>
                         <div>
-                          <span className="text-[#A8ABAF] block text-[9px]">난이도</span>
-                          <span className="font-bold text-[#4834D4]">★ {game.weight.toFixed(1)}</span>
+                          <span className="text-[#636E72] block text-[9px]">난이도</span>
+                          <span className="font-bold text-[#4834D4]">{game.weight.toFixed(1)}</span>
                         </div>
                       </div>
 
@@ -709,7 +726,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                   return (
                     <div key={key} className="print-avoid-break space-y-2">
                       <div className="flex items-center gap-2 pb-1.5 border-b-2 border-[#1E272E]">
-                        <span className="w-8 h-8 rounded-xl bg-[#1E272E] text-white flex items-center justify-center font-black text-sm">
+                        <span className="w-8 h-8 rounded-xl bg-[#E2B657] text-[#1A1408] flex items-center justify-center font-black text-sm">
                           {key}
                         </span>
                         <h4 className="text-sm font-black text-[#1E272E]">
@@ -741,7 +758,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                             </div>
 
                             <span className="text-[10px] font-black text-[#4834D4] px-2 py-0.5 rounded-md bg-white border border-[#E9ECEF] shrink-0">
-                              ★ {game.weight.toFixed(1)}
+                              {game.weight.toFixed(1)}
                             </span>
                           </div>
                         ))}
@@ -753,13 +770,13 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
             )}
 
             {/* Document Bottom Footer */}
-            <div className="print-avoid-break pt-6 border-t border-[#E9ECEF] flex flex-col sm:flex-row items-center justify-between text-[11px] text-[#A8ABAF]">
+            <div className="print-avoid-break pt-6 border-t border-[#E9ECEF] flex flex-col sm:flex-row items-center justify-between text-[11px] text-[#636E72]">
               <div>보드로그 (BoardLog) • {ownerName}의 보드게임 서가 도록 색인부</div>
               <div className="mt-1 sm:mt-0 font-medium">
-                출력 일시: {formatDate()} • 총 {processedGames.length}종 수록
+                출력 일시: {formatDate()} • 총 {processedGames.length}종
               </div>
             </div>
-          </div>
+          </section>
 
           {/* Interactive Modal Bottom Bar (Hidden on Print) */}
           <div className="no-print p-4 border-t border-[#E9ECEF] bg-[#F8F9FA] flex flex-col sm:flex-row items-center justify-between gap-3">
@@ -792,7 +809,7 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
                 type="button"
                 disabled={isGeneratingPdf}
                 onClick={handleSavePdf}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#4834D4] hover:bg-[#3c2ab9] text-white text-xs font-bold rounded-full shadow-[0_4px_12px_rgba(72,52,212,0.3)] transition-colors disabled:opacity-60"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#4834D4] hover:bg-[#3c2ab9] text-white text-xs font-bold rounded-full transition-colors disabled:opacity-60"
               >
                 {isGeneratingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                 <span>{isGeneratingPdf ? 'PDF 생성 중...' : 'PDF로 저장'}</span>

@@ -8,5 +8,10 @@ coverage/
 .env*
 !.env.example
 !.env.analytics-test
+*.jks
+*.keystore
 test-results/
 playwright-report/
+dist-desktop/
+desktop/bundle/
+release/

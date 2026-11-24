@@ -1,18 +1,32 @@
 import type React from 'react';
-import { Layers, Trophy, History, Plus, ArrowRight, Sparkles, Download, MessageCircle, Key } from 'lucide-react';
+import { Layers, Plus, ArrowRight, Download, MessageCircle } from 'lucide-react';
 import type { UserGame, PlayRecord } from '../types';
 import { PlayCard } from './PlayCard';
 import { GameCard } from './GameCard';
+import { LevelTrack } from './LevelTrack';
 import { formatDuration } from '../utils/formatters';
 import { findRemovableSampleData } from '../services/storage';
+import { activitySummary, neglectedGames, recentPlayRail, todaysTreasure } from '../utils/shelf';
+import { CoverImage } from './CoverPlaceholder';
+
+export interface QuestTeaser {
+  title: string;
+  hint: string;
+  current: number;
+  goal: number;
+}
 
 interface HomeDashboardProps {
   games: UserGame[];
   plays: PlayRecord[];
+  xp: number;
+  questTeaser: QuestTeaser | null;
   onOpenAddPlay: () => void;
   onOpenAddGame: () => void;
   onOpenCatalog?: () => void;
   onOpenKakaoShare?: () => void;
+  onOpenLevel: () => void;
+  onOpenQuests: () => void;
   onSelectGame: (game: UserGame) => void;
   onSelectPlay: (play: PlayRecord) => void;
   onNavigateTab: (tab: 'games' | 'plays') => void;
@@ -22,10 +36,14 @@ interface HomeDashboardProps {
 export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   games,
   plays,
+  xp,
+  questTeaser,
   onOpenAddPlay,
   onOpenAddGame,
   onOpenCatalog,
   onOpenKakaoShare,
+  onOpenLevel,
+  onOpenQuests,
   onSelectGame,
   onSelectPlay,
   onNavigateTab,
@@ -34,7 +52,6 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   const removableSample = findRemovableSampleData(games, plays);
   const hasSampleData = removableSample.samplePlays.length + removableSample.sampleGames.length > 0;
 
-  // Statistics calculations
   const totalGames = games.length;
   const totalPlays = plays.length;
   const totalMinutes = plays.reduce((acc, p) => acc + (p.durationMinutes || 0), 0);
@@ -43,226 +60,281 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
 
   const recentPlays = plays.slice(0, 3);
   const favoriteGames = [...games].sort((a, b) => (b.playCount || 0) - (a.playCount || 0)).slice(0, 4);
-
-  // Collector level: purely derived from plays already in storage, no new persisted state.
-  const PLAYS_PER_LEVEL = 5;
-  const collectorLevel = Math.floor(totalPlays / PLAYS_PER_LEVEL) + 1;
-  const playsIntoLevel = totalPlays % PLAYS_PER_LEVEL;
-  const levelProgressPct = Math.round((playsIntoLevel / PLAYS_PER_LEVEL) * 100);
-  const playsToNextLevel = PLAYS_PER_LEVEL - playsIntoLevel;
+  const treasure = todaysTreasure(games, plays);
+  const activity = activitySummary(plays, new Date());
+  const recentRail = recentPlayRail(plays);
+  const quietRail = neglectedGames(games, plays, new Date());
 
   return (
-    <div className="space-y-6 pb-20">
-      {/* Top Banner / Quick Action CTA - Editorial Gradient */}
-      <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#4834D4] via-[#5742df] to-[#686DE0] p-6 text-white shadow-[0_20px_40px_rgba(72,52,212,0.25)] border border-white/10">
-        <div className="relative z-10">
-          <div className="flex items-center gap-1.5 text-white/80 text-[11px] font-bold mb-2 tracking-wide uppercase">
-            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-            <span>Editorial Board Game Log</span>
+    <div className="space-y-3 pb-4">
+      <section id="home-treasure" className="home-hero rounded-3xl px-3 py-3">
+        <div className="flex items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-xs text-[#E2B657]">오늘의 보물</p>
+            <h2 className="mt-1 text-xl font-medium leading-snug text-[#F6EBD4]">
+              {treasure ? treasure.title : '오늘 플레이한 게임을 기록하세요'}
+            </h2>
+            <p id="home-activity-14" className="mt-1 text-xs leading-relaxed text-[#E4D3B4]">
+              {activity.line}
+            </p>
           </div>
-          <h2 className="text-2xl font-black italic tracking-tight mb-1.5 leading-snug">
-            오늘 플레이한 게임을 기록하세요
-          </h2>
-          <p className="text-xs text-white/80 mb-5 max-w-xs leading-relaxed font-normal">
-            승패, 순위, 점수, 현장 사진을 3터치 이내로 빠르게 아카이빙합니다.
-          </p>
-
-          <div className="flex items-center gap-2.5 flex-wrap">
+          {treasure ? (
             <button
-              id="dashboard-add-play-cta"
               type="button"
-              onClick={onOpenAddPlay}
-              className="inline-flex items-center gap-2 px-4.5 py-2.5 bg-white hover:bg-[#F8F9FA] text-[#4834D4] rounded-full text-xs font-bold shadow-[0_4px_12px_rgba(0,0,0,0.1)] active:scale-95 transition-all"
+              onClick={() => onSelectGame(treasure)}
+              className="shrink-0 rounded-xl"
+              aria-label={`${treasure.title} 열기`}
             >
-              <Plus className="w-4 h-4 stroke-[2.5]" />
-              <span>새 플레이 기록</span>
+              <CoverImage
+                title={treasure.title}
+                imageUrl={treasure.imageUrl}
+                className="home-chest rounded-xl object-cover"
+              />
             </button>
-            <button
-              id="dashboard-add-game-cta"
-              type="button"
-              onClick={onOpenAddGame}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-white/15 hover:bg-white/25 text-white rounded-full text-xs font-semibold backdrop-blur-xs transition-colors border border-white/20"
-            >
-              <Layers className="w-3.5 h-3.5" />
-              <span>게임 등록</span>
-            </button>
-            {onOpenKakaoShare && (
-              <button
-                id="dashboard-open-kakao-cta"
-                type="button"
-                onClick={onOpenKakaoShare}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-[#FEE500] hover:bg-[#F5DC00] text-[#191919] rounded-full text-xs font-black transition-transform active:scale-95 shadow-xs"
-              >
-                <MessageCircle className="w-3.5 h-3.5 fill-[#191919]" />
-                <span>카톡 목록 공유</span>
-              </button>
-            )}
-            {onOpenCatalog && (
-              <button
-                id="dashboard-open-catalog-cta"
-                type="button"
-                onClick={onOpenCatalog}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-white/15 hover:bg-white/25 text-white rounded-full text-xs font-semibold backdrop-blur-xs transition-colors border border-white/20"
-              >
-                <Download className="w-3.5 h-3.5" />
-                <span>PDF 도록 / 인쇄</span>
-              </button>
-            )}
-          </div>
+          ) : (
+            <img
+              className="home-chest"
+              src="/hero/chest-320.webp"
+              srcSet="/hero/chest-160.webp 160w, /hero/chest-320.webp 320w, /hero/chest-480.webp 480w"
+              sizes="96px"
+              alt=""
+              width={480}
+              height={410}
+            />
+          )}
         </div>
-
-        {/* Decorative subtle background accents */}
-        <div className="absolute -right-8 -bottom-8 w-44 h-44 bg-white/10 rounded-full blur-3xl pointer-events-none" />
-      </div>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <button
+            id="dashboard-add-play-cta"
+            type="button"
+            onClick={onOpenAddPlay}
+            className="btn-gold inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-2 text-center text-sm font-medium"
+          >
+            <Plus className="h-4 w-4 shrink-0" strokeWidth={1.5} />
+            <span>새 플레이 기록</span>
+          </button>
+          <button
+            id="dashboard-add-game-cta"
+            type="button"
+            onClick={onOpenAddGame}
+            className="btn-cream inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-2 text-center text-sm font-medium"
+          >
+            <Layers className="h-4 w-4 shrink-0" strokeWidth={1.5} />
+            <span>게임 등록</span>
+          </button>
+        </div>
+        <div className="mt-2 grid grid-cols-2 gap-2">
+          {onOpenKakaoShare && (
+            <button
+              id="dashboard-open-kakao-cta"
+              type="button"
+              onClick={onOpenKakaoShare}
+              className="inline-flex items-center justify-center gap-1.5 rounded-full bg-[#FEE500] px-3 py-2 text-center text-sm font-medium text-[#191919]"
+            >
+              <MessageCircle className="h-4 w-4 shrink-0 fill-[#191919]" strokeWidth={1.5} />
+              <span>카톡 목록 공유</span>
+            </button>
+          )}
+          {onOpenCatalog && (
+            <button
+              id="dashboard-open-catalog-cta"
+              type="button"
+              onClick={onOpenCatalog}
+              className="btn-quiet inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-2 text-center text-sm font-medium"
+            >
+              <Download className="h-4 w-4 shrink-0" strokeWidth={1.5} />
+              <span>PDF 도록</span>
+            </button>
+          )}
+        </div>
+      </section>
 
       {hasSampleData && onRemoveSampleData && (
-        <div className="flex items-center gap-3 px-4 py-3 bg-amber-50 rounded-[24px] border border-amber-200">
-          <p className="flex-1 text-[11px] leading-relaxed text-amber-900">
+        <div className="paper flex items-center gap-3 rounded-2xl px-4 py-3">
+          <p className="flex-1 text-xs leading-relaxed text-[#1C160E]">
             처음에 넣어둔 <strong>예시 기록</strong>이 승률과 통계에 섞여 있어요.
           </p>
           <button
             id="dashboard-remove-sample-btn"
             type="button"
             onClick={onRemoveSampleData}
-            className="shrink-0 px-3 py-1.5 bg-white border border-amber-300 text-amber-900 rounded-full text-[11px] font-bold hover:bg-amber-100 active:scale-95 transition-all"
+            className="btn-quiet shrink-0 rounded-full px-3 text-xs"
           >
             예시 지우기
           </button>
         </div>
       )}
 
-      {/* Collector Level Strip — derived from plays, no new persisted state */}
-      <div className="flex items-center gap-3 px-4 py-3 bg-white rounded-[24px] border border-[#E9ECEF] shadow-sm">
-        <div className="w-9 h-9 rounded-full bg-[#4834D4]/10 text-[#4834D4] flex items-center justify-center shrink-0 font-black italic text-xs">
-          Lv.{collectorLevel}
+      <div className="grid grid-cols-4 gap-2">
+        <div id="home-kpi-games" className="paper rounded-2xl p-2 text-center">
+          <span className="mb-1 block whitespace-nowrap text-[12px] text-[#5C4632]">보유 게임</span>
+          <span className="text-xl font-medium tabular-nums text-[#1C160E]">{totalGames}</span>
+          <span className="block text-[12px] text-[#5C4632]">개</span>
         </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-[10px] font-bold text-[#A8ABAF]">수집가 레벨</span>
-            <span className="text-[10px] font-medium text-[#636E72]">
-              {playsToNextLevel === PLAYS_PER_LEVEL ? '기록 시작!' : `다음 레벨까지 ${playsToNextLevel}회`}
-            </span>
-          </div>
-          <div className="h-1.5 bg-[#F1F2F6] rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-[#686DE0] to-[#4834D4] rounded-full transition-all duration-500"
-              style={{ width: `${levelProgressPct}%` }}
-            />
-          </div>
+        <div className="paper rounded-2xl p-2 text-center">
+          <span className="mb-1 block whitespace-nowrap text-[12px] text-[#5C4632]">총 플레이</span>
+          <span className="text-xl font-medium tabular-nums text-[#1C160E]">{totalPlays}</span>
+          <span className="block text-[12px] text-[#5C4632]">회</span>
         </div>
-        <Key
-          className={`w-4 h-4 shrink-0 transition-colors ${
-            levelProgressPct >= 80 ? 'text-amber-400' : 'text-[#DCDDE1]'
-          }`}
-          strokeWidth={2}
-        />
-      </div>
-
-      {/* Summary KPI Grid */}
-      <div className="grid grid-cols-4 gap-2.5">
-        <div className="p-3.5 bg-white rounded-[24px] border border-[#E9ECEF] shadow-sm text-center">
-          <span className="text-[10px] text-[#A8ABAF] font-bold block mb-0.5">보유 게임</span>
-          <span className="text-xl font-black italic text-[#1E272E]">{totalGames}</span>
-          <span className="text-[10px] text-[#636E72] font-medium block">개</span>
+        <div className="paper rounded-2xl p-2 text-center">
+          <span className="mb-1 block whitespace-nowrap text-[12px] text-[#5C4632]">승률</span>
+          <span id="home-kpi-winrate" className="stat-win text-xl font-medium tabular-nums">
+            {winRate}%
+          </span>
+          <span className="block text-[12px] text-[#5C4632]">{winCount}승</span>
         </div>
-
-        <div className="p-3.5 bg-white rounded-[24px] border border-[#E9ECEF] shadow-sm text-center">
-          <span className="text-[10px] text-[#A8ABAF] font-bold block mb-0.5">총 플레이</span>
-          <span className="text-xl font-black italic text-[#4834D4]">{totalPlays}</span>
-          <span className="text-[10px] text-[#636E72] font-medium block">회</span>
-        </div>
-
-        <div className="p-3.5 bg-white rounded-[24px] border border-[#E9ECEF] shadow-sm text-center">
-          <span className="text-[10px] text-[#A8ABAF] font-bold block mb-0.5">승률</span>
-          <span className="text-xl font-black italic text-[#27AE60]">{winRate}%</span>
-          <span className="text-[10px] text-[#636E72] font-medium block">{winCount}승</span>
-        </div>
-
-        <div className="p-3.5 bg-white rounded-[24px] border border-[#E9ECEF] shadow-sm text-center">
-          <span className="text-[10px] text-[#A8ABAF] font-bold block mb-0.5">총 시간</span>
-          <span className="text-xs font-black italic text-[#1E272E] block mt-1.5">{formatDuration(totalMinutes)}</span>
+        <div className="paper rounded-2xl p-2 text-center">
+          <span className="mb-1 block whitespace-nowrap text-[12px] text-[#5C4632]">총 시간</span>
+          <span className="mt-1 block text-sm font-medium tabular-nums text-[#1C160E]">
+            {formatDuration(totalMinutes)}
+          </span>
         </div>
       </div>
 
-      {/* Recent Plays Section */}
-      <div className="space-y-3.5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-xl bg-[#4834D4]/10 text-[#4834D4] flex items-center justify-center">
-              <History className="w-4 h-4" />
-            </div>
-            <h3 className="text-base font-black italic text-[#1E272E]">최근 플레이 기록</h3>
+      {recentRail.length > 0 && (
+        <section id="home-rail-recent" aria-label="최근 플레이">
+          <h3 className="mb-2 text-base font-medium text-[#F6EBD4]">최근 플레이</h3>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {recentRail.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                onClick={() => {
+                  const game = games.find((entry) => entry.id === item.gameId);
+                  if (game) onSelectGame(game);
+                  else {
+                    const play = plays.find((entry) => entry.gameTitle === item.title);
+                    if (play) onSelectPlay(play);
+                  }
+                }}
+                className="w-24 shrink-0 text-left"
+              >
+                <CoverImage
+                  title={item.title}
+                  imageUrl={item.imageUrl}
+                  className="aspect-[3/4] w-full rounded-lg object-cover"
+                />
+                <span className="mt-1 block text-xs text-[#F6EBD4]">{item.title}</span>
+              </button>
+            ))}
           </div>
+        </section>
+      )}
 
+      {quietRail.length > 0 && (
+        <section id="home-rail-neglected" aria-label="오래 안 한 게임">
+          <h3 className="mb-2 text-base font-medium text-[#F6EBD4]">오래 안 한 게임</h3>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {quietRail.map((game) => (
+              <button
+                key={game.id}
+                type="button"
+                onClick={() => onSelectGame(game)}
+                className="w-24 shrink-0 text-left"
+              >
+                <CoverImage
+                  title={game.title}
+                  imageUrl={game.imageUrl}
+                  className="aspect-[3/4] w-full rounded-lg object-cover"
+                />
+                <span className="mt-1 block text-xs text-[#F6EBD4]">{game.title}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <div className="space-y-3">
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="text-base font-medium text-[#F6EBD4]">최근 플레이 기록</h3>
           <button
             type="button"
             onClick={() => onNavigateTab('plays')}
-            className="text-xs font-bold text-[#4834D4] hover:text-[#3c2ab9] flex items-center gap-1 transition-colors"
+            className="flex items-center gap-1 text-xs text-[#E4D3B4]"
           >
-            <span>전체보기</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+            <span>전체 보기</span>
+            <ArrowRight className="h-4 w-4" strokeWidth={1.5} />
           </button>
         </div>
 
         {recentPlays.length > 0 ? (
-          <div className="space-y-3.5">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {recentPlays.map((p) => (
               <PlayCard key={p.id} play={p} onClick={() => onSelectPlay(p)} />
             ))}
           </div>
         ) : (
-          <div className="p-8 bg-white rounded-[28px] border border-dashed border-[#E9ECEF] text-center shadow-sm">
-            <p className="text-xs text-[#636E72] mb-3">
+          <div id="home-empty-hint" className="paper rounded-2xl border border-dashed border-[#C6B48A] p-4 text-center">
+            <p className="mb-3 text-xs text-[#5C4632]">
               아직 기록이 없어요. 게임이 끝나면 누가 이겼는지만 남겨도 충분해요.
             </p>
             <button
+              id="home-empty-add-play-btn"
               type="button"
               onClick={onOpenAddPlay}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#4834D4] text-white text-xs font-bold rounded-full shadow-[0_4px_14px_rgba(72,52,212,0.3)] transition-colors"
+              className="btn-gold inline-flex items-center gap-1.5 rounded-full px-4 text-xs"
             >
-              <Plus className="w-3.5 h-3.5" />
+              <Plus className="h-4 w-4" />
               <span>첫 플레이 기록 남기기</span>
             </button>
           </div>
         )}
       </div>
 
-      {/* Most Played Games Section */}
-      <div className="space-y-3.5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-xl bg-[#4834D4]/10 text-[#4834D4] flex items-center justify-center">
-              <Trophy className="w-4 h-4" />
-            </div>
-            <h3 className="text-base font-black italic text-[#1E272E]">많이 플레이한 게임</h3>
-          </div>
+      <LevelTrack xp={xp} onOpen={onOpenLevel} />
 
+      {questTeaser && (
+        <section className="paper rounded-2xl px-3 py-3" aria-label="이번 주 문제">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-xs text-[#5C4632]">이번 주 문제</p>
+              <p className="mt-1 text-sm font-medium text-[#1C160E]">{questTeaser.title}</p>
+              <p className="mt-1 text-xs leading-relaxed text-[#5C4632]">{questTeaser.hint}</p>
+              <p className="mt-1 text-xs text-[#1C160E]">
+                {Math.min(questTeaser.current, questTeaser.goal)}/{questTeaser.goal}
+              </p>
+            </div>
+            <button
+              id="home-open-quests"
+              type="button"
+              onClick={onOpenQuests}
+              className="btn-quiet shrink-0 rounded-full px-3 text-xs"
+            >
+              문제 보기
+            </button>
+          </div>
+        </section>
+      )}
+
+      <div className="space-y-3">
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="text-base font-medium text-[#F6EBD4]">많이 플레이한 게임</h3>
           <button
             type="button"
             onClick={() => onNavigateTab('games')}
-            className="text-xs font-bold text-[#4834D4] hover:text-[#3c2ab9] flex items-center gap-1 transition-colors"
+            className="flex items-center gap-1 text-xs text-[#E4D3B4]"
           >
             <span>내 게임 전체</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+            <ArrowRight className="h-4 w-4" strokeWidth={1.5} />
           </button>
         </div>
 
         {favoriteGames.length > 0 ? (
-          <div className="grid grid-cols-2 gap-3.5">
+          <div className="game-shelf grid grid-cols-2 gap-4 md:grid-cols-4">
             {favoriteGames.map((g) => (
               <GameCard key={g.id} game={g} onClick={() => onSelectGame(g)} />
             ))}
           </div>
         ) : (
-          <div className="p-8 bg-white rounded-[28px] border border-dashed border-[#E9ECEF] text-center shadow-sm">
-            <p className="text-xs text-[#636E72] mb-3">등록된 게임이 없습니다.</p>
+          <div className="paper rounded-2xl border border-dashed border-[#C6B48A] p-6 text-center">
+            <p className="mb-3 text-xs text-[#5C4632]">등록된 게임이 없습니다.</p>
             <button
               type="button"
               onClick={onOpenAddGame}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#4834D4] text-white text-xs font-bold rounded-full shadow-[0_4px_14px_rgba(72,52,212,0.3)] transition-colors"
+              className="btn-cream inline-flex items-center gap-1.5 rounded-full px-4 text-xs"
             >
-              <Plus className="w-3.5 h-3.5" />
-              <span>인기 게임 등록하기</span>
+              <Plus className="h-4 w-4" />
+              <span>게임 등록</span>
             </button>
           </div>
         )}

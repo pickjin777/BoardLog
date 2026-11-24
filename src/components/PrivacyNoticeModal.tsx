@@ -1,6 +1,10 @@
 import { ShieldCheck, X } from 'lucide-react';
 import type React from 'react';
+import { useRef } from 'react';
 import { isGoogleAnalyticsEnabled } from '../services/analytics';
+import { isNativeShell } from '../utils/nativeShell';
+import { recordLossSentence, recordStorageSentence, storagePlace, type StoragePlace } from '../utils/storageNotice';
+import { useDialogA11y } from './useDialogA11y';
 
 interface PrivacyNoticeModalProps {
   isOpen: boolean;
@@ -16,18 +20,15 @@ interface NoticeSection {
  * Plain statements of what the app does today (FR-PRIV-01). Update this whenever data starts to
  * leave the browser in a new way (cloud backup, new analytics). Its legal sufficiency is unchecked (TBD-005).
  */
-const buildSections = (googleAnalytics: boolean): NoticeSection[] => [
+export const buildPrivacySections = (googleAnalytics: boolean, place: StoragePlace): NoticeSection[] => [
   {
     heading: '내 기록은 어디에 저장되나요?',
-    lines: [
-      '게임, 플레이 기록, 함께한 사람의 이름, 사진은 이 기기의 브라우저에만 저장됩니다. 보드로그 서버로 보내지 않습니다.',
-      '그래서 브라우저 데이터를 지우거나 기기를 바꾸면 기록이 사라질 수 있어요. 마이페이지의 백업 파일로 미리 저장해 두세요.'
-    ]
+    lines: [recordStorageSentence(place), recordLossSentence(place)]
   },
   {
     heading: '사진으로 게임 등록',
     lines: [
-      "'사진으로 게임 등록'을 쓰면 고른 사진이 서버를 거쳐 Google의 AI(Gemini)로 전달되어 게임 이름을 읽는 데 쓰입니다. 보드로그는 이 사진을 저장하지 않습니다."
+      '사진 인식은 설정에서 켜져 있고, 안내를 확인한 뒤에만 동작합니다. 그때 고른 사진(최대 4장)은 이 기기에서 크기를 줄이고 위치 정보를 뺀 뒤, 보드로그 서버를 거쳐 Google의 AI(Gemini)로 전달되어 게임 이름을 읽는 데 쓰입니다. 보드로그는 이 사진을 저장하지 않습니다. 설정에서 끄면 사진을 보내지 않습니다.'
     ]
   },
   {
@@ -49,20 +50,24 @@ const buildSections = (googleAnalytics: boolean): NoticeSection[] => [
 ];
 
 export const PrivacyNoticeModal: React.FC<PrivacyNoticeModalProps> = ({ isOpen, onClose }) => {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useDialogA11y(isOpen, onClose, dialogRef);
   if (!isOpen) return null;
-  const sections = buildSections(isGoogleAnalyticsEnabled());
+  const sections = buildPrivacySections(isGoogleAnalyticsEnabled(), storagePlace(isNativeShell(), navigator.userAgent));
 
   return (
     <div
       id="privacy-notice-modal"
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-labelledby="privacy-notice-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
+      tabIndex={-1}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
     >
-      <div className="w-full max-w-sm max-h-[85vh] overflow-y-auto bg-white rounded-[28px] p-6 shadow-2xl border border-[#E9ECEF]">
+      <div className="w-full max-w-sm max-h-[85vh] overflow-y-auto bg-white rounded-2xl p-6 shadow-2xl border border-[#E9ECEF]">
         <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-2xl bg-[#4834D4]/10 text-[#4834D4] flex items-center justify-center">
               <ShieldCheck className="w-5 h-5" />
             </div>
@@ -75,7 +80,7 @@ export const PrivacyNoticeModal: React.FC<PrivacyNoticeModalProps> = ({ isOpen, 
             type="button"
             aria-label="닫기"
             onClick={onClose}
-            className="p-1.5 text-[#A8ABAF] hover:text-[#1E272E] rounded-full hover:bg-[#F1F3F5] transition-colors"
+            className="p-1.5 text-[#636E72] hover:text-[#1E272E] rounded-full hover:bg-[#F1F3F5] transition-colors"
           >
             <X className="w-4 h-4" />
           </button>

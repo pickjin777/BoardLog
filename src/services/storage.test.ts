@@ -1,7 +1,8 @@
 import 'fake-indexeddb/auto';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import type { PlayRecord, UserGame } from '../types';
-import { normalizePlay } from '../utils/backupImport';
+import { normalizePlay, parseBackup } from '../utils/backupImport';
+import { emptyCollectorState } from '../utils/collectorProgress';
 
 /** Node has no localStorage; the session pointers and the fallback store need one. */
 class MemoryStorage {
@@ -186,6 +187,29 @@ describe('storage: account isolation on the shared IndexedDB stores (invariant 2
     expect((await storage.getUserGames(b)).map((g) => g.id)).toEqual([`sample-game-1-${b}`]);
     expect((await storage.getUserPlays(b)).map((p) => p.id)).toEqual([`sample-play-1-${b}`]);
   });
+
+  it('deletes one signed-up account and leaves the other account on the device', async () => {
+    const emailA = `a${++seq}@example.com`;
+    const emailB = `b${seq}@example.com`;
+    const userA = await storage.signUp(emailA, 'secret12', '에이');
+    await storage.signOut();
+    const userB = await storage.signUp(emailB, 'secret12', '비');
+    const aGame = await storage.addUserGame(userA.uid, game('카탄'));
+    const bGame = await storage.addUserGame(userB.uid, game('아그리콜라'));
+    await storage.addPlayRecord(userA.uid, play('카탄', aGame.id));
+    await storage.addPlayRecord(userB.uid, play('아그리콜라', bGame.id));
+    await storage.setActiveSession(userA);
+
+    await storage.deleteAccount(userA.uid);
+
+    expect(await storage.getUserGames(userA.uid)).toEqual([]);
+    expect(await storage.getUserPlays(userA.uid)).toEqual([]);
+    expect(await storage.getActiveSession()).toBeNull();
+    expect((await storage.getUserGames(userB.uid)).map((g) => g.id)).toEqual([bGame.id]);
+    expect((await storage.getUserPlays(userB.uid)).map((p) => p.gameId)).toEqual([bGame.id]);
+    await expect(storage.signIn(emailA, 'secret12')).rejects.toThrow('등록되지 않은');
+    expect((await storage.signIn(emailB, 'secret12')).uid).toBe(userB.uid);
+  });
 });
 
 describe('storage: restore never reuses or takes over ids (invariant 3)', () => {
@@ -199,7 +223,8 @@ describe('storage: restore never reuses or takes over ids (invariant 3)', () => 
     const plan = await storage.planImport(b, {
       games: [{ sourceId: aGame.id, data: { ...aGame, createdAt: '', updatedAt: '' } }],
       plays: [imported],
-      invalidCount: 0
+      invalidCount: 0,
+      progress: null
     });
     await storage.commitImport(b, plan);
 
@@ -219,7 +244,7 @@ describe('storage: restore never reuses or takes over ids (invariant 3)', () => 
     const aCountBefore = (await storage.getUserGames(a))[0].playCount;
     const imported = normalizePlay(play('카탄', null, { date: '2026.01.01' }));
     if (!imported) throw new Error('fixture did not normalize');
-    const plan = await storage.planImport(b, { games: [], plays: [imported], invalidCount: 0 });
+    const plan = await storage.planImport(b, { games: [], plays: [imported], invalidCount: 0, progress: null });
     await storage.commitImport(b, plan);
 
     expect((await storage.getUserGames(b)).find((g) => g.id === bGame.id)?.playCount).toBe(1);
@@ -240,5 +265,109 @@ describe('storage: add never reuses a caller-supplied id', () => {
     expect(bGame.id).not.toBe(aGame.id);
     expect(bPlay.id).not.toBe(aPlay.id);
     expect((await storage.getUserGames(b)).map((g) => g.title)).toEqual(['탈취']);
+  });
+});
+
+describe('storage: collector progress is its own key', () => {
+  it('keeps each account’s XP apart from games and plays, and deletes it with the account', async () => {
+    const stamp = `${Date.now()}`;
+    const userA = await storage.signUp(`prog-a-${stamp}@example.com`, 'secret12', '에이');
+    await storage.signOut();
+    const userB = await storage.signUp(`prog-b-${stamp}@example.com`, 'secret12', '비');
+    await storage.addUserGame(userA.uid, game('카탄'));
+    const gamesBefore = localStorage.getItem(`boardlog_games_${userA.uid}`);
+    const playsBefore = localStorage.getItem(`boardlog_plays_${userA.uid}`);
+    const stateA = {
+      ...emptyCollectorState(),
+      migratedAt: '2026-11-12T00:00:00.000Z',
+      acknowledgedLevel: 1,
+      claimedDays: ['2026.11.12']
+    };
+    const stateB = { ...emptyCollectorState(), migratedAt: '2026-11-12T00:00:00.000Z', acknowledgedLevel: 2 };
+    storage.saveCollectorProgress(userA.uid, stateA);
+    storage.saveCollectorProgress(userB.uid, stateB);
+
+    expect(storage.getCollectorProgress(userA.uid)?.claimedDays).toEqual(['2026.11.12']);
+    expect(storage.getCollectorProgress(userB.uid)?.acknowledgedLevel).toBe(2);
+    expect(storage.getCollectorProgress('')).toBeNull();
+    expect(localStorage.getItem(`boardlog_games_${userA.uid}`)).toBe(gamesBefore);
+    expect(localStorage.getItem(`boardlog_plays_${userA.uid}`)).toBe(playsBefore);
+    expect(localStorage.getItem(`boardlog_progress_${userA.uid}`)).toContain('2026.11.12');
+
+    localStorage.setItem(`boardlog_progress_${userA.uid}`, '{');
+    expect(storage.getCollectorProgress(userA.uid)).toBeNull();
+    storage.saveCollectorProgress(userA.uid, stateA);
+    localStorage.setItem(`boardlog_progress_${userA.uid}`, JSON.stringify({ version: 9 }));
+    expect(storage.getCollectorProgress(userA.uid)).toBeNull();
+
+    await storage.deleteAccount(userA.uid);
+    expect(storage.getCollectorProgress(userA.uid)).toBeNull();
+    expect(storage.getCollectorProgress(userB.uid)?.acknowledgedLevel).toBe(2);
+  });
+});
+
+describe('storage: JSON backup includes collector progress', () => {
+  it('restores progress onto the importing account and leaves an older file untouched', async () => {
+    const stamp = `${Date.now()}`;
+    const userA = await storage.signUp(`bak-a-${stamp}@example.com`, 'secret12', '에이');
+    const gameA = await storage.addUserGame(userA.uid, game('카탄'));
+    const playA = await storage.addPlayRecord(userA.uid, play('카탄', gameA.id));
+    storage.saveCollectorProgress(userA.uid, {
+      ...emptyCollectorState(),
+      acknowledgedLevel: 4,
+      claimedDays: ['2026.11.02'],
+      grants: [{ id: `play:${playA.id}`, kind: 'play', amount: 15, entityId: playA.id }]
+    });
+    const exported = JSON.parse(await storage.exportUserDataJson(userA.uid)) as {
+      progress: { acknowledgedLevel: number };
+    };
+    expect(exported.progress.acknowledgedLevel).toBe(4);
+
+    await storage.signOut();
+    const userB = await storage.signUp(`bak-b-${stamp}@example.com`, 'secret12', '비');
+    storage.saveCollectorProgress(userB.uid, { ...emptyCollectorState(), acknowledgedLevel: 1 });
+    const plan = await storage.planImport(userB.uid, parseBackup(JSON.stringify(exported)));
+    await storage.commitImport(userB.uid, plan);
+    const restored = storage.getCollectorProgress(userB.uid);
+    expect(restored?.acknowledgedLevel).toBe(4);
+    expect(restored?.claimedDays).toEqual(['2026.11.02']);
+    expect(restored?.grants[0]?.entityId).not.toBe(playA.id);
+    expect(storage.getCollectorProgress(userA.uid)?.acknowledgedLevel).toBe(4);
+
+    const oldPlan = await storage.planImport(userB.uid, parseBackup(JSON.stringify({ games: [], plays: [] })));
+    expect(oldPlan.progress).toBeNull();
+    await storage.commitImport(userB.uid, oldPlan);
+    expect(storage.getCollectorProgress(userB.uid)?.acknowledgedLevel).toBe(4);
+  });
+});
+
+describe('storage: photo recognition prefs and login delay', () => {
+  it('remembers consent separately from the off switch', () => {
+    expect(storage.isPhotoRecognitionEnabled()).toBe(true);
+    expect(storage.hasPhotoScanConsent()).toBe(false);
+    storage.grantPhotoScanConsent();
+    expect(storage.hasPhotoScanConsent()).toBe(true);
+    storage.setPhotoRecognitionEnabled(false);
+    expect(storage.isPhotoRecognitionEnabled()).toBe(false);
+    expect(storage.hasPhotoScanConsent()).toBe(true);
+    storage.revokePhotoScanConsent();
+    storage.setPhotoRecognitionEnabled(true);
+    expect(storage.hasPhotoScanConsent()).toBe(false);
+  });
+
+  it('waits longer after a repeated wrong password and resets after success', async () => {
+    const stamp = `${Date.now()}`;
+    const email = `slow-${stamp}@example.com`;
+    await storage.signUp(email, 'secret12', '느림');
+    await storage.signOut();
+    await expect(storage.signIn(email, 'wrong')).rejects.toThrow('비밀번호');
+    const started = Date.now();
+    await expect(storage.signIn(email, 'wrong-again')).rejects.toThrow('비밀번호');
+    expect(Date.now() - started).toBeGreaterThanOrEqual(350);
+    await storage.signIn(email, 'secret12');
+    await storage.signOut();
+    const reset = Date.now();
+    await expect(storage.signIn(email, 'wrong')).rejects.toThrow('비밀번호');
+    expect(Date.now() - reset).toBeLessThan(200);
   });
 });

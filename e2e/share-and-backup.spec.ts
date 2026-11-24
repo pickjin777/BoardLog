@@ -44,10 +44,10 @@ test('share sheet after saving, backup export/restore, restore never crosses acc
   await page.locator('#play-share-name-input').fill('테스터');
   // biome-ignore lint/performance/useDomNodeTextContent: Playwright's locator.innerText() (rendered text), not the DOM property
   const sheetText = await sheet.locator('pre').innerText();
-  check('공유 문구: 게임명', sheetText.includes('🎲 카탄'));
-  check('공유 문구: 승자', sheetText.includes('👑 승자: 민수'));
-  check('공유 문구: 참여자 (나 → 이름)', sheetText.includes('👥 참여: 테스터, 민수'));
-  check('공유 문구: 점수 내림차순', sheetText.includes('🏆 점수: 민수 10 · 테스터 7'));
+  check('공유 문구: 게임명', sheetText.includes('카탄'));
+  check('공유 문구: 승자', sheetText.includes('승자: 민수'));
+  check('공유 문구: 참여자 (나 → 이름)', sheetText.includes('참여: 테스터, 민수'));
+  check('공유 문구: 점수 내림차순', sheetText.includes('점수: 민수 10 · 테스터 7'));
   check('공유 문구: 기록 링크', sheetText.includes(`내 기록에 바로 추가 → ${new URL(page.url()).origin}/#play=`));
   await page.screenshot({ path: testInfo.outputPath('share-sheet.png') });
   const hasNativeShare = await page.evaluate(() => typeof navigator.share === 'function');

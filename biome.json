@@ -6,7 +6,10 @@
       "src/**/*.tsx",
       "api/**/*.ts",
       "scripts/**/*.mjs",
+      "scripts/**/*.ts",
+      "desktop/**/*.cjs",
       "vite.config.ts",
+      "capacitor.config.ts",
       "e2e/**/*.ts",
       "playwright.config.ts",
       "vitest.config.ts"

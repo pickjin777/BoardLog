@@ -7,6 +7,8 @@ import type {
   GameOwnershipStatus,
   GameCondition
 } from '../types';
+import { parseCollectorState, type CollectorState } from './collectorProgress';
+import { cleanMemo, cleanTags } from './shelf';
 
 /** Photos are stored as data URLs, so a real backup can be large; this only stops a runaway file. */
 export const MAX_BACKUP_BYTES = 50 * 1024 * 1024;
@@ -22,6 +24,8 @@ export interface ImportedGame {
 }
 
 export interface ImportedPlay {
+  /** Id the play had in the file. Used only to re-link collector progress. Never stored. */
+  sourceId: string;
   sourceGameId: string | null;
   data: Omit<PlayRecord, 'id'>;
 }
@@ -31,9 +35,20 @@ export interface ParsedBackup {
   plays: ImportedPlay[];
   /** Entries dropped because they lacked a title or were not objects. */
   invalidCount: number;
+  /** Null for a backup from before progress was included, or when the field cannot be read. */
+  progress: CollectorState | null;
 }
 
-const OWNERSHIP: readonly GameOwnershipStatus[] = ['보유중', '빌려줌', '빌림', '판매예정', '판매완료', '분실', '처분'];
+const OWNERSHIP: readonly GameOwnershipStatus[] = [
+  '보유중',
+  '하고 싶음',
+  '빌려줌',
+  '빌림',
+  '판매예정',
+  '판매완료',
+  '분실',
+  '처분'
+];
 const CONDITIONS: readonly GameCondition[] = ['미개봉', '최상', '상', '중', '하'];
 const RESULTS: readonly MyGameResult[] = ['승리', '패배', '무승부', '참여'];
 
@@ -79,8 +94,9 @@ function normalizeGame(raw: unknown): ImportedGame | null {
       marketPrice: num(raw.marketPrice),
       storageLocation: str(raw.storageLocation),
       condition: oneOf(raw.condition, CONDITIONS, '상'),
-      tags: strArray(raw.tags),
+      tags: cleanTags(raw.tags),
       notes: str(raw.notes),
+      ...(typeof raw.memo === 'string' ? { memo: cleanMemo(raw.memo) } : {}),
       ownershipStatus: oneOf(raw.ownershipStatus, OWNERSHIP, '보유중'),
       playCount: Math.max(0, Math.floor(num(raw.playCount))),
       priceMeta: {
@@ -136,6 +152,7 @@ export function normalizePlay(raw: unknown): ImportedPlay | null {
   const sourceGameId = str(raw.gameId);
 
   return {
+    sourceId: str(raw.id),
     sourceGameId: sourceGameId || null,
     data: {
       gameId: null,
@@ -185,7 +202,8 @@ export function parseBackup(text: string): ParsedBackup {
   return {
     games: validGames,
     plays: validPlays,
-    invalidCount: games.length - validGames.length + (plays.length - validPlays.length)
+    invalidCount: games.length - validGames.length + (plays.length - validPlays.length),
+    progress: 'progress' in root ? parseCollectorState(root.progress) : null
   };
 }
 
