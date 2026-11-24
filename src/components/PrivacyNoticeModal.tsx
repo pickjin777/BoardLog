@@ -23,12 +23,17 @@ interface NoticeSection {
 export const buildPrivacySections = (googleAnalytics: boolean, place: StoragePlace): NoticeSection[] => [
   {
     heading: '내 기록은 어디에 저장되나요?',
-    lines: [recordStorageSentence(place), recordLossSentence(place)]
+    lines: [
+      recordStorageSentence(place),
+      '이 정보는 이용자의 기기에만 저장되며, 개발자는 이를 전송받거나 열람할 수 없습니다.',
+      recordLossSentence(place)
+    ]
   },
   {
     heading: '사진으로 게임 등록',
     lines: [
-      '사진 인식은 만 14세 이상으로 고르고, 설정에서 켜져 있고, 안내를 확인한 뒤에만 동작합니다. 그때 고른 사진(최대 4장)은 이 기기에서 크기를 줄이고 위치 정보를 뺀 뒤, 보드로그 서버를 거쳐 Google의 AI(Gemini)로 전달되어 게임 이름을 읽는 데 쓰입니다. 보드로그는 이 사진을 저장하지 않습니다. 설정에서 끄면 사진을 보내지 않습니다.'
+      '사진 인식은 만 14세 이상으로 고르고, 설정에서 켜져 있고, 안내를 확인한 뒤에만 동작합니다. 그때 고른 사진(최대 4장)은 이 기기에서 크기를 줄이고 위치 정보를 뺀 뒤, 보드로그 서버를 거쳐 Google의 AI(Gemini)로 전달되어 게임 이름을 읽는 데 쓰입니다. 보드로그는 이 사진을 저장하지 않습니다. 설정에서 끄면 사진을 보내지 않습니다.',
+      '본인이 찍었거나 쓸 권한이 있는 상자 사진만 올려 주세요. 사람 얼굴, 이름, 주소 같은 개인정보가 나오지 않게 해 주세요.'
     ]
   },
   {
@@ -51,7 +56,7 @@ export const buildPrivacySections = (googleAnalytics: boolean, place: StoragePla
     heading: '만 14세 미만',
     lines: [
       '만 14세 미만은 기록을 이 기기에만 남깁니다. 사진 인식과 이용 통계는 켜지지 않고, 그 정보는 서버로 나가지 않습니다.',
-      '나이 선택은 이 기기에만 저장됩니다.'
+      '나이 선택은 이 기기에만 저장됩니다. 만 14세 미만으로 둔 뒤 만 14세 이상으로 바꾸려면 한 번 더 확인합니다.'
     ]
   }
 ];

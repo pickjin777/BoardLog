@@ -22,6 +22,7 @@ const LS_SHARE_NAME = 'boardlog_share_name';
 const LS_SCAN_ENABLED = 'boardlog_scan_enabled';
 const LS_SCAN_CONSENT = 'boardlog_scan_consent';
 const LS_AGE_BAND = 'boardlog_age_band';
+const LS_TERMS_VERSION = 'boardlog_terms_version';
 const LS_LOGIN_FAILURES = 'boardlog_login_failures';
 
 const PBKDF2_ITERATIONS = 210_000;
@@ -751,6 +752,16 @@ class BoardLogStorage {
    */
   getAgeBand(): AgeBand {
     return parseAgeBand(this.lsGet<unknown>(LS_AGE_BAND, null));
+  }
+
+  /** Empty until the person has opened a build. A later terms version can announce itself on launch. */
+  getTermsVersion(): string | null {
+    const value = this.lsGet<unknown>(LS_TERMS_VERSION, null);
+    return typeof value === 'string' && value.length > 0 ? value : null;
+  }
+
+  setTermsVersion(version: string): void {
+    this.lsSetQuiet(LS_TERMS_VERSION, version);
   }
 
   setAgeBand(band: Exclude<AgeBand, 'unset'>): void {

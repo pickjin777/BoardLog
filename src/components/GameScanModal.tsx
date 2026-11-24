@@ -294,6 +294,10 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
                       제거한 뒤 보드로그 서버를 거쳐 Google Gemini로 보내 게임 이름을 읽는 데 쓰입니다. 보드로그는 이
                       사진을 저장하지 않습니다.
                     </p>
+                    <p id="scan-consent-photo-rule" className="text-xs leading-relaxed text-[#1C160E]">
+                      본인이 찍었거나 쓸 권한이 있는 상자 사진만 올려 주세요. 사람 얼굴, 이름, 주소 같은 개인정보가
+                      나오지 않게 해 주세요.
+                    </p>
                     <label
                       className="flex min-h-12 items-center gap-2 text-xs text-[#1C160E]"
                       htmlFor="scan-consent-check"
