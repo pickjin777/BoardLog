@@ -1,5 +1,5 @@
 import type React from 'react';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Printer,
@@ -178,9 +178,18 @@ export const GameCatalogModal: React.FC<GameCatalogModalProps> = ({ isOpen, game
   };
 
   // Browser print fallback handler
+  const printTimer = useRef<number | null>(null);
+  useEffect(
+    () => () => {
+      if (printTimer.current != null) window.clearTimeout(printTimer.current);
+    },
+    []
+  );
+
   const handlePrint = () => {
     showToast('인쇄 대화상자에서 "PDF로 저장" 또는 연결된 프린터를 선택하세요.', 'info');
-    setTimeout(() => {
+    if (printTimer.current != null) window.clearTimeout(printTimer.current);
+    printTimer.current = window.setTimeout(() => {
       window.print();
     }, 250);
   };

@@ -389,6 +389,7 @@ export const PlayRecordFormModal: React.FC<PlayRecordFormModalProps> = ({
 
     if (photos.length + files.length > 6) {
       setFormError('사진은 1개 기록당 최대 6장까지만 등록 가능합니다.');
+      e.target.value = '';
       return;
     }
 

@@ -45,7 +45,17 @@ export interface SeedMatch {
 /** Best seed-list entry for a photographed title, or null when nothing clears the threshold. */
 export function findSeedMatch(rawTitle: string, seeds: SeedGame[]): SeedMatch | null {
   const query = normalizeTitle(rawTitle);
-  if (query.length < 2) return null;
+  if (!query) return null;
+  // One-letter titles such as "뱅!" are real games. Fuzzy match would treat "뱅" as "뱅!" and also
+  // as the start of a longer title, so a short query may only hit an exact normalized title.
+  if (query.length < 2) {
+    for (const game of seeds) {
+      const title = normalizeTitle(game.title);
+      const titleEn = game.titleEn ? normalizeTitle(game.titleEn) : '';
+      if (title === query || titleEn === query) return { game, score: 1 };
+    }
+    return null;
+  }
 
   let best: SeedMatch | null = null;
   for (const game of seeds) {

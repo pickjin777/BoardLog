@@ -50,7 +50,9 @@ export function activitySummary(
   const recent = playsInLastDays(plays, now, 14);
   const people = new Set<string>();
   for (const play of recent) {
-    for (const person of play.participants) {
+    const participants = Array.isArray(play.participants) ? play.participants : [];
+    for (const person of participants) {
+      if (!person || typeof person.name !== 'string') continue;
       const name = person.name.trim();
       if (!name || name === '나' || /^(동행|플레이어) \d+$/.test(name)) continue;
       people.add(name);
@@ -97,10 +99,16 @@ export function recentPlayRail(
   const items: RailItem[] = [];
   const seen = new Set<string>();
   for (const play of ordered) {
-    const key = play.gameId || play.gameTitle.trim();
+    const title = typeof play.gameTitle === 'string' ? play.gameTitle : '';
+    const key = play.gameId || title.trim();
     if (!key || seen.has(key)) continue;
     seen.add(key);
-    items.push({ key, title: play.gameTitle, imageUrl: play.gameImageUrl, gameId: play.gameId });
+    items.push({
+      key,
+      title,
+      imageUrl: typeof play.gameImageUrl === 'string' ? play.gameImageUrl : '',
+      gameId: play.gameId
+    });
     if (items.length >= limit) break;
   }
   return items;

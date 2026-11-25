@@ -3,6 +3,16 @@ import { formatDate } from '../utils/formatters';
 import { type ParsedBackup, gameDedupKey, playDedupKey } from '../utils/backupImport';
 import { parseCollectorState, remapCollectorIds, type CollectorState } from '../utils/collectorProgress';
 import { loginFailureDelayMs, waitMs } from '../utils/loginBackoff';
+import {
+  asStoredList,
+  parseJsonValue,
+  presentPlay,
+  presentUserGame,
+  recordId,
+  StorageDataError
+} from '../utils/storedRecords';
+
+export { StorageDataError };
 
 const DB_NAME = 'board_log_db_v1';
 const DB_VERSION = 1;
@@ -190,28 +200,31 @@ class BoardLogStorage {
     });
   }
 
-  private async idbReadOne<T>(storeName: string, id: string): Promise<Stored<T> | null> {
+  /**
+   * Both stores are keyed by record id alone, so a bare id lookup would reach any
+   * account's rows. Every by-id path goes through here to stay inside one owner.
+   * `error` means the read itself failed, which is not the same as a missing row.
+   */
+  private async idbReadOwned<T>(
+    storeName: string,
+    uid: string,
+    id: string
+  ): Promise<{ state: 'ok'; record: Stored<T> | null } | { state: 'error' }> {
     const db = await this.openDb();
-    if (!db) return null;
+    if (!db) return { state: 'error' };
 
     return new Promise((resolve) => {
       try {
         const request = db.transaction(storeName, 'readonly').objectStore(storeName).get(id);
-        request.onsuccess = () => resolve((request.result as Stored<T>) ?? null);
-        request.onerror = () => resolve(null);
+        request.onsuccess = () => {
+          const record = (request.result as Stored<T> | undefined) ?? null;
+          resolve({ state: 'ok', record: record && record.userId === uid ? record : null });
+        };
+        request.onerror = () => resolve({ state: 'error' });
       } catch {
-        resolve(null);
+        resolve({ state: 'error' });
       }
     });
-  }
-
-  /**
-   * Both stores are keyed by record id alone, so a bare id lookup would reach any
-   * account's rows. Every by-id path goes through here to stay inside one owner.
-   */
-  private async idbReadOwned<T>(storeName: string, uid: string, id: string): Promise<Stored<T> | null> {
-    const record = await this.idbReadOne<T>(storeName, id);
-    return record && record.userId === uid ? record : null;
   }
 
   /** Resolves false when the store is simply unusable; rejects only when the device is out of space. */
@@ -262,6 +275,28 @@ class BoardLogStorage {
     }
   }
 
+  /** Games and plays. A broken value throws so the next save cannot replace it with `[]`. */
+  private readCollection(key: string): unknown[] {
+    return asStoredList(parseJsonValue(localStorage.getItem(key)));
+  }
+
+  private readUsers(): Record<string, StoredUser> {
+    const parsed = parseJsonValue(localStorage.getItem(LS_ALL_USERS));
+    if (parsed.kind === 'missing') return {};
+    if (parsed.kind === 'corrupt' || !parsed.value || typeof parsed.value !== 'object' || Array.isArray(parsed.value)) {
+      throw new StorageDataError('계정 정보를 읽지 못했습니다. 기존 계정은 덮어쓰지 않았습니다.');
+    }
+    return parsed.value as Record<string, StoredUser>;
+  }
+
+  private presentGames(rows: unknown[]): UserGame[] {
+    return rows.map((row) => presentUserGame(row)).filter((game): game is UserGame => game !== null);
+  }
+
+  private presentPlays(rows: unknown[]): PlayRecord[] {
+    return rows.map((row) => presentPlay(row)).filter((play): play is PlayRecord => play !== null);
+  }
+
   /** For user data: a failed write must reach the user rather than look like a successful save. */
   private lsSet(key: string, value: unknown): void {
     try {
@@ -296,7 +331,8 @@ class BoardLogStorage {
     let backend: Backend = 'ls';
     try {
       backend = (await this.migrateToIdb(uid)) ? 'idb' : 'ls';
-    } catch {
+    } catch (err) {
+      if (err instanceof StorageDataError) throw err;
       backend = 'ls';
     }
     this.backends.set(uid, backend);
@@ -305,13 +341,24 @@ class BoardLogStorage {
 
   /** Moves any LocalStorage-era records into IndexedDB. Originals are kept unless both stores commit. */
   private async migrateToIdb(uid: string): Promise<boolean> {
-    const legacyGames = this.lsGet<UserGame[]>(gamesKey(uid), []);
-    const legacyPlays = this.lsGet<PlayRecord[]>(playsKey(uid), []);
+    let legacyGames: unknown[];
+    let legacyPlays: unknown[];
+    try {
+      legacyGames = this.readCollection(gamesKey(uid));
+      legacyPlays = this.readCollection(playsKey(uid));
+    } catch (err) {
+      if (!(err instanceof StorageDataError)) throw err;
+      const idbGames = await this.idbReadAll<UserGame>(STORE_GAMES, uid);
+      const idbPlays = await this.idbReadAll<PlayRecord>(STORE_PLAYS, uid);
+      if ((idbGames && idbGames.length > 0) || (idbPlays && idbPlays.length > 0)) return true;
+      throw err;
+    }
     if (legacyGames.length === 0 && legacyPlays.length === 0) return true;
 
     const base = Date.now();
     const writtenGames = await this.idbWrite(STORE_GAMES, (store) => {
       legacyGames.forEach((game, i) => {
+        if (!game || typeof game !== 'object') return;
         store.put({ ...game, userId: uid, order: base - i });
       });
     });
@@ -319,6 +366,7 @@ class BoardLogStorage {
 
     const writtenPlays = await this.idbWrite(STORE_PLAYS, (store) => {
       legacyPlays.forEach((play, i) => {
+        if (!play || typeof play !== 'object') return;
         store.put({ ...play, userId: uid, order: base - i });
       });
     });
@@ -339,7 +387,7 @@ class BoardLogStorage {
   }
 
   async signUp(email: string, password: string, nickname: string): Promise<UserProfile> {
-    const users = this.lsGet<Record<string, StoredUser>>(LS_ALL_USERS, {});
+    const users = this.readUsers();
     const cleanEmail = email.trim().toLowerCase();
     if (users[cleanEmail]) {
       throw new Error('이미 등록된 이메일 계정입니다.');
@@ -365,7 +413,7 @@ class BoardLogStorage {
   async signIn(email: string, password: string): Promise<UserProfile> {
     const failures = this.lsGet<number>(LS_LOGIN_FAILURES, 0);
     await waitMs(loginFailureDelayMs(failures));
-    const users = this.lsGet<Record<string, StoredUser>>(LS_ALL_USERS, {});
+    const users = this.readUsers();
     const cleanEmail = email.trim().toLowerCase();
     const record = users[cleanEmail];
     const reject = (message: string): never => {
@@ -455,6 +503,7 @@ class BoardLogStorage {
    * There is no server user record to delete.
    */
   async deleteAccount(uid: string): Promise<void> {
+    const users = this.readUsers();
     const backend = await this.resolveBackend(uid);
     const games = await this.getUserGames(uid);
     const plays = await this.getUserPlays(uid);
@@ -472,7 +521,6 @@ class BoardLogStorage {
     localStorage.removeItem(playsKey(uid));
     localStorage.removeItem(progressKey(uid));
 
-    const users = this.lsGet<Record<string, StoredUser>>(LS_ALL_USERS, {});
     let removedUser = false;
     for (const [email, record] of Object.entries(users)) {
       if (record.profile.uid === uid) {
@@ -498,15 +546,14 @@ class BoardLogStorage {
       throw new Error('로그인이 필요합니다.');
     }
     const updated: UserProfile = { ...current, ...updates };
-    await this.setActiveSession(updated);
-
     if (!current.isAnonymous && current.email) {
-      const users = this.lsGet<Record<string, StoredUser>>(LS_ALL_USERS, {});
+      const users = this.readUsers();
       if (users[current.email]) {
         users[current.email].profile = updated;
         this.lsSet(LS_ALL_USERS, users);
       }
     }
+    await this.setActiveSession(updated);
     return updated;
   }
 
@@ -536,10 +583,10 @@ class BoardLogStorage {
     if ((await this.resolveBackend(uid)) === 'idb') {
       const stored = await this.idbReadAll<UserGame>(STORE_GAMES, uid);
       if (stored) {
-        return stored.sort((a, b) => b.order - a.order).map(({ userId, order, ...game }) => game as UserGame);
+        return this.presentGames(stored.sort((a, b) => b.order - a.order).map(({ userId, order, ...game }) => game));
       }
     }
-    return this.lsGet<UserGame[]>(gamesKey(uid), []);
+    return this.presentGames(this.readCollection(gamesKey(uid)));
   }
 
   async getUserGameById(uid: string, id: string): Promise<UserGame | null> {
@@ -565,9 +612,10 @@ class BoardLogStorage {
       if (await this.idbWrite(STORE_GAMES, (store) => store.put({ ...newGame, userId: uid, order }))) {
         return newGame;
       }
+      throw new Error('게임을 저장하지 못했습니다. 다시 시도해 주세요.');
     }
 
-    const games = this.lsGet<UserGame[]>(gamesKey(uid), []);
+    const games = this.readCollection(gamesKey(uid));
     games.unshift(newGame);
     this.lsSet(gamesKey(uid), games);
     return newGame;
@@ -575,41 +623,43 @@ class BoardLogStorage {
 
   async updateUserGame(uid: string, id: string, updates: Partial<UserGame>): Promise<UserGame> {
     if ((await this.resolveBackend(uid)) === 'idb') {
-      const existing = await this.idbReadOwned<UserGame>(STORE_GAMES, uid, id);
-      if (!existing) {
-        throw new Error('수정할 게임을 찾을 수 없습니다.');
-      }
-      const merged = { ...existing, ...updates, updatedAt: formatDate() };
+      const read = await this.idbReadOwned<UserGame>(STORE_GAMES, uid, id);
+      if (read.state === 'error') throw new Error('기록을 확인하지 못해 수정하지 못했습니다. 다시 시도해 주세요.');
+      if (!read.record) throw new Error('수정할 게임을 찾을 수 없습니다.');
+      const merged = { ...read.record, ...updates, updatedAt: formatDate() };
       if (await this.idbWrite(STORE_GAMES, (store) => store.put(merged))) {
         const { userId, order, ...game } = merged;
         return game as UserGame;
       }
+      throw new Error('수정을 저장하지 못했습니다. 다시 시도해 주세요.');
     }
 
-    const games = this.lsGet<UserGame[]>(gamesKey(uid), []);
-    const index = games.findIndex((g) => g.id === id);
-    if (index === -1) {
-      throw new Error('수정할 게임을 찾을 수 없습니다.');
-    }
-    games[index] = { ...games[index], ...updates, updatedAt: formatDate() };
+    const games = this.readCollection(gamesKey(uid));
+    const index = games.findIndex((game) => recordId(game) === id);
+    if (index === -1) throw new Error('수정할 게임을 찾을 수 없습니다.');
+    const current = games[index];
+    if (!current || typeof current !== 'object') throw new Error('수정할 게임을 찾을 수 없습니다.');
+    const next = { ...current, ...updates, updatedAt: formatDate() };
+    games[index] = next;
     this.lsSet(gamesKey(uid), games);
-    return games[index];
+    const presented = presentUserGame(next);
+    if (!presented) throw new Error('수정할 게임을 찾을 수 없습니다.');
+    return presented;
   }
 
   async deleteUserGame(uid: string, id: string): Promise<boolean> {
     if ((await this.resolveBackend(uid)) === 'idb') {
-      if (!(await this.idbReadOwned<UserGame>(STORE_GAMES, uid, id))) {
-        return true;
-      }
-      if (await this.idbWrite(STORE_GAMES, (store) => store.delete(id))) {
-        return true;
-      }
+      const read = await this.idbReadOwned<UserGame>(STORE_GAMES, uid, id);
+      if (read.state === 'error') throw new Error('기록을 확인하지 못해 지우지 못했습니다. 다시 시도해 주세요.');
+      if (!read.record) return true;
+      if (await this.idbWrite(STORE_GAMES, (store) => store.delete(id))) return true;
+      throw new Error('게임을 지우지 못했습니다. 다시 시도해 주세요.');
     }
 
-    const games = this.lsGet<UserGame[]>(gamesKey(uid), []);
+    const games = this.readCollection(gamesKey(uid));
     this.lsSet(
       gamesKey(uid),
-      games.filter((g) => g.id !== id)
+      games.filter((game) => recordId(game) !== id)
     );
     return true;
   }
@@ -619,10 +669,10 @@ class BoardLogStorage {
     if ((await this.resolveBackend(uid)) === 'idb') {
       const stored = await this.idbReadAll<PlayRecord>(STORE_PLAYS, uid);
       if (stored) {
-        return stored.sort((a, b) => b.order - a.order).map(({ userId, order, ...play }) => play as PlayRecord);
+        return this.presentPlays(stored.sort((a, b) => b.order - a.order).map(({ userId, order, ...play }) => play));
       }
     }
-    return this.lsGet<PlayRecord[]>(playsKey(uid), []);
+    return this.presentPlays(this.readCollection(playsKey(uid)));
   }
 
   async getPlayRecords(uid: string): Promise<PlayRecord[]> {
@@ -646,13 +696,12 @@ class BoardLogStorage {
       updatedAt: formatDate()
     };
 
-    let written = false;
     if ((await this.resolveBackend(uid)) === 'idb') {
       const order = this.nextOrder();
-      written = await this.idbWrite(STORE_PLAYS, (store) => store.put({ ...newPlay, userId: uid, order }));
-    }
-    if (!written) {
-      const plays = this.lsGet<PlayRecord[]>(playsKey(uid), []);
+      const written = await this.idbWrite(STORE_PLAYS, (store) => store.put({ ...newPlay, userId: uid, order }));
+      if (!written) throw new Error('플레이 기록을 저장하지 못했습니다. 다시 시도해 주세요.');
+    } else {
+      const plays = this.readCollection(playsKey(uid));
       plays.unshift(newPlay);
       this.lsSet(playsKey(uid), plays);
     }
@@ -676,25 +725,28 @@ class BoardLogStorage {
 
   async updateUserPlay(uid: string, id: string, updates: Partial<PlayRecord>): Promise<PlayRecord> {
     if ((await this.resolveBackend(uid)) === 'idb') {
-      const existing = await this.idbReadOwned<PlayRecord>(STORE_PLAYS, uid, id);
-      if (!existing) {
-        throw new Error('수정할 플레이 기록을 찾을 수 없습니다.');
-      }
-      const merged = { ...existing, ...updates, updatedAt: formatDate() };
+      const read = await this.idbReadOwned<PlayRecord>(STORE_PLAYS, uid, id);
+      if (read.state === 'error') throw new Error('기록을 확인하지 못해 수정하지 못했습니다. 다시 시도해 주세요.');
+      if (!read.record) throw new Error('수정할 플레이 기록을 찾을 수 없습니다.');
+      const merged = { ...read.record, ...updates, updatedAt: formatDate() };
       if (await this.idbWrite(STORE_PLAYS, (store) => store.put(merged))) {
         const { userId, order, ...play } = merged;
         return play as PlayRecord;
       }
+      throw new Error('수정을 저장하지 못했습니다. 다시 시도해 주세요.');
     }
 
-    const plays = this.lsGet<PlayRecord[]>(playsKey(uid), []);
-    const index = plays.findIndex((p) => p.id === id);
-    if (index === -1) {
-      throw new Error('수정할 플레이 기록을 찾을 수 없습니다.');
-    }
-    plays[index] = { ...plays[index], ...updates, updatedAt: formatDate() };
+    const plays = this.readCollection(playsKey(uid));
+    const index = plays.findIndex((play) => recordId(play) === id);
+    if (index === -1) throw new Error('수정할 플레이 기록을 찾을 수 없습니다.');
+    const current = plays[index];
+    if (!current || typeof current !== 'object') throw new Error('수정할 플레이 기록을 찾을 수 없습니다.');
+    const next = { ...current, ...updates, updatedAt: formatDate() };
+    plays[index] = next;
     this.lsSet(playsKey(uid), plays);
-    return plays[index];
+    const presented = presentPlay(next);
+    if (!presented) throw new Error('수정할 플레이 기록을 찾을 수 없습니다.');
+    return presented;
   }
 
   async updatePlayRecord(uid: string, id: string, updates: Partial<PlayRecord>): Promise<PlayRecord> {
@@ -702,22 +754,29 @@ class BoardLogStorage {
   }
 
   async deleteUserPlay(uid: string, id: string): Promise<boolean> {
-    const target = await this.getUserPlayById(uid, id);
-    if (!target) return true;
-
-    let deleted = false;
-    if ((await this.resolveBackend(uid)) === 'idb') {
-      deleted = await this.idbWrite(STORE_PLAYS, (store) => store.delete(id));
-    }
-    if (!deleted) {
-      const plays = this.lsGet<PlayRecord[]>(playsKey(uid), []);
+    const backend = await this.resolveBackend(uid);
+    let target: PlayRecord | null = null;
+    if (backend === 'idb') {
+      const read = await this.idbReadOwned<PlayRecord>(STORE_PLAYS, uid, id);
+      if (read.state === 'error') throw new Error('기록을 확인하지 못해 지우지 못했습니다. 다시 시도해 주세요.');
+      if (!read.record) return true;
+      const { userId, order, ...play } = read.record;
+      target = play as PlayRecord;
+      if (!(await this.idbWrite(STORE_PLAYS, (store) => store.delete(id)))) {
+        throw new Error('플레이 기록을 지우지 못했습니다. 다시 시도해 주세요.');
+      }
+    } else {
+      const plays = this.readCollection(playsKey(uid));
+      const raw = plays.find((play) => recordId(play) === id);
+      if (!raw) return true;
+      target = presentPlay(raw);
       this.lsSet(
         playsKey(uid),
-        plays.filter((p) => p.id !== id)
+        plays.filter((play) => recordId(play) !== id)
       );
     }
 
-    if (target.gameId) {
+    if (target?.gameId) {
       const game = await this.getUserGameById(uid, target.gameId);
       if (game && game.playCount > 0) {
         await this.updateUserGame(uid, game.id, { playCount: Math.max(0, game.playCount - 1) });
@@ -851,7 +910,8 @@ class BoardLogStorage {
       const bumped: Stored<UserGame>[] = [];
       for (const [id, extra] of plan.playCountBumps) {
         const existing = await this.idbReadOwned<UserGame>(STORE_GAMES, uid, id);
-        if (existing) bumped.push({ ...existing, playCount: (existing.playCount || 0) + extra });
+        if (existing.state === 'error') throw new Error('복원 데이터를 저장하지 못했습니다. 다시 시도해주세요.');
+        if (existing.record) bumped.push({ ...existing.record, playCount: (existing.record.playCount || 0) + extra });
       }
 
       // Backup arrays are newest first; assigning order oldest-first keeps that ordering.
@@ -882,11 +942,13 @@ class BoardLogStorage {
       return;
     }
 
-    const games = this.lsGet<UserGame[]>(gamesKey(uid), []).map((g) => {
-      const extra = plan.playCountBumps.get(g.id);
-      return extra ? { ...g, playCount: (g.playCount || 0) + extra } : g;
+    const games = this.readCollection(gamesKey(uid)).map((item) => {
+      if (!item || typeof item !== 'object') return item;
+      const game = item as UserGame;
+      const extra = plan.playCountBumps.get(game.id);
+      return extra ? { ...game, playCount: (game.playCount || 0) + extra } : item;
     });
-    const plays = this.lsGet<PlayRecord[]>(playsKey(uid), []);
+    const plays = this.readCollection(playsKey(uid));
     this.lsSet(gamesKey(uid), [...plan.newGames, ...games]);
     this.lsSet(playsKey(uid), [...plan.newPlays, ...plays]);
   }

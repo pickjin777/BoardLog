@@ -51,6 +51,17 @@ export default defineConfig(({ mode }) => {
       omitPackageUnlessEnabled('@capacitor-community/admob', admob),
       omitPackageUnlessEnabled('@capgo/native-purchases', billing)
     ],
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            // Seed data is shared by the add-game and play forms. Keeping it in one chunk
+            // stops the first screen from downloading the catalog.
+            if (id.includes('/src/data/seedGames')) return 'seed-games';
+          }
+        }
+      }
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.')

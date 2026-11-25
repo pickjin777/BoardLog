@@ -1,5 +1,5 @@
 import type React from 'react';
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Copy, Check, Users, Search, X, MessageCircle, Tag, Dices, Image as ImageIcon } from 'lucide-react';
 import type { UserGame } from '../types';
@@ -61,6 +61,13 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
 
   // States
   const [isCopied, setIsCopied] = useState(false);
+  const copiedTimer = useRef<number | null>(null);
+  useEffect(
+    () => () => {
+      if (copiedTimer.current != null) window.clearTimeout(copiedTimer.current);
+    },
+    []
+  );
   const [isExportingImage, setIsExportingImage] = useState(false);
   const [activeTab, setActiveTab] = useState<'settings' | 'preview'>('settings');
 
@@ -200,7 +207,8 @@ export const KakaoShareModal: React.FC<KakaoShareModalProps> = ({ isOpen, games,
       track('kakao_list_shared');
       setIsCopied(true);
       showToast('카카오톡 공유 문구가 클립보드에 복사되었습니다! 카톡 채팅방에 붙여넣기(Ctrl+V)하세요.', 'success');
-      setTimeout(() => setIsCopied(false), 2500);
+      if (copiedTimer.current != null) window.clearTimeout(copiedTimer.current);
+      copiedTimer.current = window.setTimeout(() => setIsCopied(false), 2500);
     } catch {
       showToast('문구 복사에 실패했습니다.', 'error');
     }

@@ -55,6 +55,15 @@ export class ScanFailedError extends Error {
   }
 }
 
+export const OFFLINE_SCAN_ERROR =
+  '네트워크에 연결되지 않아 사진을 보내지 못했습니다. 연결을 확인한 뒤 다시 시도해 주세요.';
+
+/** A failed fetch is a TypeError. The screen should say the device is offline, not the browser's English text. */
+export function errorForScanTransport(err: unknown): Error | null {
+  if (err instanceof TypeError) return new Error(OFFLINE_SCAN_ERROR);
+  return null;
+}
+
 function looksLikeProviderDump(text: string): boolean {
   return /gemini|model|모델|쓸 수 있는/i.test(text);
 }
@@ -126,11 +135,18 @@ export async function scanGamePhotos(files: File[], seeds: SeedGame[] = SEED_GAM
   const compressed = await Promise.all(files.map((file) => compressImage(file)));
   const images = compressed.map((result) => toInlineImage(result.dataUrl));
 
-  const response = await fetch(scanApiUrl(), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ images })
-  });
+  let response: Response;
+  try {
+    response = await fetch(scanApiUrl(), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ images })
+    });
+  } catch (err) {
+    const offline = errorForScanTransport(err);
+    if (offline) throw offline;
+    throw err;
+  }
 
   let payload: { detections?: unknown; error?: unknown; code?: unknown; available?: unknown } = {};
   try {

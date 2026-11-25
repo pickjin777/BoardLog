@@ -62,6 +62,7 @@ describe('findSeedMatch', () => {
 
   it('returns null for a query too short to trust, or an empty list', () => {
     expect(findSeedMatch('a', seeds)).toBeNull();
+    expect(findSeedMatch('카', seeds)).toBeNull();
     expect(findSeedMatch('!!', seeds)).toBeNull();
     expect(findSeedMatch('카탄', [])).toBeNull();
   });
@@ -74,10 +75,8 @@ describe('findSeedMatch', () => {
     }
   });
 
-  // Known defect (TBD-019): a one-letter title such as "뱅!" or "라" is rejected by the length guard, so a
-  // photo of that exact title never matches its seed entry. `it.fails` turns green again, and so reminds us
-  // to rewrite this test, once the guard learns to allow an exact match.
-  it.fails('finds seed games whose title is a single letter', () => {
+  it('finds a one-letter seed title by exact match', () => {
     expect(findSeedMatch('뱅!', SEED_GAMES)?.game.titleEn).toBe('BANG!');
+    expect(findSeedMatch('뱅', SEED_GAMES)?.game.title).toBe('뱅!');
   });
 });
