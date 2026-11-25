@@ -31,6 +31,8 @@ const {
   errorForScanResponse,
   fetchScanAvailable,
   scanGamePhotos,
+  errorForScanTransport,
+  OFFLINE_SCAN_ERROR,
   ScanConsentRequiredError,
   ScanDisabledError,
   ScanFailedError
@@ -65,5 +67,12 @@ describe('scan consent gate', () => {
       errorForScanResponse({ code: 'VALIDATION', error: '사진은 한 번에 4장까지 보낼 수 있습니다.' }).message
     ).toBe('사진은 한 번에 4장까지 보낼 수 있습니다.');
     expect(errorForScanResponse({ code: 'VALIDATION', error: '모델 목록 gemini-x' })).toBeInstanceOf(ScanFailedError);
+  });
+
+  it('turns a failed fetch into an offline message and hides the browser text', () => {
+    const offline = errorForScanTransport(new TypeError('Failed to fetch'));
+    expect(offline?.message).toBe(OFFLINE_SCAN_ERROR);
+    expect(offline?.message).not.toMatch(/Failed to fetch/);
+    expect(errorForScanTransport(new Error('다른 오류'))).toBeNull();
   });
 });

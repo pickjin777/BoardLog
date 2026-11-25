@@ -1,5 +1,5 @@
 import type React from 'react';
-import { lazy, Suspense, useState, useEffect, useCallback, useRef } from 'react';
+import { lazy, Suspense, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Search, Plus, LayoutGrid, List, Download, MessageCircle } from 'lucide-react';
 import type { UserGame, PlayRecord, GameOwnershipStatus, MyGameResult, TabType } from './types';
 import { ToastProvider, useToast } from './context/ToastContext';
@@ -10,25 +10,11 @@ import { storage } from './services/storage';
 import { Navbar } from './components/Navbar';
 import { BottomNav } from './components/BottomNav';
 import { HomeDashboard } from './components/HomeDashboard';
-import { GameCard } from './components/GameCard';
-import { GameListItem } from './components/GameListItem';
-import { GameFormModal } from './components/GameFormModal';
-import { GameScanModal } from './components/GameScanModal';
-const GameDetailModal = lazy(() =>
-  import('./components/GameDetailModal').then((mod) => ({ default: mod.GameDetailModal }))
-);
-import { GameCatalogModal } from './components/GameCatalogModal';
-import { KakaoShareModal } from './components/KakaoShareModal';
-import { PlayCard } from './components/PlayCard';
-import { PlayRecordFormModal } from './components/PlayRecordFormModal';
-import { PlayDetailModal } from './components/PlayDetailModal';
-import { MyPageView } from './components/MyPageView';
-import { AuthModal } from './components/AuthModal';
-import { PlayShareSheet } from './components/PlayShareSheet';
-import { SharedPlayModal } from './components/SharedPlayModal';
+import { StableGameCard, StableGameListItem, StablePlayCard } from './components/stableCards';
+import { MountAfterOpen } from './components/MountAfterOpen';
 import { type SharedPlay, decodeSharedPlay, sharedHashPresent, toRecipientRecord } from './utils/sharedPlay';
 import { normalizePlay } from './utils/backupImport';
-import { ConfirmModal } from './components/ConfirmModal';
+import { gameMatchesFilters, playMatchesFilters } from './utils/collectionQuery';
 import { LocalStorageNotice } from './components/LocalStorageNotice';
 import { LoadingState, EmptyState, ErrorState } from './components/StateViews';
 import { TreasureReveal, type TreasureMoment } from './components/TreasureReveal';
@@ -49,6 +35,32 @@ import {
 } from './utils/collectorProgress';
 import type { CollectorMode } from './components/CollectorBoard';
 
+const GameDetailModal = lazy(() =>
+  import('./components/GameDetailModal').then((mod) => ({ default: mod.GameDetailModal }))
+);
+const GameFormModal = lazy(() => import('./components/GameFormModal').then((mod) => ({ default: mod.GameFormModal })));
+const GameScanModal = lazy(() => import('./components/GameScanModal').then((mod) => ({ default: mod.GameScanModal })));
+const GameCatalogModal = lazy(() =>
+  import('./components/GameCatalogModal').then((mod) => ({ default: mod.GameCatalogModal }))
+);
+const KakaoShareModal = lazy(() =>
+  import('./components/KakaoShareModal').then((mod) => ({ default: mod.KakaoShareModal }))
+);
+const PlayRecordFormModal = lazy(() =>
+  import('./components/PlayRecordFormModal').then((mod) => ({ default: mod.PlayRecordFormModal }))
+);
+const PlayDetailModal = lazy(() =>
+  import('./components/PlayDetailModal').then((mod) => ({ default: mod.PlayDetailModal }))
+);
+const MyPageView = lazy(() => import('./components/MyPageView').then((mod) => ({ default: mod.MyPageView })));
+const AuthModal = lazy(() => import('./components/AuthModal').then((mod) => ({ default: mod.AuthModal })));
+const PlayShareSheet = lazy(() =>
+  import('./components/PlayShareSheet').then((mod) => ({ default: mod.PlayShareSheet }))
+);
+const SharedPlayModal = lazy(() =>
+  import('./components/SharedPlayModal').then((mod) => ({ default: mod.SharedPlayModal }))
+);
+const ConfirmModal = lazy(() => import('./components/ConfirmModal').then((mod) => ({ default: mod.ConfirmModal })));
 const PlayCalendar = lazy(() => import('./components/PlayCalendar').then((mod) => ({ default: mod.PlayCalendar })));
 const CollectorBoard = lazy(() =>
   import('./components/CollectorBoard').then((mod) => ({ default: mod.CollectorBoard }))
@@ -69,7 +81,7 @@ const OWNERSHIP_TABS: (GameOwnershipStatus | '전체')[] = [
 const PLAY_RESULT_TABS: (MyGameResult | '전체')[] = ['전체', '승리', '패배', '무승부'];
 
 const MainApp: React.FC = () => {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading, signInAnonymously } = useAuth();
   const { showToast } = useToast();
 
   // Navigation Tab
@@ -215,7 +227,12 @@ const MainApp: React.FC = () => {
 
   // Fetch all user data
   const loadData = useCallback(async () => {
-    if (!user) return;
+    if (authLoading) return;
+    if (!user) {
+      setIsLoading(false);
+      setLoadError('이 기기에서 계정을 열지 못했습니다. 다시 시도해 주세요.');
+      return;
+    }
     setIsLoading(true);
     setLoadError(null);
     try {
@@ -226,17 +243,26 @@ const MainApp: React.FC = () => {
       setGames(fetchedGames);
       setPlays(fetchedPlays);
       syncProgress(fetchedGames, fetchedPlays);
-    } catch {
-      setLoadError('데이터를 불러오는 중 오류가 발생했습니다.');
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : '데이터를 불러오는 중 오류가 발생했습니다.');
       showToast('데이터 불러오기 실패', 'error');
     } finally {
       setIsLoading(false);
     }
-  }, [user, showToast, syncProgress]);
+  }, [user, authLoading, showToast, syncProgress]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // The add and edit screens stay out of the first file. Fetch them while the device is still
+  // online so a later offline visit can still type a game or a play. The service worker stores
+  // the files the next time this page is the active shell.
+  useEffect(() => {
+    void import('./components/GameFormModal');
+    void import('./components/PlayRecordFormModal');
+    void import('./components/ConfirmModal');
+  }, []);
 
   // --- Handlers: Game CRUD ---
   const handleSaveGame = async (
@@ -278,7 +304,7 @@ const MainApp: React.FC = () => {
   };
 
   const handleRegisterScannedGames = async (scanned: Omit<UserGame, 'id' | 'createdAt' | 'updatedAt'>[]) => {
-    if (!user) return;
+    if (!user) throw new Error('로그인이 필요합니다.');
     const created: UserGame[] = [];
     try {
       for (const game of scanned) {
@@ -447,35 +473,21 @@ const MainApp: React.FC = () => {
     setIsPlayFormOpen(true);
   };
 
-  // Filtered Games
-  const filteredGames = games.filter((g) => {
-    const matchesSearch =
-      !gameSearch.trim() ||
-      g.title.toLowerCase().includes(gameSearch.toLowerCase()) ||
-      g.titleEn.toLowerCase().includes(gameSearch.toLowerCase()) ||
-      g.publisher.toLowerCase().includes(gameSearch.toLowerCase()) ||
-      g.genre.some((tag) => tag.toLowerCase().includes(gameSearch.toLowerCase())) ||
-      g.storageLocation.toLowerCase().includes(gameSearch.toLowerCase());
+  const filteredGames = useMemo(
+    () =>
+      games.filter((game) =>
+        gameMatchesFilters(game, { query: gameSearch, ownership: selectedOwnership, tag: selectedTag })
+      ),
+    [games, gameSearch, selectedOwnership, selectedTag]
+  );
 
-    const matchesOwnership = selectedOwnership === '전체' || g.ownershipStatus === selectedOwnership;
-    const matchesTag = selectedTag === null || (g.tags ?? []).includes(selectedTag);
-
-    return matchesSearch && matchesOwnership && matchesTag;
-  });
-
-  // Filtered Plays
-  const filteredPlays = plays.filter((p) => {
-    const matchesSearch =
-      !playSearch.trim() ||
-      p.gameTitle.toLowerCase().includes(playSearch.toLowerCase()) ||
-      p.location.toLowerCase().includes(playSearch.toLowerCase()) ||
-      p.participants.some((part) => part.name.toLowerCase().includes(playSearch.toLowerCase()));
-
-    const matchesResult = selectedPlayResult === '전체' || p.myResult === selectedPlayResult;
-    const matchesDate = selectedPlayDate === null || p.date === selectedPlayDate;
-
-    return matchesSearch && matchesResult && matchesDate;
-  });
+  const filteredPlays = useMemo(
+    () =>
+      plays.filter((play) =>
+        playMatchesFilters(play, { query: playSearch, result: selectedPlayResult, date: selectedPlayDate })
+      ),
+    [plays, playSearch, selectedPlayResult, selectedPlayDate]
+  );
 
   const now = new Date();
   const sourceGames = progressGames(games);
@@ -524,7 +536,16 @@ const MainApp: React.FC = () => {
         {isLoading ? (
           <LoadingState message="보드로그 데이터를 불러오는 중입니다..." />
         ) : loadError ? (
-          <ErrorState message={loadError} onRetry={loadData} />
+          <ErrorState
+            message={loadError}
+            onRetry={() => {
+              if (!user) {
+                void signInAnonymously();
+                return;
+              }
+              void loadData();
+            }}
+          />
         ) : (
           <>
             {/* 1. HOME TAB */}
@@ -702,7 +723,7 @@ const MainApp: React.FC = () => {
                   gameViewMode === 'grid' ? (
                     <div className="game-shelf grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
                       {filteredGames.map((game) => (
-                        <GameCard
+                        <StableGameCard
                           key={game.id}
                           dense
                           game={game}
@@ -717,7 +738,7 @@ const MainApp: React.FC = () => {
                   ) : (
                     <div className="space-y-2">
                       {filteredGames.map((game) => (
-                        <GameListItem
+                        <StableGameListItem
                           key={game.id}
                           game={game}
                           onClick={() => setViewingGame(game)}
@@ -853,7 +874,7 @@ const MainApp: React.FC = () => {
                 {filteredPlays.length > 0 ? (
                   <div id="memory-card-list" className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {filteredPlays.map((play) => (
-                      <PlayCard key={play.id} play={play} onClick={() => setViewingPlay(play)} />
+                      <StablePlayCard key={play.id} play={play} onClick={() => setViewingPlay(play)} />
                     ))}
                   </div>
                 ) : plays.length === 0 ? (
@@ -904,17 +925,25 @@ const MainApp: React.FC = () => {
                       const linked = plays.filter((play) => play.gameId === favorite.id).length;
                       return linked || favorite.playCount || 0;
                     })(),
-                    photos: plays.flatMap((play) => play.photos.map((photo) => photo.url)).slice(0, 8)
+                    photos: plays.flatMap((play) => (play.photos ?? []).map((photo) => photo.url)).slice(0, 8)
                   }}
                 />
               </Suspense>
             )}
             {activeTab === 'mypage' && (
-              <MyPageView
-                onOpenAuth={() => setIsAuthOpen(true)}
-                onOpenCatalog={() => setIsCatalogModalOpen(true)}
-                onDataImported={loadData}
-              />
+              <Suspense
+                fallback={
+                  <p role="status" className="paper rounded-3xl px-4 py-4 text-sm text-[#1C160E]">
+                    마이 페이지를 불러오는 중
+                  </p>
+                }
+              >
+                <MyPageView
+                  onOpenAuth={() => setIsAuthOpen(true)}
+                  onOpenCatalog={() => setIsCatalogModalOpen(true)}
+                  onDataImported={loadData}
+                />
+              </Suspense>
             )}
           </>
         )}
@@ -931,60 +960,63 @@ const MainApp: React.FC = () => {
         }}
       />
 
-      {/* --- ALL MODALS --- */}
-      {/* KakaoTalk Share Modal */}
-      <KakaoShareModal
-        isOpen={isKakaoShareOpen}
-        games={games}
-        ownerName={user?.nickname || '나'}
-        onClose={() => setIsKakaoShareOpen(false)}
-      />
+      <MountAfterOpen open={isKakaoShareOpen}>
+        <KakaoShareModal
+          isOpen={isKakaoShareOpen}
+          games={games}
+          ownerName={user?.nickname || '나'}
+          onClose={() => setIsKakaoShareOpen(false)}
+        />
+      </MountAfterOpen>
 
-      {/* Game Catalog & PDF Print Modal */}
-      <GameCatalogModal
-        isOpen={isCatalogModalOpen}
-        games={games}
-        ownerName={user?.nickname || '나'}
-        onClose={() => setIsCatalogModalOpen(false)}
-      />
+      <MountAfterOpen open={isCatalogModalOpen}>
+        <GameCatalogModal
+          isOpen={isCatalogModalOpen}
+          games={games}
+          ownerName={user?.nickname || '나'}
+          onClose={() => setIsCatalogModalOpen(false)}
+        />
+      </MountAfterOpen>
 
-      {/* Game Add/Edit Modal */}
-      <GameFormModal
-        isOpen={isGameFormOpen}
-        initialGame={editingGame}
-        defaultSearchQuery={gameSearch}
-        onClose={() => {
-          setIsGameFormOpen(false);
-          setEditingGame(null);
-        }}
-        onSave={handleSaveGame}
-        onOpenScan={() => {
-          setScanAllowsRecognition(true);
-          setIsGameFormOpen(false);
-          setEditingGame(null);
-          setIsScanOpen(true);
-        }}
-        onPickPhoto={() => {
-          setScanAllowsRecognition(false);
-          setIsGameFormOpen(false);
-          setEditingGame(null);
-          setIsScanOpen(true);
-        }}
-      />
+      <MountAfterOpen open={isGameFormOpen}>
+        <GameFormModal
+          isOpen={isGameFormOpen}
+          initialGame={editingGame}
+          defaultSearchQuery={gameSearch}
+          onClose={() => {
+            setIsGameFormOpen(false);
+            setEditingGame(null);
+          }}
+          onSave={handleSaveGame}
+          onOpenScan={() => {
+            setScanAllowsRecognition(true);
+            setIsGameFormOpen(false);
+            setEditingGame(null);
+            setIsScanOpen(true);
+          }}
+          onPickPhoto={() => {
+            setScanAllowsRecognition(false);
+            setIsGameFormOpen(false);
+            setEditingGame(null);
+            setIsScanOpen(true);
+          }}
+        />
+      </MountAfterOpen>
 
-      {/* Bulk Registration from Photos */}
-      <GameScanModal
-        isOpen={isScanOpen}
-        allowRecognition={scanAllowsRecognition}
-        onClose={() => setIsScanOpen(false)}
-        onManualEntry={() => {
-          setIsScanOpen(false);
-          setEditingGame(null);
-          setIsGameFormOpen(true);
-        }}
-        existingGames={games}
-        onRegister={handleRegisterScannedGames}
-      />
+      <MountAfterOpen open={isScanOpen}>
+        <GameScanModal
+          isOpen={isScanOpen}
+          allowRecognition={scanAllowsRecognition}
+          onClose={() => setIsScanOpen(false)}
+          onManualEntry={() => {
+            setIsScanOpen(false);
+            setEditingGame(null);
+            setIsGameFormOpen(true);
+          }}
+          existingGames={games}
+          onRegister={handleRegisterScannedGames}
+        />
+      </MountAfterOpen>
 
       {viewingGame && (
         <Suspense fallback={<p role="status">게임을 여는 중</p>}>
@@ -1014,46 +1046,52 @@ const MainApp: React.FC = () => {
         </Suspense>
       )}
 
-      {/* Play Add/Edit Modal */}
-      <PlayRecordFormModal
-        isOpen={isPlayFormOpen}
-        initialPlay={editingPlay}
-        preselectedGame={preselectedGameForPlay}
-        userGames={games}
-        pastPlays={plays}
-        onClose={() => {
-          setIsPlayFormOpen(false);
-          setEditingPlay(null);
-          setPreselectedGameForPlay(null);
-        }}
-        onSave={handleSavePlay}
-      />
+      <MountAfterOpen open={isPlayFormOpen}>
+        <PlayRecordFormModal
+          isOpen={isPlayFormOpen}
+          initialPlay={editingPlay}
+          preselectedGame={preselectedGameForPlay}
+          userGames={games}
+          pastPlays={plays}
+          onClose={() => {
+            setIsPlayFormOpen(false);
+            setEditingPlay(null);
+            setPreselectedGameForPlay(null);
+          }}
+          onSave={handleSavePlay}
+        />
+      </MountAfterOpen>
 
-      {/* Play Details Modal */}
-      <PlayDetailModal
-        isOpen={!!viewingPlay}
-        play={viewingPlay}
-        onClose={() => setViewingPlay(null)}
-        onEdit={(play) => {
-          setViewingPlay(null);
-          setEditingPlay(play);
-          setIsPlayFormOpen(true);
-        }}
-        onDelete={(play) => {
-          setDeletingPlay(play);
-        }}
-      />
+      <MountAfterOpen open={viewingPlay !== null}>
+        <PlayDetailModal
+          isOpen={!!viewingPlay}
+          play={viewingPlay}
+          onClose={() => setViewingPlay(null)}
+          onEdit={(play) => {
+            setViewingPlay(null);
+            setEditingPlay(play);
+            setIsPlayFormOpen(true);
+          }}
+          onDelete={(play) => {
+            setDeletingPlay(play);
+          }}
+        />
+      </MountAfterOpen>
 
-      <PlayShareSheet
-        play={sharingPlay}
-        onClose={() => setSharingPlay(null)}
-        onShared={(playId) =>
-          syncProgress(games, plays, (state) => ({
-            ...state,
-            sharedPlayIds: state.sharedPlayIds.includes(playId) ? state.sharedPlayIds : [...state.sharedPlayIds, playId]
-          }))
-        }
-      />
+      <MountAfterOpen open={sharingPlay !== null}>
+        <PlayShareSheet
+          play={sharingPlay}
+          onClose={() => setSharingPlay(null)}
+          onShared={(playId) =>
+            syncProgress(games, plays, (state) => ({
+              ...state,
+              sharedPlayIds: state.sharedPlayIds.includes(playId)
+                ? state.sharedPlayIds
+                : [...state.sharedPlayIds, playId]
+            }))
+          }
+        />
+      </MountAfterOpen>
       {collectorSheet && progress && (
         <Suspense fallback={null}>
           <CollectorBoard
@@ -1068,32 +1106,37 @@ const MainApp: React.FC = () => {
           />
         </Suspense>
       )}
-      <SharedPlayModal shared={incomingShare} onClose={() => setIncomingShare(null)} onAdd={handleAddSharedPlay} />
+      <MountAfterOpen open={incomingShare !== null}>
+        <SharedPlayModal shared={incomingShare} onClose={() => setIncomingShare(null)} onAdd={handleAddSharedPlay} />
+      </MountAfterOpen>
 
-      {/* Auth Modal */}
-      <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
+      <MountAfterOpen open={isAuthOpen}>
+        <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
+      </MountAfterOpen>
 
-      {/* Delete Game Confirmation Modal */}
-      <ConfirmModal
-        isOpen={!!deletingGame}
-        title="보드게임 삭제"
-        message={`'${deletingGame?.title}' 게임을 내 목록에서 삭제하시겠습니까? 기록된 플레이 내역은 유지됩니다.`}
-        confirmText="삭제하기"
-        isDestructive
-        onConfirm={handleConfirmDeleteGame}
-        onCancel={() => setDeletingGame(null)}
-      />
+      <MountAfterOpen open={deletingGame !== null}>
+        <ConfirmModal
+          isOpen={!!deletingGame}
+          title="보드게임 삭제"
+          message={`'${deletingGame?.title}' 게임을 내 목록에서 삭제하시겠습니까? 기록된 플레이 내역은 유지됩니다.`}
+          confirmText="삭제하기"
+          isDestructive
+          onConfirm={handleConfirmDeleteGame}
+          onCancel={() => setDeletingGame(null)}
+        />
+      </MountAfterOpen>
 
-      {/* Delete Play Confirmation Modal */}
-      <ConfirmModal
-        isOpen={!!deletingPlay}
-        title="플레이 기록 삭제"
-        message={`'${deletingPlay?.gameTitle}' (${deletingPlay?.date}) 기록을 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.`}
-        confirmText="삭제하기"
-        isDestructive
-        onConfirm={handleConfirmDeletePlay}
-        onCancel={() => setDeletingPlay(null)}
-      />
+      <MountAfterOpen open={deletingPlay !== null}>
+        <ConfirmModal
+          isOpen={!!deletingPlay}
+          title="플레이 기록 삭제"
+          message={`'${deletingPlay?.gameTitle}' (${deletingPlay?.date}) 기록을 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.`}
+          confirmText="삭제하기"
+          isDestructive
+          onConfirm={handleConfirmDeletePlay}
+          onCancel={() => setDeletingPlay(null)}
+        />
+      </MountAfterOpen>
     </div>
   );
 };

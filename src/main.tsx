@@ -1,11 +1,24 @@
-import { StrictMode } from 'react';
+import { lazy, StrictMode, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import { ErrorBoundary, PreviewCrash } from './components/ErrorBoundary.tsx';
-import { VercelAnalytics } from './components/VercelAnalytics.tsx';
 import './index.css';
 import { initAnalytics } from './services/analytics.ts';
+import { isLocalHost } from './utils/analyticsEvents.ts';
 import { isNativeShell, shouldRegisterOfflineShell } from './utils/nativeShell.ts';
+
+const VercelAnalytics = lazy(() =>
+  import('./components/VercelAnalytics.tsx').then((mod) => ({ default: mod.VercelAnalytics }))
+);
+
+function VisitAnalytics() {
+  if (isLocalHost(window.location.hostname)) return null;
+  return (
+    <Suspense fallback={null}>
+      <VercelAnalytics />
+    </Suspense>
+  );
+}
 
 initAnalytics();
 startShell();
@@ -71,7 +84,7 @@ createRoot(rootElement).render(
     <ErrorBoundary>
       <PreviewCrash />
       <App />
-      <VercelAnalytics />
+      <VisitAnalytics />
     </ErrorBoundary>
   </StrictMode>
 );

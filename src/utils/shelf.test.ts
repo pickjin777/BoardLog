@@ -108,4 +108,25 @@ describe('home rails and the featured game', () => {
     expect(mostPlayed(games, plays)?.id).toBe('b');
     expect(mostPlayed([game('w', '위시', '하고 싶음')], [])).toBeNull();
   });
+
+  it('does not throw when an old play is missing its participant list or title', () => {
+    const broken = { date: '2026.11.12', participants: undefined } as unknown as PlayRecord;
+    expect(activitySummary([broken], NOW)).toEqual({
+      plays: 1,
+      people: 0,
+      line: '최근 14일 · 1회 · 함께한 사람 0명'
+    });
+    expect(
+      recentPlayRail([
+        {
+          id: 'x',
+          gameId: null,
+          gameTitle: undefined,
+          gameImageUrl: undefined,
+          date: '2026.11.12',
+          startTime: '19:00'
+        } as unknown as PlayRecord
+      ])
+    ).toEqual([]);
+  });
 });

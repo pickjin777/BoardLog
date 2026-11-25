@@ -1,8 +1,7 @@
 import type React from 'react';
 import { Layers, Plus, ArrowRight, Download, MessageCircle } from 'lucide-react';
 import type { UserGame, PlayRecord } from '../types';
-import { PlayCard } from './PlayCard';
-import { GameCard } from './GameCard';
+import { StableGameCard, StablePlayCard } from './stableCards';
 import { LevelTrack } from './LevelTrack';
 import { formatDuration } from '../utils/formatters';
 import { findRemovableSampleData } from '../services/storage';
@@ -260,7 +259,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         {recentPlays.length > 0 ? (
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {recentPlays.map((p) => (
-              <PlayCard key={p.id} play={p} onClick={() => onSelectPlay(p)} />
+              <StablePlayCard key={p.id} play={p} onClick={() => onSelectPlay(p)} />
             ))}
           </div>
         ) : (
@@ -322,7 +321,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         {favoriteGames.length > 0 ? (
           <div className="game-shelf grid grid-cols-2 gap-4 md:grid-cols-4">
             {favoriteGames.map((g) => (
-              <GameCard key={g.id} game={g} onClick={() => onSelectGame(g)} />
+              <StableGameCard key={g.id} game={g} onClick={() => onSelectGame(g)} />
             ))}
           </div>
         ) : (
