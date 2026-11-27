@@ -7,7 +7,7 @@ import { compressImage } from '../utils/imageCompressor';
 import { isNativeShell } from '../utils/nativeShell';
 import { readGamesWithUserKey, UserGeminiError } from '../utils/geminiDirect';
 import { PUBLIC_SCAN_ERROR } from '../utils/publicScanError';
-import { scanAvailableFromResponse } from '../utils/scanAvailability';
+import { probeScanServer, type NativeHttpResult } from '../utils/scanProbe';
 import {
   MAX_SCAN_IMAGES,
   ONE_PHOTO_LIMIT_MESSAGE,
@@ -84,28 +84,44 @@ function toInlineImage(dataUrl: string): { data: string; mimeType: string } {
 }
 
 /**
- * Asks the server whether a scan key is configured. A missing route, a 503, or a network
- * error all mean "off", so the form can explain that instead of opening a broken scan.
- * No image is sent and Gemini is not called.
+ * Asks the server whether a scan key is configured. A missing route, a 405, a 503, a timeout,
+ * or a network error all mean "off". No image is sent and Gemini is not called.
+ *
+ * On Android, CapacitorHttp rewrites window.fetch GET through a WebView proxy that can sit
+ * forever on a non-200 answer. The plugin's own request() uses the native client instead.
  */
 function scanApiUrl(): string {
   return resolveApiUrl('/api/scan-games', isNativeShell(), PRODUCTION_ORIGIN);
 }
 
-export async function fetchScanAvailable(): Promise<boolean> {
+function nativeScanRequest(): ((url: string) => Promise<NativeHttpResult>) | null {
+  if (!isNativeShell()) return null;
+  const plugin = (globalThis as { Capacitor?: { Plugins?: { CapacitorHttp?: { request?: unknown } } } }).Capacitor
+    ?.Plugins?.CapacitorHttp;
+  if (!plugin || typeof plugin.request !== 'function') return null;
+  const request = plugin.request as (options: {
+    url: string;
+    method: string;
+    headers?: Record<string, string>;
+  }) => Promise<NativeHttpResult>;
+  return (url) => request({ url, method: 'GET', headers: { Accept: 'application/json' } });
+}
+
+export async function fetchScanAvailable(options?: { timeoutMs?: number }): Promise<boolean> {
   if (!storage.isPhotoRecognitionEnabled() || !storage.hasPhotoScanConsent()) return false;
-  try {
-    const response = await fetch(scanApiUrl(), { method: 'GET' });
-    let body: unknown = null;
-    try {
-      body = await response.json();
-    } catch {
-      body = null;
-    }
-    return scanAvailableFromResponse(response.status, body);
-  } catch {
-    return false;
-  }
+  const nativeRequest = nativeScanRequest();
+  return probeScanServer(scanApiUrl(), {
+    timeoutMs: options?.timeoutMs,
+    nativeRequest: nativeRequest ?? undefined
+  });
+}
+
+/** Photo picker route. A saved personal key skips the server probe so a stuck GET cannot trap the sheet. */
+export async function planScanEntry(options?: { timeoutMs?: number }): Promise<'ready' | 'connect'> {
+  const key = await readUserGeminiKey();
+  if (key) return 'ready';
+  const server = await fetchScanAvailable(options);
+  return server ? 'ready' : 'connect';
 }
 
 async function scanOnServer(image: { data: string; mimeType: string }, seeds: SeedGame[]): Promise<ScanCandidate[]> {

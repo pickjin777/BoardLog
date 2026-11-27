@@ -7,7 +7,7 @@ import { SEED_GAMES } from '../data/seedGames';
 import { formatDate } from '../utils/formatters';
 import { storage } from '../services/storage';
 import {
-  fetchScanAvailable,
+  planScanEntry,
   scanGamePhotos,
   type ScanCandidate,
   ScanConsentRequiredError,
@@ -19,7 +19,6 @@ import {
   MAX_SCAN_IMAGES,
   ONE_PHOTO_LIMIT_MESSAGE
 } from '../services/gameScanner';
-import { readUserGeminiKey } from '../services/geminiKeyStore';
 import { PUBLIC_SCAN_ERROR } from '../utils/publicScanError';
 import { GeminiKeyForm } from './GeminiKeyForm';
 import { scanResultKind, scanResultMessage } from '../utils/scanRecognition';
@@ -77,6 +76,7 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
   const [path, setPath] = useState<'unknown' | 'ready' | 'connect'>('ready');
   const [unsentPhoto, setUnsentPhoto] = useState(false);
   const heldFile = useRef<File | null>(null);
+  const ignoreProbe = useRef(false);
 
   const ownedTitles = useMemo(() => new Set(existingGames.map((g) => normalizeTitle(g.title))), [existingGames]);
 
@@ -100,6 +100,7 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
     setPickedLabel('');
     setUnsentPhoto(false);
     heldFile.current = null;
+    ignoreProbe.current = false;
     replacePreview(null);
   }, [replacePreview]);
 
@@ -127,18 +128,12 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
   useEffect(() => {
     if (!isOpen || !recognitionOn || !hasConsent) return;
     let cancel = false;
+    ignoreProbe.current = false;
     setPath('unknown');
-    void (async () => {
-      const server = await fetchScanAvailable();
-      if (cancel) return;
-      if (server) {
-        setPath('ready');
-        return;
-      }
-      const key = await readUserGeminiKey();
-      if (cancel) return;
-      setPath(key ? 'ready' : 'connect');
-    })();
+    void planScanEntry().then((next) => {
+      if (cancel || ignoreProbe.current) return;
+      setPath(next);
+    });
     return () => {
       cancel = true;
     };
@@ -429,9 +424,28 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
               )}
 
               {path === 'unknown' && hasConsent && recognitionOn && !isScanning && (
-                <p id="scan-route-check" role="status" className="text-xs text-[#E4D3B4]">
-                  서버 인식을 확인하는 중…
-                </p>
+                <div id="scan-route-check" role="status" className="space-y-3">
+                  <p className="text-sm text-[#E4D3B4]">서버 인식을 확인하는 중…</p>
+                  <button
+                    id="scan-route-connect"
+                    type="button"
+                    onClick={() => {
+                      ignoreProbe.current = true;
+                      setPath('connect');
+                    }}
+                    className="btn-gold min-h-12 w-full text-sm"
+                  >
+                    내 제미나이로 바로 연결
+                  </button>
+                  <button
+                    id="scan-route-manual"
+                    type="button"
+                    onClick={onManualEntry}
+                    className="btn-quiet min-h-12 w-full text-sm"
+                  >
+                    직접 입력
+                  </button>
+                </div>
               )}
 
               {path === 'connect' && hasConsent && recognitionOn && !isScanning && !manualEntry && (

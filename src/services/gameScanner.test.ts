@@ -39,6 +39,7 @@ const { storage } = await import('./storage');
 const {
   errorForScanResponse,
   fetchScanAvailable,
+  planScanEntry,
   scanGamePhotos,
   ScanConsentRequiredError,
   ScanDisabledError,
@@ -84,6 +85,7 @@ describe('one photo, many games', () => {
 
   beforeEach(() => {
     fetchMock.mockReset();
+    localStorage.removeItem('boardlog_gemini_user_key');
     storage.setPhotoRecognitionEnabled(true);
     storage.grantPhotoScanConsent();
   });
@@ -121,6 +123,38 @@ describe('one photo, many games', () => {
       '없는게임'
     ]);
     expect(found.filter((candidate) => candidate.match === null)).toHaveLength(1);
+  });
+
+  it('skips a stuck server check when a personal key is already saved', async () => {
+    localStorage.setItem('boardlog_gemini_user_key', 'already-saved');
+    fetchMock.mockImplementation(() => new Promise(() => undefined));
+    await expect(planScanEntry()).resolves.toBe('ready');
+    expect(fetchMock).not.toHaveBeenCalled();
+    localStorage.removeItem('boardlog_gemini_user_key');
+  });
+
+  it('opens the connect guide when the availability GET is 405', async () => {
+    fetchMock.mockResolvedValue({ status: 405, json: async () => ({ error: '허용되지 않은 요청입니다.' }) });
+    await expect(planScanEntry({ timeoutMs: 200 })).resolves.toBe('connect');
+  });
+
+  it('does not stay pending when the native HTTP call never settles', async () => {
+    const previous = (globalThis as { Capacitor?: unknown }).Capacitor;
+    (globalThis as { Capacitor?: unknown }).Capacitor = {
+      isNativePlatform: () => true,
+      Plugins: { CapacitorHttp: { request: () => new Promise(() => undefined) } }
+    };
+    fetchMock.mockImplementation(() => new Promise(() => undefined));
+    try {
+      const started = Date.now();
+      await expect(fetchScanAvailable({ timeoutMs: 40 })).resolves.toBe(false);
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(Date.now() - started).toBeLessThan(500);
+    } finally {
+      if (previous === undefined) delete (globalThis as { Capacitor?: unknown }).Capacitor;
+      else (globalThis as { Capacitor?: unknown }).Capacitor = previous;
+    }
+    await expect(planScanEntry({ timeoutMs: 40 })).resolves.toBe('connect');
   });
 
   it('uses the device key when the server answers 405, and never puts that key in the url', async () => {

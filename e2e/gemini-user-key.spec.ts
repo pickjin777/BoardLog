@@ -28,6 +28,39 @@ async function expectContrast(page: Page) {
   expect(summary).toBe('');
 }
 
+test('a 405 availability response opens the connect guide instead of waiting', async ({ page }) => {
+  let released = false;
+  await page.route('**/api/scan-games', async (route) => {
+    await new Promise<void>((resolve) => {
+      const timer = setTimeout(resolve, 8000);
+      const watch = setInterval(() => {
+        if (released) {
+          clearTimeout(timer);
+          clearInterval(watch);
+          resolve();
+        }
+      }, 20);
+    });
+    if (!released) await route.fulfill({ status: 405, contentType: 'application/json', body: '{}' });
+    else await route.fulfill({ status: 405, contentType: 'application/json', body: '{}' });
+  });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/', { waitUntil: 'networkidle' });
+  const reveal = page.locator('#treasure-reveal');
+  if (await reveal.isVisible()) await page.locator('#treasure-skip-btn').click();
+  await page.locator('#nav-tab-games').click();
+  await page.locator('#games-add-game-btn').click();
+  await page.locator('#game-form-open-scan-btn').click();
+  await page.locator('#scan-consent-check').check();
+  await page.locator('#scan-consent-confirm').click();
+  await visible('확인 중', page.locator('#scan-route-check'));
+  const started = Date.now();
+  await page.locator('#scan-route-connect').click();
+  await visible('연결 안내', page.locator('#gemini-key-panel'));
+  expect(Date.now() - started).toBeLessThan(3000);
+  released = true;
+});
+
 test('a personal gemini key stays on the device and reads one photo', async ({ page }) => {
   const leaks: string[] = [];
   let scanPosts = 0;
