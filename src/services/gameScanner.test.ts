@@ -93,23 +93,26 @@ describe('one photo, many games', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('sends the one photo and returns each matched game once', async () => {
-    fetchMock.mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: async () => ({
-        games: [
-          { title: '카탄', confidence: 0.91 },
-          { title: 'Splendor', confidence: 0.8 },
-          { title: '없는게임', confidence: 0.4 },
-          { title: '카탄!', confidence: 0.2 }
-        ]
-      })
-    });
+  it('sends the one photo to the server when the server key is on', async () => {
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ available: true }) })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          games: [
+            { title: '카탄', confidence: 0.91 },
+            { title: 'Splendor', confidence: 0.8 },
+            { title: '없는게임', confidence: 0.4 },
+            { title: '카탄!', confidence: 0.2 }
+          ]
+        })
+      });
 
     const found = await scanGamePhotos([file], seeds);
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-    const body = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body));
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(String(fetchMock.mock.calls[1]?.[0])).toContain('/api/scan-games');
+    const body = JSON.parse(String(fetchMock.mock.calls[1]?.[1]?.body));
     expect(body.images).toHaveLength(1);
     expect(body.images[0].mimeType).toBe('image/jpeg');
     expect(found.map((candidate) => candidate.match?.game.title ?? candidate.detection.title)).toEqual([
@@ -118,5 +121,33 @@ describe('one photo, many games', () => {
       '없는게임'
     ]);
     expect(found.filter((candidate) => candidate.match === null)).toHaveLength(1);
+  });
+
+  it('uses the device key when the server answers 405, and never puts that key in the url', async () => {
+    const secret = 'device-key-not-a-server-secret';
+    localStorage.setItem('boardlog_gemini_user_key', secret);
+    const log = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    fetchMock.mockResolvedValueOnce({ ok: false, status: 405, json: async () => ({}) }).mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        candidates: [
+          { content: { parts: [{ text: JSON.stringify({ games: [{ title: '카탄', confidence: 0.9 }] }) }] } }
+        ]
+      })
+    });
+
+    const found = await scanGamePhotos([file], seeds);
+    const googleCall = fetchMock.mock.calls[1];
+    const url = String(googleCall?.[0]);
+    const headers = googleCall?.[1]?.headers as Record<string, string>;
+    expect(url).toContain('generativelanguage.googleapis.com');
+    expect(url).not.toContain(secret);
+    expect(headers['x-goog-api-key']).toBe(secret);
+    expect(String(googleCall?.[1]?.body)).not.toContain(secret);
+    expect(found.map((candidate) => candidate.match?.game.title)).toEqual(['카탄']);
+    expect(log.mock.calls.flat().join(' ')).not.toContain(secret);
+    log.mockRestore();
+    localStorage.removeItem('boardlog_gemini_user_key');
   });
 });

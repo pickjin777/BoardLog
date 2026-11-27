@@ -5,6 +5,7 @@ import { storage } from './storage';
 import { resolveApiUrl } from '../utils/apiOrigin';
 import { compressImage } from '../utils/imageCompressor';
 import { isNativeShell } from '../utils/nativeShell';
+import { readGamesWithUserKey, UserGeminiError } from '../utils/geminiDirect';
 import { PUBLIC_SCAN_ERROR } from '../utils/publicScanError';
 import { scanAvailableFromResponse } from '../utils/scanAvailability';
 import {
@@ -14,6 +15,7 @@ import {
   parseRecognizedGames,
   type ScanCandidate
 } from '../utils/scanRecognition';
+import { readUserGeminiKey } from './geminiKeyStore';
 
 export { MAX_SCAN_IMAGES, ONE_PHOTO_LIMIT_MESSAGE };
 export type { ScanCandidate };
@@ -45,6 +47,16 @@ export class ScanFailedError extends Error {
     this.name = 'ScanFailedError';
   }
 }
+
+/** The server cannot scan, and this device has no Gemini key yet. No photo was sent. */
+export class ScanNeedsUserKeyError extends Error {
+  constructor() {
+    super('내 제미나이 키를 연결하면 이 사진으로 인식할 수 있습니다.');
+    this.name = 'ScanNeedsUserKeyError';
+  }
+}
+
+export { UserGeminiError };
 
 function looksLikeProviderDump(text: string): boolean {
   return /gemini|model|모델|쓸 수 있는/i.test(text);
@@ -96,18 +108,11 @@ export async function fetchScanAvailable(): Promise<boolean> {
   }
 }
 
-export async function scanGamePhotos(files: File[], seeds: SeedGame[] = SEED_GAMES): Promise<ScanCandidate[]> {
-  assertScanAllowed();
-  if (files.length === 0) return [];
-  if (files.length > MAX_SCAN_IMAGES) throw new Error(ONE_PHOTO_LIMIT_MESSAGE);
-
-  const compressed = await compressImage(files[0]);
-  const images = [toInlineImage(compressed.dataUrl)];
-
+async function scanOnServer(image: { data: string; mimeType: string }, seeds: SeedGame[]): Promise<ScanCandidate[]> {
   const response = await fetch(scanApiUrl(), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ images })
+    body: JSON.stringify({ images: [image] })
   });
 
   let payload: { games?: unknown; error?: unknown; code?: unknown; available?: unknown } = {};
@@ -118,6 +123,24 @@ export async function scanGamePhotos(files: File[], seeds: SeedGame[] = SEED_GAM
   }
 
   if (!response.ok) throw errorForScanResponse(payload);
+  return matchRecognizedGames(parseRecognizedGames(payload), seeds);
+}
 
+export async function scanGamePhotos(files: File[], seeds: SeedGame[] = SEED_GAMES): Promise<ScanCandidate[]> {
+  assertScanAllowed();
+  if (files.length === 0) return [];
+  if (files.length > MAX_SCAN_IMAGES) throw new Error(ONE_PHOTO_LIMIT_MESSAGE);
+
+  // The BoardLog server is used only when it reports a key. The user's key never rides along.
+  if (await fetchScanAvailable()) {
+    const compressed = await compressImage(files[0]);
+    return scanOnServer(toInlineImage(compressed.dataUrl), seeds);
+  }
+
+  const userKey = await readUserGeminiKey();
+  if (!userKey) throw new ScanNeedsUserKeyError();
+
+  const compressed = await compressImage(files[0]);
+  const payload = await readGamesWithUserKey(userKey, toInlineImage(compressed.dataUrl));
   return matchRecognizedGames(parseRecognizedGames(payload), seeds);
 }

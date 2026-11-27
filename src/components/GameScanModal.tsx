@@ -13,11 +13,15 @@ import {
   ScanConsentRequiredError,
   ScanDisabledError,
   ScanFailedError,
+  ScanNeedsUserKeyError,
   ScanNotConfiguredError,
+  UserGeminiError,
   MAX_SCAN_IMAGES,
   ONE_PHOTO_LIMIT_MESSAGE
 } from '../services/gameScanner';
+import { readUserGeminiKey } from '../services/geminiKeyStore';
 import { PUBLIC_SCAN_ERROR } from '../utils/publicScanError';
+import { GeminiKeyForm } from './GeminiKeyForm';
 import { scanResultKind, scanResultMessage } from '../utils/scanRecognition';
 import { findSeedMatch, normalizeTitle } from '../utils/titleMatch';
 import { useDialogA11y } from './useDialogA11y';
@@ -70,6 +74,9 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
   const [manualEntry, setManualEntry] = useState(false);
   const [pickedLabel, setPickedLabel] = useState('');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [path, setPath] = useState<'unknown' | 'ready' | 'connect'>('ready');
+  const [unsentPhoto, setUnsentPhoto] = useState(false);
+  const heldFile = useRef<File | null>(null);
 
   const ownedTitles = useMemo(() => new Set(existingGames.map((g) => normalizeTitle(g.title))), [existingGames]);
 
@@ -91,6 +98,8 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
     setIsSaving(false);
     setManualEntry(false);
     setPickedLabel('');
+    setUnsentPhoto(false);
+    heldFile.current = null;
     replacePreview(null);
   }, [replacePreview]);
 
@@ -115,6 +124,70 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
     setConsentChecked(false);
   }, [isOpen]);
 
+  useEffect(() => {
+    if (!isOpen || !recognitionOn || !hasConsent) return;
+    let cancel = false;
+    setPath('unknown');
+    void (async () => {
+      const server = await fetchScanAvailable();
+      if (cancel) return;
+      if (server) {
+        setPath('ready');
+        return;
+      }
+      const key = await readUserGeminiKey();
+      if (cancel) return;
+      setPath(key ? 'ready' : 'connect');
+    })();
+    return () => {
+      cancel = true;
+    };
+  }, [isOpen, recognitionOn, hasConsent]);
+
+  const runScan = useCallback(async (file: File) => {
+    setIsScanning(true);
+    setManualEntry(false);
+    setError(null);
+    setFinishedEmpty(false);
+    setUnsentPhoto(false);
+    try {
+      const found = await scanGamePhotos([file]);
+      if (found.length === 0) {
+        setFinishedEmpty(true);
+        setCandidates([]);
+        setPath('ready');
+        return;
+      }
+      setCandidates(found);
+      setTitles(Object.fromEntries(found.map((c) => [c.id, c.match?.game.title ?? c.detection.title])));
+      setPath('ready');
+    } catch (err) {
+      if (err instanceof ScanNeedsUserKeyError) {
+        setUnsentPhoto(true);
+        setPath('connect');
+        return;
+      }
+      if (err instanceof UserGeminiError) {
+        setError(err.message);
+        setManualEntry(true);
+        return;
+      }
+      if (err instanceof ScanNotConfiguredError || err instanceof ScanDisabledError) {
+        setManualEntry(true);
+        setError(null);
+        return;
+      }
+      if (err instanceof ScanConsentRequiredError) {
+        setHasConsent(false);
+        setError(null);
+        return;
+      }
+      setError(err instanceof ScanFailedError ? err.message : err instanceof Error ? err.message : PUBLIC_SCAN_ERROR);
+    } finally {
+      setIsScanning(false);
+    }
+  }, []);
+
   const handleFiles = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
       const picked = event.target.files;
@@ -132,6 +205,8 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
       }
 
       const file = files[0];
+      if (!file) return;
+      heldFile.current = file;
       replacePreview(file);
       setPickedLabel(file.name);
       setCandidates([]);
@@ -140,44 +215,14 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
       setManualIds({});
       setError(null);
       setFinishedEmpty(false);
+      setUnsentPhoto(false);
       if (!recognitionOn || !storage.hasPhotoScanConsent()) {
         setManualEntry(!recognitionOn);
         return;
       }
-      const ready = await fetchScanAvailable();
-      if (!ready) {
-        setManualEntry(true);
-        return;
-      }
-
-      setIsScanning(true);
-      setManualEntry(false);
-      try {
-        const found = await scanGamePhotos([file]);
-        if (found.length === 0) {
-          setFinishedEmpty(true);
-          setCandidates([]);
-          return;
-        }
-        setCandidates(found);
-        setTitles(Object.fromEntries(found.map((c) => [c.id, c.match?.game.title ?? c.detection.title])));
-      } catch (err) {
-        if (err instanceof ScanNotConfiguredError || err instanceof ScanDisabledError) {
-          setManualEntry(true);
-          setError(null);
-          return;
-        }
-        if (err instanceof ScanConsentRequiredError) {
-          setHasConsent(false);
-          setError(null);
-          return;
-        }
-        setError(err instanceof ScanFailedError ? err.message : err instanceof Error ? err.message : PUBLIC_SCAN_ERROR);
-      } finally {
-        setIsScanning(false);
-      }
+      await runScan(file);
     },
-    [recognitionOn, replacePreview]
+    [recognitionOn, replacePreview, runScan]
   );
 
   const updateTitle = useCallback((id: string, value: string) => {
@@ -312,9 +357,14 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
                 >
                   <h3 className="text-sm font-medium text-[#1C160E]">사진 인식 안내</h3>
                   <p className="text-xs leading-relaxed text-[#1C160E]">
-                    고른 사진(최대 {MAX_SCAN_IMAGES}장)은 이 기기에서 크기를 줄이고, 위치 등 사진에 붙은 정보(EXIF)를
-                    제거한 뒤 보드로그 서버를 거쳐 Google Gemini로 보내 게임 이름을 읽는 데 쓰입니다. 보드로그는 이
-                    사진을 저장하지 않습니다.
+                    서버에서 사진 인식을 쓸 수 있으면, 고른 사진 1장은 이 기기에서 크기를 줄이고 위치 정보(EXIF)를 뺀 뒤
+                    보드로그 서버를 거쳐 Google Gemini로 갑니다. 서버를 쓸 수 없으면 이 기기에 저장한 본인 키로 Google
+                    Gemini에 직접 보냅니다. 그 키는 보드로그 서버로 나가지 않습니다. 보드로그는 이 사진을 저장하지
+                    않습니다.
+                  </p>
+                  <p className="text-xs leading-relaxed text-[#1C160E]">
+                    무료 키는 Google이 보낸 내용을 서비스 개선에 쓸 수 있습니다. Gemini API는 만 18세 이상 이용 조건이
+                    있습니다.
                   </p>
                   <label
                     className="flex min-h-12 items-center gap-2 text-xs text-[#1C160E]"
@@ -378,22 +428,55 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
                 </p>
               )}
 
-              {candidates.length === 0 && !isScanning && !manualEntry && (!recognitionOn || hasConsent) && (
-                <button
-                  id="scan-pick-photos-btn"
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-full py-10 border-2 border-dashed border-[#C6A36A] bg-[#243044] rounded-2xl flex flex-col items-center gap-2 text-[#F6EBD4]"
-                >
-                  <Camera className="w-7 h-7 text-[#E2B657]" />
-                  <span className="text-xs font-bold">사진 1장 고르기</span>
-                  <span className="text-[11px] text-[#E4D3B4]">
-                    {allowRecognition
-                      ? '찍거나 고른 한 장으로 바꿉니다. 박스 여러 개도 됩니다.'
-                      : '인식 설정이 없으면 이름은 읽지 않고, 고른 사진은 기기에만 있습니다'}
-                  </span>
-                </button>
+              {path === 'unknown' && hasConsent && recognitionOn && !isScanning && (
+                <p id="scan-route-check" role="status" className="text-xs text-[#E4D3B4]">
+                  서버 인식을 확인하는 중…
+                </p>
               )}
+
+              {path === 'connect' && hasConsent && recognitionOn && !isScanning && !manualEntry && (
+                <GeminiKeyForm
+                  onSaved={() => {
+                    setPath('ready');
+                    const file = heldFile.current;
+                    if (file) void runScan(file);
+                  }}
+                  onManualEntry={onManualEntry}
+                />
+              )}
+
+              {unsentPhoto && !manualEntry && (
+                <div
+                  id="scan-manual-fallback"
+                  className="rounded-2xl border border-[#C6B48A] bg-[#F6EBD4] p-4 text-[#1C160E]"
+                >
+                  <p className="text-xs font-bold">이 사진은 아직 어디에도 보내지 않았습니다.</p>
+                  <p className="mt-1 break-all text-[11px] leading-relaxed">
+                    서버로 보내지 않았습니다.
+                    {pickedLabel ? ` 선택한 파일: ${pickedLabel}` : ''}
+                  </p>
+                </div>
+              )}
+
+              {candidates.length === 0 &&
+                !isScanning &&
+                !manualEntry &&
+                (!recognitionOn || (hasConsent && path !== 'unknown')) && (
+                  <button
+                    id="scan-pick-photos-btn"
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full py-10 border-2 border-dashed border-[#C6A36A] bg-[#243044] rounded-2xl flex flex-col items-center gap-2 text-[#F6EBD4]"
+                  >
+                    <Camera className="w-7 h-7 text-[#E2B657]" />
+                    <span className="text-xs font-bold">사진 1장 고르기</span>
+                    <span className="text-[11px] text-[#E4D3B4]">
+                      {allowRecognition
+                        ? '찍거나 고른 한 장으로 바꿉니다. 박스 여러 개도 됩니다.'
+                        : '인식 설정이 없으면 이름은 읽지 않고, 고른 사진은 기기에만 있습니다'}
+                    </span>
+                  </button>
+                )}
 
               {manualEntry && (
                 <div
@@ -402,7 +485,9 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
                 >
                   <p className="text-xs font-bold">이 사진에서 이름을 읽지 않았습니다.</p>
                   <p className="mt-1 break-all text-[11px] leading-relaxed">
-                    인식 설정이 없어 고른 사진은 서버로 보내지 않았습니다.
+                    {error
+                      ? '고른 사진은 서버로 보내지 않았습니다.'
+                      : '인식 설정이 없어 고른 사진은 서버로 보내지 않았습니다.'}
                     {pickedLabel ? ` 선택한 파일: ${pickedLabel}` : ''}
                   </p>
                   <button

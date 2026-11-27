@@ -117,8 +117,10 @@ test('320px games title stays wide and the 390px empty hint clears the tab', asy
 
 test('photo scan makes no network call before consent', async ({ page }) => {
   let calls = 0;
+  let posts = 0;
   await page.route('**/api/scan-games', (route) => {
     calls += 1;
+    if (route.request().method() === 'POST') posts += 1;
     return route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -142,7 +144,8 @@ test('photo scan makes no network call before consent', async ({ page }) => {
   await expect(confirm).toBeEnabled();
   await confirm.click();
   await visible('동의 후 사진 선택', page.locator('#scan-pick-photos-btn'));
-  check('사진을 고르기 전에는 요청 없음', calls === 0, String(calls));
+  check('사진을 고르기 전에는 사진을 보내지 않음', posts === 0, String(posts));
+  check('동의 뒤에만 서버 가능 여부를 묻는다', calls >= 1, String(calls));
 });
 
 test('without a scan key, a chosen photo falls back to manual entry and saves', async ({ page }) => {

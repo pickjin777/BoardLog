@@ -21,7 +21,8 @@ export default defineConfig({
         'src/utils/omitNativeMonetization.ts': { branches: 100 },
         'src/utils/memoryCard.ts': { branches: 100 },
         'src/utils/thumbnail.ts': { branches: 100 },
-        'src/utils/scanRecognition.ts': { branches: 100 }
+        'src/utils/scanRecognition.ts': { branches: 100 },
+        'src/utils/geminiDirect.ts': { branches: 100 }
       }
     }
   }

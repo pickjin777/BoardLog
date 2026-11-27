@@ -1,6 +1,7 @@
-import { GoogleGenAI, Type } from '@google/genai';
+import { GoogleGenAI } from '@google/genai';
 import { PUBLIC_SCAN_ERROR } from '../src/utils/publicScanError';
 import { MAX_SCAN_IMAGES, ONE_PHOTO_LIMIT_MESSAGE, parseRecognizedGames } from '../src/utils/scanRecognition';
+import { SCAN_MODEL_CANDIDATES, SCAN_PROMPT, SCAN_RESPONSE_SCHEMA } from '../src/utils/scanPrompt';
 
 /**
  * Model ids retire while still appearing in the account's model list, so a single
@@ -9,48 +10,10 @@ import { MAX_SCAN_IMAGES, ONE_PHOTO_LIMIT_MESSAGE, parseRecognizedGames } from '
  */
 
 const MODEL_CANDIDATES = (process.env.GEMINI_MODEL ? [process.env.GEMINI_MODEL] : []).concat([
-  'gemini-flash-latest',
-  'gemini-3.5-flash',
-  'gemini-2.5-flash'
+  ...SCAN_MODEL_CANDIDATES
 ]);
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp'];
-
-const PROMPT = `You are reading one photograph of physical board game boxes. A single photo may show several boxes at once.
-
-Return every distinct board game whose title you can read. The response is a JSON object with a "games" array. Each item has only:
-- "title": the product title printed on that box, in the language printed on the box. Keep Korean titles in Korean. When both a Korean and an English title are printed, use the Korean one.
-- "confidence": a number from 0 to 1 for how sure you are of that title.
-
-Titles may be printed in any of these ways. Read all of them:
-- Horizontal text across a box face.
-- Vertically stacked characters, each one below the previous.
-- Horizontal text on a spine, rotated 90 degrees clockwise or counter-clockwise.
-
-Rules:
-- One array item per physical box. Never merge two boxes. Never split one box into two.
-- Ignore publisher names, taglines, player-count badges, age ratings, awards, barcodes and expansion banners.
-- When a title is partly hidden or blurred, report the legible part and lower the confidence.
-- When the photo shows no board game box, return an empty "games" array. Do not guess.`;
-
-const RESPONSE_SCHEMA = {
-  type: Type.OBJECT,
-  properties: {
-    games: {
-      type: Type.ARRAY,
-      description: 'Every board game read from this one photo',
-      items: {
-        type: Type.OBJECT,
-        properties: {
-          title: { type: Type.STRING, description: 'Title as printed on the box' },
-          confidence: { type: Type.NUMBER, description: '0 to 1' }
-        },
-        required: ['title', 'confidence']
-      }
-    }
-  },
-  required: ['games']
-};
 
 /**
  * The provider reports a bad key, a disabled API and an unavailable model all as one
@@ -216,7 +179,7 @@ export default async function handler(req: HandlerRequest, res: HandlerResponse)
     {
       role: 'user',
       parts: [
-        { text: PROMPT },
+        { text: SCAN_PROMPT },
         ...images.map((image) => ({
           inlineData: { mimeType: image.mimeType, data: image.data }
         }))
@@ -232,7 +195,7 @@ export default async function handler(req: HandlerRequest, res: HandlerResponse)
         contents,
         config: {
           responseMimeType: 'application/json',
-          responseSchema: RESPONSE_SCHEMA,
+          responseSchema: SCAN_RESPONSE_SCHEMA,
           temperature: 0
         }
       });
