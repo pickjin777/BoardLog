@@ -2,7 +2,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page, type Route } from '@playwright/test';
 import { visible } from './helpers';
 
-const SECRET = 'boardlog-device-gemini-key';
+const SECRET = `AIza${'x'.repeat(35)}`;
 const PNG = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
   'base64'
@@ -63,20 +63,43 @@ test('a personal gemini key stays on the device and reads one photo', async ({ p
   await page.locator('#scan-consent-check').check();
   await page.locator('#scan-consent-confirm').click();
   await visible('내 제미나이 연결', page.locator('#gemini-key-panel'));
+  await expect(page.locator('#gemini-key-panel')).toContainText('키 받으러 가기');
+  await expect(page.locator('#gemini-key-panel')).toContainText('구글 계정으로 들어가기');
+  await expect(page.locator('#gemini-key-panel')).toContainText('글자 만들기');
+  await expect(page.locator('#gemini-key-panel')).toContainText('여기로 돌아와 붙이기');
+  await expect(page.locator('#gemini-key-panel')).toContainText('연결 비밀번호');
   await expect(page.locator('#gemini-key-panel')).toContainText('만 18세');
   await expect(page.locator('#gemini-key-help')).toHaveAttribute('href', 'https://aistudio.google.com/apikey');
+  await expect(page.locator('#gemini-key-help')).toHaveAttribute('target', '_blank');
   await expectAxe(page);
   await expectContrast(page);
 
-  await page.locator('#gemini-key-input').fill(SECRET);
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.evaluate(async () => navigator.clipboard.writeText('AIza잘림'));
+  await page.locator('#gemini-key-paste').click();
+  await visible('잘린 글자', page.locator('#gemini-key-error'));
+  await expect(page.locator('#gemini-key-error')).toContainText('잘린');
+
+  await page.locator('#gemini-key-faq').click();
+  await expect(page.locator('#gemini-key-faq-body')).toContainText('돈이 드나요?');
+  await expect(page.locator('#gemini-key-faq-body')).toContainText('안전한가요?');
+  await expect(page.locator('#gemini-key-faq-body')).toContainText('잊어버렸어요');
+  await expect(page.locator('#gemini-key-faq-body')).toContainText('지우고 싶어요');
+
+  await page.evaluate(async (key) => navigator.clipboard.writeText(`\n${key}\n`), SECRET);
+  await page.locator('#gemini-key-paste').click();
+  await expect(page.locator('#gemini-key-input')).toHaveValue(SECRET);
   await page.locator('#gemini-key-verify').click();
   await visible('틀린 키', page.locator('#gemini-key-error'));
-  await expect(page.locator('#gemini-key-error')).toContainText('키가 올바르지 않습니다');
+  await expect(page.locator('#gemini-key-error')).toContainText('글자가 안 맞아요');
   await expect(page.locator('#gemini-key-error')).not.toContainText(SECRET);
 
   modelsStatus = 200;
-  await page.locator('#gemini-key-input').fill(SECRET);
   await page.locator('#gemini-key-verify').click();
+  await visible('연결됨', page.locator('#gemini-key-success'));
+  await expect(page.locator('#gemini-key-success')).toContainText('연결됐어요');
+  await expect(page.locator('#gemini-key-success')).toContainText('사진을 고르면');
+  await page.locator('#gemini-key-success-next').click();
   await visible('연결 후 사진', page.locator('#scan-pick-photos-btn'));
   await page.locator('#scan-file-input').setInputFiles({ name: 'shelf.png', mimeType: 'image/png', buffer: PNG });
   await visible('인식 결과', page.locator('#scan-result-list'));
@@ -90,4 +113,6 @@ test('a personal gemini key stays on the device and reads one photo', async ({ p
   await page.locator('#settings-gemini-key-clear').click();
   await expect(page.locator('#settings-gemini-key-status')).toContainText('없습니다');
   await expect(page.locator('#settings-gemini-key-clear')).toHaveCount(0);
+  await page.locator('#settings-gemini-faq').click();
+  await expect(page.locator('#settings-gemini-faq-body')).toContainText('돈이 드나요?');
 });

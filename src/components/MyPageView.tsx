@@ -6,7 +6,7 @@ import { useToast } from '../context/ToastContext';
 import { track } from '../services/analytics';
 import { storage, type ImportPlan } from '../services/storage';
 import { clearUserGeminiKey, readUserGeminiKey } from '../services/geminiKeyStore';
-import { GeminiKeyForm } from './GeminiKeyForm';
+import { GeminiKeyFaq, GeminiKeyForm } from './GeminiKeyForm';
 import { CONTACT, contactHref } from '../config/contact';
 import { parseBackup, MAX_BACKUP_BYTES } from '../utils/backupImport';
 import { isNativeShell } from '../utils/nativeShell';
@@ -277,6 +277,7 @@ export const MyPageView: React.FC<MyPageViewProps> = ({ onOpenAuth, onOpenCatalo
         {geminiEditing ? (
           <GeminiKeyForm
             idPrefix="settings-gemini-key"
+            doneLabel="확인"
             onSaved={() => {
               setGeminiOn(true);
               setGeminiEditing(false);
@@ -306,6 +307,7 @@ export const MyPageView: React.FC<MyPageViewProps> = ({ onOpenAuth, onOpenCatalo
             )}
           </div>
         )}
+        {!geminiEditing && <GeminiKeyFaq id="settings-gemini-faq" />}
       </div>
 
       <div id="settings-contact-card" className="space-y-2 rounded-2xl border border-[#E9ECEF] bg-white p-4 shadow-sm">
