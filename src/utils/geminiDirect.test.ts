@@ -5,6 +5,7 @@ import {
   classifyGeminiStatus,
   geminiGenerateUrl,
   geminiKeyFailureMessage,
+  geminiKeyHeader,
   geminiModelsUrl,
   readGamesWithUserKey,
   textFromGeminiResponse,
@@ -53,6 +54,9 @@ describe('gemini status and urls', () => {
     expect(body).toContain('inlineData');
     expect(body).toContain('QQ==');
     expect(body).not.toContain(SECRET);
+    const dotted = 'AQ.ab.cd-ef_12';
+    expect(geminiKeyHeader(dotted)['x-goog-api-key']).toBe(dotted);
+    expect(JSON.stringify(geminiKeyHeader(dotted))).not.toContain('%2E');
   });
 });
 

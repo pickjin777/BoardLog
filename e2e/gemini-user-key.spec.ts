@@ -2,7 +2,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page, type Route } from '@playwright/test';
 import { visible } from './helpers';
 
-const SECRET = `AIza${'x'.repeat(35)}`;
+const SECRET = `AQ.${'ab'.repeat(12)}.key-1`;
 const PNG = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
   'base64'
@@ -108,7 +108,7 @@ test('a personal gemini key stays on the device and reads one photo', async ({ p
   await expectContrast(page);
 
   await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
-  await page.evaluate(async () => navigator.clipboard.writeText('AIza잘림'));
+  await page.evaluate(async () => navigator.clipboard.writeText('AQ.short'));
   await page.locator('#gemini-key-paste').click();
   await visible('잘린 글자', page.locator('#gemini-key-error'));
   await expect(page.locator('#gemini-key-error')).toContainText('잘린');
