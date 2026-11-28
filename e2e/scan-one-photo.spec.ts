@@ -148,6 +148,28 @@ test('an empty read and a failed read stay on the one photo', async ({ page }) =
   await page.locator('#scan-file-input').setInputFiles({ name: 'fail.png', mimeType: 'image/png', buffer: PNG });
   await visible('실패', page.locator('#scan-error'));
   await expect(page.locator('#scan-error')).toContainText('사진 인식을 끝내지 못했습니다');
+  await expect(page.locator('#scan-error')).toContainText('다시 시도');
+  await expect(page.locator('#scan-retry-btn')).toContainText('다시 시도');
   await expect(page.locator('#scan-error')).not.toContainText('gemini');
   await expect(page.locator('#scan-pick-photos-btn')).toBeVisible();
+});
+
+test('a slow read shows progress before the result', async ({ page }) => {
+  let release: () => void = () => undefined;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route('**/api/scan-games', async (route) => {
+    if (route.request().method() === 'GET') return fulfillJson(route, 200, { available: true });
+    await gate;
+    return fulfillJson(route, 200, { games: [{ title: '카탄', confidence: 0.9 }] });
+  });
+
+  await openScanPicker(page);
+  await page.locator('#scan-file-input').setInputFiles({ name: 'slow.png', mimeType: 'image/png', buffer: PNG });
+  await visible('진행', page.locator('#scan-progress'));
+  await expect(page.locator('#scan-progress')).toContainText('읽는 중');
+  await expect(page.getByRole('progressbar', { name: '사진 인식 진행' })).toBeVisible();
+  release();
+  await visible('카탄', page.locator('input[value="카탄"]'));
 });

@@ -57,5 +57,6 @@ describe('plain-language hints', () => {
     expect(geminiVerifyHelp('limited')).toContain('잠시');
     expect(geminiVerifyHelp('offline')).toContain('인터넷');
     expect(geminiVerifyHelp('failed')).toContain('잠시');
+    expect(geminiVerifyHelp('timeout')).toContain('다시 시도');
   });
 });

@@ -20,6 +20,7 @@ import {
   ONE_PHOTO_LIMIT_MESSAGE
 } from '../services/gameScanner';
 import { PUBLIC_SCAN_ERROR } from '../utils/publicScanError';
+import { SCAN_CLIENT_TIMEOUT_MS } from '../utils/scanPrompt';
 import { GeminiKeyForm } from './GeminiKeyForm';
 import { scanResultKind, scanResultMessage } from '../utils/scanRecognition';
 import { findSeedMatch, normalizeTitle } from '../utils/titleMatch';
@@ -75,6 +76,7 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [path, setPath] = useState<'unknown' | 'ready' | 'connect'>('ready');
   const [unsentPhoto, setUnsentPhoto] = useState(false);
+  const [scanWaitedMs, setScanWaitedMs] = useState(0);
   const heldFile = useRef<File | null>(null);
   const ignoreProbe = useRef(false);
 
@@ -117,6 +119,8 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
   }, [reset, onClose]);
 
   const recognitionOn = allowRecognition && storage.isPhotoRecognitionEnabled();
+  const waitedPct = Math.min(100, Math.round((scanWaitedMs / SCAN_CLIENT_TIMEOUT_MS) * 100));
+  const barPct = Math.max(waitedPct, 8);
   useDialogA11y(isOpen, handleClose, dialogRef);
 
   useEffect(() => {
@@ -124,6 +128,16 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
     setHasConsent(storage.hasPhotoScanConsent());
     setConsentChecked(false);
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!isScanning) {
+      setScanWaitedMs(0);
+      return;
+    }
+    const started = Date.now();
+    const timer = window.setInterval(() => setScanWaitedMs(Date.now() - started), 200);
+    return () => window.clearInterval(timer);
+  }, [isScanning]);
 
   useEffect(() => {
     if (!isOpen || !recognitionOn || !hasConsent) return;
@@ -164,7 +178,7 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
       }
       if (err instanceof UserGeminiError) {
         setError(err.message);
-        setManualEntry(true);
+        if (err.kind !== 'timeout') setManualEntry(true);
         return;
       }
       if (err instanceof ScanNotConfiguredError || err instanceof ScanDisabledError) {
@@ -516,10 +530,20 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
               )}
 
               {isScanning && (
-                <div className="py-12 flex flex-col items-center gap-3">
-                  <Loader2 className="w-7 h-7 text-[#E2B657] animate-spin" />
+                <div id="scan-progress" className="py-12 flex flex-col items-center gap-3" role="status">
+                  <Loader2 className="w-7 h-7 text-[#E2B657] animate-spin" aria-hidden="true" />
                   <span className="text-xs font-bold text-[#F6EBD4]">사진에서 게임 이름을 읽는 중…</span>
-                  <span className="text-[11px] text-[#E4D3B4]">10초 정도 걸릴 수 있습니다</span>
+                  <div
+                    role="progressbar"
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={waitedPct}
+                    aria-label="사진 인식 진행"
+                    className="h-2 w-full max-w-[240px] overflow-hidden rounded-full bg-[#243044]"
+                  >
+                    <div className="h-full rounded-full bg-[#E2B657]" style={{ width: `${barPct}%` }} />
+                  </div>
+                  <span className="text-[11px] text-[#E4D3B4]">길어도 20초 안에 끝나거나, 다시 시도할 수 있습니다</span>
                 </div>
               )}
 
@@ -527,10 +551,25 @@ export const GameScanModal: React.FC<GameScanModalProps> = ({
                 <div
                   id="scan-error"
                   role="alert"
-                  className="flex items-start gap-2 p-3 bg-[#FDECEA] border border-[#F5C6C2] rounded-2xl"
+                  className="flex flex-col gap-2 p-3 bg-[#FDECEA] border border-[#F5C6C2] rounded-2xl"
                 >
-                  <AlertCircle className="w-4 h-4 text-[#C0392B] shrink-0 mt-0.5" />
-                  <p className="text-[11px] text-[#C0392B] leading-relaxed whitespace-pre-line break-all">{error}</p>
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 text-[#C0392B] shrink-0 mt-0.5" />
+                    <p className="text-[11px] text-[#C0392B] leading-relaxed whitespace-pre-line break-all">{error}</p>
+                  </div>
+                  {pickedLabel && !isScanning && (
+                    <button
+                      id="scan-retry-btn"
+                      type="button"
+                      onClick={() => {
+                        const file = heldFile.current;
+                        if (file) void runScan(file);
+                      }}
+                      className="btn-gold inline-flex min-h-12 w-full items-center justify-center rounded-full px-4 text-[11px] font-bold"
+                    >
+                      다시 시도
+                    </button>
+                  )}
                 </div>
               )}
 

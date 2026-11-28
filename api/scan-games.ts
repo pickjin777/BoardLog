@@ -1,12 +1,19 @@
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI, type GenerateContentConfig } from '@google/genai';
 import { PUBLIC_SCAN_ERROR } from '../src/utils/publicScanError';
 import { MAX_SCAN_IMAGES, ONE_PHOTO_LIMIT_MESSAGE, parseRecognizedGames } from '../src/utils/scanRecognition';
-import { SCAN_MODEL_CANDIDATES, SCAN_PROMPT, SCAN_RESPONSE_SCHEMA } from '../src/utils/scanPrompt';
+import {
+  SCAN_CANDIDATE_TIMEOUT_MS,
+  SCAN_MODEL_CANDIDATES,
+  SCAN_PROMPT,
+  SCAN_RESPONSE_SCHEMA,
+  SCAN_THINKING_CONFIG
+} from '../src/utils/scanPrompt';
+import { isThinkingRejection, withCandidateTimeout } from '../src/utils/scanTiming';
 
 /**
  * Model ids retire while still appearing in the account's model list, so a single
  * hardcoded id eventually stops working. GEMINI_MODEL wins when set; otherwise these
- * are tried in order, starting with the alias that tracks the current flash release.
+ * are tried in order, fastest measured id first.
  */
 
 const MODEL_CANDIDATES = (process.env.GEMINI_MODEL ? [process.env.GEMINI_MODEL] : []).concat([
@@ -40,6 +47,9 @@ export function classifyProviderError(err: unknown): { status: number; error: st
   } else if (text.includes('unavailable') || text.includes('overloaded') || text.includes('high demand')) {
     status = 503;
     reason = 'MODEL_OVERLOADED';
+  } else if (text.includes('timeout') || text.includes('timed out') || text.includes('aborted')) {
+    status = 504;
+    reason = 'TIMEOUT';
   } else {
     const upstreamStatus = (err as { status?: unknown }).status;
     const fromMessage = /\b(4\d{2}|5\d{2})\b/.exec(text);
@@ -187,18 +197,34 @@ export default async function handler(req: HandlerRequest, res: HandlerResponse)
     }
   ];
 
+  const nextModel = new Set(['MODEL_NOT_FOUND', 'MODEL_OVERLOADED', 'RATE_LIMITED', 'TIMEOUT']);
+  const configFor = (thinking: boolean): GenerateContentConfig => {
+    const config: GenerateContentConfig = {
+      responseMimeType: 'application/json',
+      responseSchema: SCAN_RESPONSE_SCHEMA,
+      temperature: 0
+    };
+    // The measured value is the lowercase level. The SDK enum spells it MINIMAL.
+    if (thinking) Object.assign(config, { thinkingConfig: SCAN_THINKING_CONFIG });
+    return config;
+  };
+
   let lastError: unknown = null;
   for (const model of MODEL_CANDIDATES) {
     try {
-      const result = await ai.models.generateContent({
-        model,
-        contents,
-        config: {
-          responseMimeType: 'application/json',
-          responseSchema: SCAN_RESPONSE_SCHEMA,
-          temperature: 0
-        }
-      });
+      let result: { text?: string };
+      try {
+        result = await withCandidateTimeout(
+          ai.models.generateContent({ model, contents, config: configFor(true) }),
+          SCAN_CANDIDATE_TIMEOUT_MS
+        );
+      } catch (err) {
+        if (!isThinkingRejection(err)) throw err;
+        result = await withCandidateTimeout(
+          ai.models.generateContent({ model, contents, config: configFor(false) }),
+          SCAN_CANDIDATE_TIMEOUT_MS
+        );
+      }
 
       const text = result.text;
       if (!text) {
@@ -214,9 +240,9 @@ export default async function handler(req: HandlerRequest, res: HandlerResponse)
       console.error(`scan-games failed on ${model}`, err);
       lastError = err;
       const reason = classifyProviderError(err).reason;
-      // A missing or momentarily overloaded model might succeed on another id; a bad
-      // key or a spent quota fails the same way on every one, so stop immediately.
-      if (reason !== 'MODEL_NOT_FOUND' && reason !== 'MODEL_OVERLOADED') break;
+      // A missing, overloaded, rate-limited, or slow model can succeed on the next id.
+      // A bad key fails the same way on every one, so stop.
+      if (!nextModel.has(reason)) break;
     }
   }
 

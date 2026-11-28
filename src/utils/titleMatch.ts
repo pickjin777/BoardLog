@@ -42,6 +42,27 @@ export interface SeedMatch {
   score: number;
 }
 
+/**
+ * A photographed English name is often the first word of titleEn ("Rummikub" on a box
+ * whose list entry is "Rummikub Classic") or a name kept in aliases ("Spot It" for Dobble).
+ * A whole-word hit scores just under an exact full-title hit, so the base game still wins
+ * when the query is that game's own title.
+ */
+function scoreLabel(query: string, raw: string): number {
+  const full = normalizeTitle(raw);
+  if (full.length === 0) return 0;
+  const direct = similarity(query, full);
+  if (direct === 1) return 1;
+
+  let score = direct;
+  for (const part of raw.split(/[\s/,:()[\]]+/)) {
+    const token = normalizeTitle(part);
+    if (token.length < 4) continue;
+    score = Math.max(score, token === query ? 0.99 : similarity(query, token));
+  }
+  return score;
+}
+
 /** Best seed-list entry for a photographed title, or null when nothing clears the threshold. */
 export function findSeedMatch(rawTitle: string, seeds: SeedGame[]): SeedMatch | null {
   const query = normalizeTitle(rawTitle);
@@ -49,13 +70,13 @@ export function findSeedMatch(rawTitle: string, seeds: SeedGame[]): SeedMatch | 
 
   let best: SeedMatch | null = null;
   for (const game of seeds) {
-    const score = Math.max(
-      similarity(query, normalizeTitle(game.title)),
-      game.titleEn ? similarity(query, normalizeTitle(game.titleEn)) : 0
-    );
-    if (!best || score > best.score) {
-      best = { game, score };
+    const labels = [game.title, game.titleEn, ...(game.aliases ?? [])];
+    let score = 0;
+    for (const label of labels) {
+      if (!label) continue;
+      score = Math.max(score, scoreLabel(query, label));
     }
+    if (!best || score > best.score) best = { game, score };
   }
 
   return best && best.score >= MATCH_THRESHOLD ? best : null;

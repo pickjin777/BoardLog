@@ -7,6 +7,7 @@ import { compressImage } from '../utils/imageCompressor';
 import { isNativeShell } from '../utils/nativeShell';
 import { readGamesWithUserKey, UserGeminiError } from '../utils/geminiDirect';
 import { PUBLIC_SCAN_ERROR } from '../utils/publicScanError';
+import { SCAN_CLIENT_TIMEOUT_MS } from '../utils/scanPrompt';
 import { probeScanServer, type NativeHttpResult } from '../utils/scanProbe';
 import {
   MAX_SCAN_IMAGES,
@@ -124,11 +125,16 @@ export async function planScanEntry(options?: { timeoutMs?: number }): Promise<'
   return server ? 'ready' : 'connect';
 }
 
-async function scanOnServer(image: { data: string; mimeType: string }, seeds: SeedGame[]): Promise<ScanCandidate[]> {
+async function scanOnServer(
+  image: { data: string; mimeType: string },
+  seeds: SeedGame[],
+  signal: AbortSignal
+): Promise<ScanCandidate[]> {
   const response = await fetch(scanApiUrl(), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ images: [image] })
+    body: JSON.stringify({ images: [image] }),
+    signal
   });
 
   let payload: { games?: unknown; error?: unknown; code?: unknown; available?: unknown } = {};
@@ -142,21 +148,49 @@ async function scanOnServer(image: { data: string; mimeType: string }, seeds: Se
   return matchRecognizedGames(parseRecognizedGames(payload), seeds);
 }
 
-export async function scanGamePhotos(files: File[], seeds: SeedGame[] = SEED_GAMES): Promise<ScanCandidate[]> {
+async function withinClientBudget(
+  timeoutMs: number,
+  work: (signal: AbortSignal) => Promise<ScanCandidate[]>
+): Promise<ScanCandidate[]> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await work(controller.signal);
+  } catch (err) {
+    if (controller.signal.aborted) throw new ScanFailedError();
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+export async function scanGamePhotos(
+  files: File[],
+  seeds: SeedGame[] = SEED_GAMES,
+  options?: { clientTimeoutMs?: number }
+): Promise<ScanCandidate[]> {
   assertScanAllowed();
   if (files.length === 0) return [];
   if (files.length > MAX_SCAN_IMAGES) throw new Error(ONE_PHOTO_LIMIT_MESSAGE);
 
+  const timeoutMs = options?.clientTimeoutMs ?? SCAN_CLIENT_TIMEOUT_MS;
+  const file = files[0];
+  if (!file) return [];
+
   // The BoardLog server is used only when it reports a key. The user's key never rides along.
   if (await fetchScanAvailable()) {
-    const compressed = await compressImage(files[0]);
-    return scanOnServer(toInlineImage(compressed.dataUrl), seeds);
+    const compressed = await compressImage(file);
+    const image = toInlineImage(compressed.dataUrl);
+    return withinClientBudget(timeoutMs, (signal) => scanOnServer(image, seeds, signal));
   }
 
   const userKey = await readUserGeminiKey();
   if (!userKey) throw new ScanNeedsUserKeyError();
 
-  const compressed = await compressImage(files[0]);
-  const payload = await readGamesWithUserKey(userKey, toInlineImage(compressed.dataUrl));
-  return matchRecognizedGames(parseRecognizedGames(payload), seeds);
+  const compressed = await compressImage(file);
+  const image = toInlineImage(compressed.dataUrl);
+  return withinClientBudget(timeoutMs, async (signal) => {
+    const payload = await readGamesWithUserKey(userKey, image, fetch, { signal, clientTimeoutMs: timeoutMs });
+    return matchRecognizedGames(parseRecognizedGames(payload), seeds);
+  });
 }

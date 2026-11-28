@@ -64,5 +64,7 @@ export function geminiVerifyHelp(kind: GeminiKeyFailure): string {
       return '인터넷이 꺼져 있어요. 와이파이나 데이터를 켠 뒤 다시 눌러 주세요.';
     case 'failed':
       return '연결이 안 됐어요. 잠시 뒤에 다시 해 주세요.';
+    case 'timeout':
+      return '시간이 너무 걸렸어요. 다시 시도해 주세요.';
   }
 }

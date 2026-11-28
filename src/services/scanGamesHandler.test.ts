@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import handler, { isScanConfigured, nativeShellAllowOrigin } from '../../api/scan-games';
+import handler, { classifyProviderError, isScanConfigured, nativeShellAllowOrigin } from '../../api/scan-games';
 
 const { generateContent } = vi.hoisted(() => ({ generateContent: vi.fn() }));
 
@@ -120,17 +120,63 @@ describe('one photo limit and multi-game parse', () => {
     });
     expect(JSON.stringify(res.state.body)).not.toContain('not-a-real-key');
     const request = generateContent.mock.calls[0]?.[0] as {
+      model: string;
       contents: { parts: { text?: string; inlineData?: unknown }[] }[];
-      config: { responseSchema: { required: string[]; properties: { games: { items: { required: string[] } } } } };
+      config: {
+        thinkingConfig?: { thinkingLevel: string };
+        responseSchema: { required: string[]; properties: { games: { items: { required: string[] } } } };
+      };
     };
     const prompt = request.contents[0]?.parts[0]?.text ?? '';
-    expect(prompt).toContain('one photograph');
-    expect(prompt).toContain('"games"');
+    expect(prompt).toContain('one photo');
+    expect(prompt).toContain('선물입니다');
+    expect(prompt).toContain('독수리 눈치싸움');
     expect(prompt).toContain('confidence');
+    expect(request.config.thinkingConfig).toEqual({ thinkingLevel: 'minimal' });
+    expect(request.model).toBe('gemini-3.1-flash-lite');
     expect(request.contents[0]?.parts.filter((part) => part.inlineData)).toHaveLength(1);
     expect(request.config.responseSchema.required).toEqual(['games']);
     expect(request.config.responseSchema.properties.games.items.required).toEqual(['title', 'confidence']);
     expect(JSON.stringify(request.config.responseSchema)).not.toContain('orientation');
+  });
+
+  it('retries without thinking, then tries the next model on 429, 503, or a timeout', async () => {
+    process.env.GEMINI_API_KEY = 'not-a-real-key';
+    generateContent.mockRejectedValueOnce(Object.assign(new Error('thinking level is not supported'), { status: 400 }));
+    generateContent.mockResolvedValueOnce({ text: JSON.stringify({ games: [{ title: '도블', confidence: 0.8 }] }) });
+    const retried = capture();
+    await handler({ method: 'POST', body: { images: [oneImage] } }, retried.res);
+    expect(retried.state.status).toBe(200);
+    expect(generateContent).toHaveBeenCalledTimes(2);
+    const second = generateContent.mock.calls[1]?.[0] as { config: { thinkingConfig?: unknown } };
+    expect(second.config.thinkingConfig).toBeUndefined();
+
+    generateContent.mockReset();
+    generateContent.mockRejectedValueOnce(Object.assign(new Error('API key not valid'), { status: 400 }));
+    const badKey = capture();
+    await handler({ method: 'POST', body: { images: [oneImage] } }, badKey.res);
+    expect(badKey.state.status).toBe(502);
+    expect(generateContent).toHaveBeenCalledTimes(1);
+
+    generateContent.mockReset();
+    generateContent.mockRejectedValueOnce(Object.assign(new Error('rate limit quota'), { status: 429 }));
+    generateContent.mockResolvedValueOnce({ text: '{"games":[]}' });
+    const limited = capture();
+    await handler({ method: 'POST', body: { images: [oneImage] } }, limited.res);
+    expect(limited.state.status).toBe(200);
+    const nextCall = generateContent.mock.calls[1]?.[0] as { model: string } | undefined;
+    expect(nextCall?.model).toBe('gemini-flash-lite-latest');
+
+    generateContent.mockReset();
+    generateContent.mockRejectedValueOnce(new Error('timeout'));
+    generateContent.mockRejectedValueOnce(Object.assign(new Error('unavailable overloaded'), { status: 503 }));
+    generateContent.mockResolvedValueOnce({ text: '{"games":[]}' });
+    const slow = capture();
+    await handler({ method: 'POST', body: { images: [oneImage] } }, slow.res);
+    expect(slow.state.status).toBe(200);
+    expect(generateContent).toHaveBeenCalledTimes(3);
+    expect(classifyProviderError(new Error('timeout')).reason).toBe('TIMEOUT');
+    expect(classifyProviderError(new Error('The operation was aborted')).reason).toBe('TIMEOUT');
   });
 });
 

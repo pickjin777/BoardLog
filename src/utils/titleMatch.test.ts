@@ -45,6 +45,21 @@ describe('findSeedMatch', () => {
     expect(findSeedMatch('SPLENDOR!', seeds)?.game.title).toBe('스플렌더');
   });
 
+  it('matches a short English name and an alias that is not the full title', () => {
+    const withAlias = [seed('도블', 'Dobble')];
+    const game = withAlias[0];
+    if (!game) throw new Error('missing seed');
+    game.aliases = ['Spot It'];
+    expect(findSeedMatch('Spot It!', withAlias)?.game.title).toBe('도블');
+    expect(findSeedMatch('Rummikub', [seed('루미큐브 클래식', 'Rummikub Classic')])?.game.title).toBe(
+      '루미큐브 클래식'
+    );
+    expect(findSeedMatch('블로커스', [seed('블로커스', '')])?.game.title).toBe('블로커스');
+    const blank = seed('!!!', '');
+    blank.aliases = ['???'];
+    expect(findSeedMatch('abcd', [blank])).toBeNull();
+  });
+
   it('tolerates a one-letter misread', () => {
     expect(findSeedMatch('Splendar', seeds)?.game.title).toBe('스플렌더');
   });
@@ -70,8 +85,15 @@ describe('findSeedMatch', () => {
     const searchable = SEED_GAMES.filter((game) => normalizeTitle(game.title).length >= 2);
     expect(searchable.length).toBeGreaterThan(290);
     for (const game of searchable) {
-      expect(findSeedMatch(game.title, SEED_GAMES)?.score, game.title).toBe(1);
+      const match = findSeedMatch(game.title, SEED_GAMES);
+      expect(match?.score, game.title).toBe(1);
+      expect(match?.game.id, game.title).toBe(game.id);
     }
+    expect(findSeedMatch('Blokus', SEED_GAMES)?.game.title).toBe('블로커스');
+    expect(findSeedMatch('Rummikub', SEED_GAMES)?.game.title).toBe('루미큐브 클래식');
+    expect(findSeedMatch('Dobble', SEED_GAMES)?.game.title).toBe('도블');
+    expect(findSeedMatch('Spot It', SEED_GAMES)?.game.title).toBe('도블');
+    expect(findSeedMatch('루미큐브', SEED_GAMES)?.game.title).toBe('루미큐브 클래식');
   });
 
   // Known defect (TBD-019): a one-letter title such as "뱅!" or "라" is rejected by the length guard, so a

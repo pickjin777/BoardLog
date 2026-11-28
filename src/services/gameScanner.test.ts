@@ -184,4 +184,24 @@ describe('one photo, many games', () => {
     log.mockRestore();
     localStorage.removeItem('boardlog_gemini_user_key');
   });
+
+  it('gives up on a hanging read and says to try again', async () => {
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ available: true }) })
+      .mockImplementationOnce((_url: string, init?: RequestInit) => {
+        return new Promise((_resolve, reject) => {
+          init?.signal?.addEventListener('abort', () => reject(new Error('aborted')));
+        });
+      });
+    await expect(scanGamePhotos([file], seeds, { clientTimeoutMs: 40 })).rejects.toThrow(/다시 시도/);
+  });
+
+  it('keeps a personal-key rejection when the wait has not run out', async () => {
+    localStorage.setItem('boardlog_gemini_user_key', 'device-key-not-a-server-secret');
+    fetchMock
+      .mockResolvedValueOnce({ ok: false, status: 405, json: async () => ({}) })
+      .mockResolvedValueOnce({ status: 401, ok: false, json: async () => ({ error: 'nope' }) });
+    await expect(scanGamePhotos([file], seeds)).rejects.toMatchObject({ kind: 'invalid' });
+    localStorage.removeItem('boardlog_gemini_user_key');
+  });
 });
