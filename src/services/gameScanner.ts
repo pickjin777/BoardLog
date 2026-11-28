@@ -5,27 +5,21 @@ import { storage } from './storage';
 import { resolveApiUrl } from '../utils/apiOrigin';
 import { compressImage } from '../utils/imageCompressor';
 import { isNativeShell } from '../utils/nativeShell';
+import { readGamesWithUserKey, UserGeminiError } from '../utils/geminiDirect';
 import { PUBLIC_SCAN_ERROR } from '../utils/publicScanError';
-import { scanAvailableFromResponse } from '../utils/scanAvailability';
-import { findSeedMatch, type SeedMatch } from '../utils/titleMatch';
+import { SCAN_CLIENT_TIMEOUT_MS } from '../utils/scanPrompt';
+import { probeScanServer, type NativeHttpResult } from '../utils/scanProbe';
+import {
+  MAX_SCAN_IMAGES,
+  ONE_PHOTO_LIMIT_MESSAGE,
+  matchRecognizedGames,
+  parseRecognizedGames,
+  type ScanCandidate
+} from '../utils/scanRecognition';
+import { readUserGeminiKey } from './geminiKeyStore';
 
-export const MAX_SCAN_IMAGES = 4;
-
-export type TitleOrientation = 'horizontal' | 'vertical' | 'rotated';
-
-export interface ScanDetection {
-  title: string;
-  titleEn?: string;
-  orientation: TitleOrientation;
-  confidence: number;
-}
-
-export interface ScanCandidate {
-  id: string;
-  detection: ScanDetection;
-  /** Null when the photographed title is not in the seed list; registered under its read title. */
-  match: SeedMatch | null;
-}
+export { MAX_SCAN_IMAGES, ONE_PHOTO_LIMIT_MESSAGE };
+export type { ScanCandidate };
 
 export class ScanNotConfiguredError extends Error {
   constructor() {
@@ -55,6 +49,16 @@ export class ScanFailedError extends Error {
   }
 }
 
+/** The server cannot scan, and this device has no Gemini key yet. No photo was sent. */
+export class ScanNeedsUserKeyError extends Error {
+  constructor() {
+    super('내 제미나이 키를 연결하면 이 사진으로 인식할 수 있습니다.');
+    this.name = 'ScanNeedsUserKeyError';
+  }
+}
+
+export { UserGeminiError };
+
 function looksLikeProviderDump(text: string): boolean {
   return /gemini|model|모델|쓸 수 있는/i.test(text);
 }
@@ -80,59 +84,60 @@ function toInlineImage(dataUrl: string): { data: string; mimeType: string } {
   return { data: dataUrl.slice(separator + 1), mimeType };
 }
 
-function isDetection(value: unknown): value is ScanDetection {
-  if (typeof value !== 'object' || value === null) return false;
-  const { title, orientation, confidence } = value as Record<string, unknown>;
-  return (
-    typeof title === 'string' &&
-    title.trim().length > 0 &&
-    (orientation === 'horizontal' || orientation === 'vertical' || orientation === 'rotated') &&
-    typeof confidence === 'number'
-  );
-}
-
 /**
- * Asks the server whether a scan key is configured. A missing route, a 503, or a network
- * error all mean "off", so the form can explain that instead of opening a broken scan.
- * No image is sent and Gemini is not called.
+ * Asks the server whether a scan key is configured. A missing route, a 405, a 503, a timeout,
+ * or a network error all mean "off". No image is sent and Gemini is not called.
+ *
+ * On Android, CapacitorHttp rewrites window.fetch GET through a WebView proxy that can sit
+ * forever on a non-200 answer. The plugin's own request() uses the native client instead.
  */
 function scanApiUrl(): string {
   return resolveApiUrl('/api/scan-games', isNativeShell(), PRODUCTION_ORIGIN);
 }
 
-export async function fetchScanAvailable(): Promise<boolean> {
-  if (!storage.isPhotoRecognitionEnabled() || !storage.hasPhotoScanConsent()) return false;
-  try {
-    const response = await fetch(scanApiUrl(), { method: 'GET' });
-    let body: unknown = null;
-    try {
-      body = await response.json();
-    } catch {
-      body = null;
-    }
-    return scanAvailableFromResponse(response.status, body);
-  } catch {
-    return false;
-  }
+function nativeScanRequest(): ((url: string) => Promise<NativeHttpResult>) | null {
+  if (!isNativeShell()) return null;
+  const plugin = (globalThis as { Capacitor?: { Plugins?: { CapacitorHttp?: { request?: unknown } } } }).Capacitor
+    ?.Plugins?.CapacitorHttp;
+  if (!plugin || typeof plugin.request !== 'function') return null;
+  const request = plugin.request as (options: {
+    url: string;
+    method: string;
+    headers?: Record<string, string>;
+  }) => Promise<NativeHttpResult>;
+  return (url) => request({ url, method: 'GET', headers: { Accept: 'application/json' } });
 }
 
-export async function scanGamePhotos(files: File[], seeds: SeedGame[] = SEED_GAMES): Promise<ScanCandidate[]> {
-  assertScanAllowed();
-  if (files.length === 0) return [];
-  if (files.length > MAX_SCAN_IMAGES) {
-    throw new Error(`사진은 한 번에 ${MAX_SCAN_IMAGES}장까지 인식할 수 있습니다.`);
-  }
+export async function fetchScanAvailable(options?: { timeoutMs?: number }): Promise<boolean> {
+  if (!storage.isPhotoRecognitionEnabled() || !storage.hasPhotoScanConsent()) return false;
+  const nativeRequest = nativeScanRequest();
+  return probeScanServer(scanApiUrl(), {
+    timeoutMs: options?.timeoutMs,
+    nativeRequest: nativeRequest ?? undefined
+  });
+}
 
-  const compressed = await Promise.all(files.map((file) => compressImage(file)));
-  const images = compressed.map((result) => toInlineImage(result.dataUrl));
+/** Photo picker route. A saved personal key skips the server probe so a stuck GET cannot trap the sheet. */
+export async function planScanEntry(options?: { timeoutMs?: number }): Promise<'ready' | 'connect'> {
+  const key = await readUserGeminiKey();
+  if (key) return 'ready';
+  const server = await fetchScanAvailable(options);
+  return server ? 'ready' : 'connect';
+}
 
+async function scanOnServer(
+  image: { data: string; mimeType: string },
+  seeds: SeedGame[],
+  signal: AbortSignal
+): Promise<ScanCandidate[]> {
   const response = await fetch(scanApiUrl(), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ images })
+    body: JSON.stringify({ images: [image] }),
+    signal
   });
 
-  let payload: { detections?: unknown; error?: unknown; code?: unknown; available?: unknown } = {};
+  let payload: { games?: unknown; error?: unknown; code?: unknown; available?: unknown } = {};
   try {
     payload = await response.json();
   } catch {
@@ -140,19 +145,52 @@ export async function scanGamePhotos(files: File[], seeds: SeedGame[] = SEED_GAM
   }
 
   if (!response.ok) throw errorForScanResponse(payload);
+  return matchRecognizedGames(parseRecognizedGames(payload), seeds);
+}
 
-  const raw = Array.isArray(payload.detections) ? payload.detections : [];
-  const seen = new Set<string>();
-  const candidates: ScanCandidate[] = [];
+async function withinClientBudget(
+  timeoutMs: number,
+  work: (signal: AbortSignal) => Promise<ScanCandidate[]>
+): Promise<ScanCandidate[]> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await work(controller.signal);
+  } catch (err) {
+    if (controller.signal.aborted) throw new ScanFailedError();
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
-  raw.filter(isDetection).forEach((detection, index) => {
-    const match = findSeedMatch(detection.title, seeds);
-    // One shelf photo can show the same box twice from different angles.
-    const key = match ? match.game.id : detection.title.trim().toLowerCase();
-    if (seen.has(key)) return;
-    seen.add(key);
-    candidates.push({ id: `scan_${index}_${key}`, detection, match });
+export async function scanGamePhotos(
+  files: File[],
+  seeds: SeedGame[] = SEED_GAMES,
+  options?: { clientTimeoutMs?: number }
+): Promise<ScanCandidate[]> {
+  assertScanAllowed();
+  if (files.length === 0) return [];
+  if (files.length > MAX_SCAN_IMAGES) throw new Error(ONE_PHOTO_LIMIT_MESSAGE);
+
+  const timeoutMs = options?.clientTimeoutMs ?? SCAN_CLIENT_TIMEOUT_MS;
+  const file = files[0];
+  if (!file) return [];
+
+  // The BoardLog server is used only when it reports a key. The user's key never rides along.
+  if (await fetchScanAvailable()) {
+    const compressed = await compressImage(file);
+    const image = toInlineImage(compressed.dataUrl);
+    return withinClientBudget(timeoutMs, (signal) => scanOnServer(image, seeds, signal));
+  }
+
+  const userKey = await readUserGeminiKey();
+  if (!userKey) throw new ScanNeedsUserKeyError();
+
+  const compressed = await compressImage(file);
+  const image = toInlineImage(compressed.dataUrl);
+  return withinClientBudget(timeoutMs, async (signal) => {
+    const payload = await readGamesWithUserKey(userKey, image, fetch, { signal, clientTimeoutMs: timeoutMs });
+    return matchRecognizedGames(parseRecognizedGames(payload), seeds);
   });
-
-  return candidates;
 }

@@ -101,6 +101,8 @@ export interface SeedGame {
   id: string;
   title: string;
   titleEn: string;
+  /** Other names a photo may show, such as a short English title. */
+  aliases?: string[];
   imageUrl: string;
   genre: string[];
   minPlayers: number;

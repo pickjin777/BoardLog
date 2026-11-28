@@ -1,61 +1,26 @@
-import { GoogleGenAI, Type } from '@google/genai';
+import { GoogleGenAI, type GenerateContentConfig } from '@google/genai';
 import { PUBLIC_SCAN_ERROR } from '../src/utils/publicScanError';
+import { MAX_SCAN_IMAGES, ONE_PHOTO_LIMIT_MESSAGE, parseRecognizedGames } from '../src/utils/scanRecognition';
+import {
+  SCAN_CANDIDATE_TIMEOUT_MS,
+  SCAN_MODEL_CANDIDATES,
+  SCAN_PROMPT,
+  SCAN_RESPONSE_SCHEMA,
+  SCAN_THINKING_CONFIG
+} from '../src/utils/scanPrompt';
+import { isThinkingRejection, withCandidateTimeout } from '../src/utils/scanTiming';
 
 /**
  * Model ids retire while still appearing in the account's model list, so a single
  * hardcoded id eventually stops working. GEMINI_MODEL wins when set; otherwise these
- * are tried in order, starting with the alias that tracks the current flash release.
+ * are tried in order, fastest measured id first.
  */
 
 const MODEL_CANDIDATES = (process.env.GEMINI_MODEL ? [process.env.GEMINI_MODEL] : []).concat([
-  'gemini-flash-latest',
-  'gemini-3.5-flash',
-  'gemini-2.5-flash'
+  ...SCAN_MODEL_CANDIDATES
 ]);
-const MAX_IMAGES = 4;
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp'];
-
-const PROMPT = `You are reading photographs of physical board game boxes, usually stacked or shelved together.
-
-Identify every distinct board game box you can see and report the product title printed on it.
-
-Text orientation varies. Handle all three of these:
-- Horizontal text printed across a box face.
-- Vertically stacked characters, each one below the previous.
-- Horizontal text on a box standing on its edge, so the title reads rotated 90 degrees clockwise or counter-clockwise (spine text).
-
-Rules:
-- Report the title exactly as printed, in its original language. Keep Korean titles in Korean.
-- When a box shows both a Korean and an English title, put the Korean one in "title" and the English one in "titleEn".
-- One entry per physical box. Never merge two boxes, never split one box into two.
-- Ignore publisher names, taglines, player-count badges, age ratings, awards, barcodes and expansion banners.
-- When a title is partly hidden or blurred, report what is legible and lower the confidence.
-- Report no board game boxes as an empty list rather than guessing.`;
-
-const RESPONSE_SCHEMA = {
-  type: Type.OBJECT,
-  properties: {
-    detections: {
-      type: Type.ARRAY,
-      items: {
-        type: Type.OBJECT,
-        properties: {
-          title: { type: Type.STRING, description: 'Title as printed on the box' },
-          titleEn: { type: Type.STRING, description: 'English title when the box also shows one' },
-          orientation: {
-            type: Type.STRING,
-            enum: ['horizontal', 'vertical', 'rotated'],
-            description: 'How the title text was oriented in the photo'
-          },
-          confidence: { type: Type.NUMBER, description: '0 to 1' }
-        },
-        required: ['title', 'orientation', 'confidence']
-      }
-    }
-  },
-  required: ['detections']
-};
 
 /**
  * The provider reports a bad key, a disabled API and an unavailable model all as one
@@ -82,6 +47,9 @@ export function classifyProviderError(err: unknown): { status: number; error: st
   } else if (text.includes('unavailable') || text.includes('overloaded') || text.includes('high demand')) {
     status = 503;
     reason = 'MODEL_OVERLOADED';
+  } else if (text.includes('timeout') || text.includes('timed out') || text.includes('aborted')) {
+    status = 504;
+    reason = 'TIMEOUT';
   } else {
     const upstreamStatus = (err as { status?: unknown }).status;
     const fromMessage = /\b(4\d{2}|5\d{2})\b/.exec(text);
@@ -154,7 +122,7 @@ function readImages(body: unknown): IncomingImage[] | string {
   if (typeof body !== 'object' || body === null) return '요청 형식이 올바르지 않습니다.';
   const raw = (body as { images?: unknown }).images;
   if (!Array.isArray(raw) || raw.length === 0) return '이미지가 없습니다.';
-  if (raw.length > MAX_IMAGES) return `사진은 한 번에 ${MAX_IMAGES}장까지 보낼 수 있습니다.`;
+  if (raw.length > MAX_SCAN_IMAGES) return ONE_PHOTO_LIMIT_MESSAGE;
 
   const images: IncomingImage[] = [];
   for (const entry of raw) {
@@ -221,7 +189,7 @@ export default async function handler(req: HandlerRequest, res: HandlerResponse)
     {
       role: 'user',
       parts: [
-        { text: PROMPT },
+        { text: SCAN_PROMPT },
         ...images.map((image) => ({
           inlineData: { mimeType: image.mimeType, data: image.data }
         }))
@@ -229,18 +197,34 @@ export default async function handler(req: HandlerRequest, res: HandlerResponse)
     }
   ];
 
+  const nextModel = new Set(['MODEL_NOT_FOUND', 'MODEL_OVERLOADED', 'RATE_LIMITED', 'TIMEOUT']);
+  const configFor = (thinking: boolean): GenerateContentConfig => {
+    const config: GenerateContentConfig = {
+      responseMimeType: 'application/json',
+      responseSchema: SCAN_RESPONSE_SCHEMA,
+      temperature: 0
+    };
+    // The measured value is the lowercase level. The SDK enum spells it MINIMAL.
+    if (thinking) Object.assign(config, { thinkingConfig: SCAN_THINKING_CONFIG });
+    return config;
+  };
+
   let lastError: unknown = null;
   for (const model of MODEL_CANDIDATES) {
     try {
-      const result = await ai.models.generateContent({
-        model,
-        contents,
-        config: {
-          responseMimeType: 'application/json',
-          responseSchema: RESPONSE_SCHEMA,
-          temperature: 0
-        }
-      });
+      let result: { text?: string };
+      try {
+        result = await withCandidateTimeout(
+          ai.models.generateContent({ model, contents, config: configFor(true) }),
+          SCAN_CANDIDATE_TIMEOUT_MS
+        );
+      } catch (err) {
+        if (!isThinkingRejection(err)) throw err;
+        result = await withCandidateTimeout(
+          ai.models.generateContent({ model, contents, config: configFor(false) }),
+          SCAN_CANDIDATE_TIMEOUT_MS
+        );
+      }
 
       const text = result.text;
       if (!text) {
@@ -248,17 +232,17 @@ export default async function handler(req: HandlerRequest, res: HandlerResponse)
         return;
       }
 
-      const parsed = JSON.parse(text) as { detections?: unknown };
-      const detections = Array.isArray(parsed.detections) ? parsed.detections : [];
-      res.status(200).json({ detections, model });
+      const parsed = JSON.parse(text) as unknown;
+      const games = parseRecognizedGames(parsed);
+      res.status(200).json({ games });
       return;
     } catch (err) {
       console.error(`scan-games failed on ${model}`, err);
       lastError = err;
       const reason = classifyProviderError(err).reason;
-      // A missing or momentarily overloaded model might succeed on another id; a bad
-      // key or a spent quota fails the same way on every one, so stop immediately.
-      if (reason !== 'MODEL_NOT_FOUND' && reason !== 'MODEL_OVERLOADED') break;
+      // A missing, overloaded, rate-limited, or slow model can succeed on the next id.
+      // A bad key fails the same way on every one, so stop.
+      if (!nextModel.has(reason)) break;
     }
   }
 

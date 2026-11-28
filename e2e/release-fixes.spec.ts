@@ -117,8 +117,10 @@ test('320px games title stays wide and the 390px empty hint clears the tab', asy
 
 test('photo scan makes no network call before consent', async ({ page }) => {
   let calls = 0;
+  let posts = 0;
   await page.route('**/api/scan-games', (route) => {
     calls += 1;
+    if (route.request().method() === 'POST') posts += 1;
     return route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -142,7 +144,8 @@ test('photo scan makes no network call before consent', async ({ page }) => {
   await expect(confirm).toBeEnabled();
   await confirm.click();
   await visible('동의 후 사진 선택', page.locator('#scan-pick-photos-btn'));
-  check('사진을 고르기 전에는 요청 없음', calls === 0, String(calls));
+  check('사진을 고르기 전에는 사진을 보내지 않음', posts === 0, String(posts));
+  check('동의 뒤에만 서버 가능 여부를 묻는다', calls >= 1, String(calls));
 });
 
 test('without a scan key, a chosen photo falls back to manual entry and saves', async ({ page }) => {
@@ -186,7 +189,7 @@ test('without a scan key, a chosen photo falls back to manual entry and saves', 
   expect(pageErrors, pageErrors.join('\n')).toEqual([]);
 });
 
-test('without a scan key, several photos stay on the device and open manual entry', async ({ page }) => {
+test('without a scan key, replacing the one photo stays on the device', async ({ page }) => {
   let scanPosts = 0;
   await page.route('**/api/scan-games', (route) => {
     if (route.request().method() === 'POST') scanPosts += 1;
@@ -202,22 +205,27 @@ test('without a scan key, several photos stay on the device and open manual entr
   await page.locator('#scan-consent-check').check();
   await page.locator('#scan-consent-confirm').click();
   await visible('사진 선택 시트', page.locator('#scan-modal-sheet'));
+  await hasText('한 장만', page.locator('#scan-pick-photos-btn'), '1장');
+  check('파일 입력은 한 장', (await page.locator('#scan-file-input').getAttribute('multiple')) === null);
 
   const png = Buffer.from(
     'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
     'base64'
   );
   const longName = `${'shelf'.repeat(24)}.png`;
-  await page.locator('#scan-file-input').setInputFiles([
-    { name: 'shelf-a.png', mimeType: 'image/png', buffer: png },
-    { name: longName, mimeType: 'image/png', buffer: png }
-  ]);
-
+  await page.locator('#scan-file-input').setInputFiles({ name: 'shelf-a.png', mimeType: 'image/png', buffer: png });
   await visible('직접 입력 안내', page.locator('#scan-manual-fallback'));
   await hasText('첫 사진 이름', page.locator('#scan-manual-fallback'), 'shelf-a.png');
-  await hasText('둘째 사진 이름', page.locator('#scan-manual-fallback'), longName);
+
+  await page.locator('#scan-file-input').setInputFiles({ name: longName, mimeType: 'image/png', buffer: png });
+  await hasText('바꾼 사진 이름', page.locator('#scan-manual-fallback'), longName);
+  await hasText('이전 사진은 남지 않음', page.locator('#scan-manual-fallback'), `선택한 파일: ${longName}`);
+  check(
+    '바꾼 뒤에는 첫 사진 이름이 없음',
+    !(await page.locator('#scan-manual-fallback').textContent())?.includes('shelf-a.png')
+  );
   await hasText('사진을 보내지 않음', page.locator('#scan-manual-fallback'), '서버로 보내지 않았습니다');
-  check('여러 장도 인식 요청 없음', scanPosts === 0, String(scanPosts));
+  check('한 장도 인식 요청 없음', scanPosts === 0, String(scanPosts));
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth
   );

@@ -11,6 +11,11 @@ describe('buildPrivacySections', () => {
     expect(line).toContain('Gemini');
     expect(line).toContain('사진을 저장하지 않습니다');
     expect(line).toContain('설정에서 끄면');
+    expect(line).toContain('사진 1장');
+    expect(line).toContain('본인 키');
+    expect(line).toContain('만 18세');
+    expect(line).toContain('한 장에 여러 게임');
+    expect(line).not.toContain('4장');
     expect(line).not.toContain('이 버전에서는 사진 인식을 사용하지 않습니다');
   });
 

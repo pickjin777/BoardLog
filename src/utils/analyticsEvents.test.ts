@@ -44,6 +44,7 @@ describe('validateEvent (FR-MEAS-03: only listed events and values leave the bro
     expect(validateEvent('play_saved', { gameTitle: '카탄' })).toBeNull();
     expect(validateEvent('play_saved', { participants: ['민수'] })).toBeNull();
     expect(validateEvent('game_added', { method: 'manual', title: '카탄' })).toBeNull();
+    expect(validateEvent('game_added', { method: 'scan', apiKey: 'device-key' })).toBeNull();
     expect(validateEvent('play_photo_added', { count: 2, caption: '민수 얼굴' })).toBeNull();
   });
 

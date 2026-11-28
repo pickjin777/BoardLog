@@ -1,10 +1,12 @@
 import type React from 'react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Database, Download, LogOut, CheckCircle2, Upload } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { track } from '../services/analytics';
 import { storage, type ImportPlan } from '../services/storage';
+import { clearUserGeminiKey, readUserGeminiKey } from '../services/geminiKeyStore';
+import { GeminiKeyFaq, GeminiKeyForm } from './GeminiKeyForm';
 import { CONTACT, contactHref } from '../config/contact';
 import { parseBackup, MAX_BACKUP_BYTES } from '../utils/backupImport';
 import { isNativeShell } from '../utils/nativeShell';
@@ -32,8 +34,14 @@ export const MyPageView: React.FC<MyPageViewProps> = ({ onOpenAuth, onOpenCatalo
   const [isDeleting, setIsDeleting] = useState(false);
   const [scanOn, setScanOn] = useState(() => storage.isPhotoRecognitionEnabled());
   const [scanConsent, setScanConsent] = useState(() => storage.hasPhotoScanConsent());
+  const [geminiOn, setGeminiOn] = useState(false);
+  const [geminiEditing, setGeminiEditing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const place = storagePlace(isNativeShell(), navigator.userAgent);
+
+  useEffect(() => {
+    void readUserGeminiKey().then((key) => setGeminiOn(key.length > 0));
+  }, []);
   const contactLink = contactHref(CONTACT);
 
   const handleBackupChosen = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -227,7 +235,8 @@ export const MyPageView: React.FC<MyPageViewProps> = ({ onOpenAuth, onOpenCatalo
           <div>
             <h3 className="text-xs font-bold text-[#1E272E]">사진 인식</h3>
             <p className="mt-1 text-[11px] leading-relaxed text-[#636E72]">
-              끄면 사진을 서버로 보내지 않습니다. 동의는 미리 체크되지 않습니다.
+              끄면 사진을 서버나 Google로 보내지 않습니다. 동의는 미리 체크되지 않습니다. 본인 키는 이 기기에만 있고
+              백업에는 들어가지 않습니다.
             </p>
           </div>
           <button
@@ -262,6 +271,43 @@ export const MyPageView: React.FC<MyPageViewProps> = ({ onOpenAuth, onOpenCatalo
         ) : (
           <p className="text-[11px] text-[#636E72]">다음 사진 인식 때 안내를 확인하고 동의해야 합니다.</p>
         )}
+        <p id="settings-gemini-key-status" className="text-[11px] text-[#636E72]">
+          {geminiOn ? '내 제미나이 키가 이 기기에 연결되어 있습니다.' : '내 제미나이 키가 없습니다.'}
+        </p>
+        {geminiEditing ? (
+          <GeminiKeyForm
+            idPrefix="settings-gemini-key"
+            doneLabel="확인"
+            onSaved={() => {
+              setGeminiOn(true);
+              setGeminiEditing(false);
+            }}
+          />
+        ) : (
+          <div className="flex gap-2">
+            <button
+              id="settings-gemini-key-edit"
+              type="button"
+              onClick={() => setGeminiEditing(true)}
+              className="btn-gold min-h-12 flex-1 text-xs"
+            >
+              {geminiOn ? '키 바꾸기' : '키 연결'}
+            </button>
+            {geminiOn && (
+              <button
+                id="settings-gemini-key-clear"
+                type="button"
+                onClick={() => {
+                  void clearUserGeminiKey().then(() => setGeminiOn(false));
+                }}
+                className="btn-quiet min-h-12 flex-1 text-xs"
+              >
+                키 지우기
+              </button>
+            )}
+          </div>
+        )}
+        {!geminiEditing && <GeminiKeyFaq id="settings-gemini-faq" />}
       </div>
 
       <div id="settings-contact-card" className="space-y-2 rounded-2xl border border-[#E9ECEF] bg-white p-4 shadow-sm">

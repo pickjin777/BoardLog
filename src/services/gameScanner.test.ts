@@ -1,5 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+vi.mock('../utils/imageCompressor', () => ({
+  compressImage: vi.fn(async () => ({
+    dataUrl: 'data:image/jpeg;base64,QQ==',
+    sizeBytes: 1,
+    width: 1,
+    height: 1
+  }))
+}));
+
 class MemoryStorage {
   private data = new Map<string, string>();
   get length() {
@@ -30,11 +39,14 @@ const { storage } = await import('./storage');
 const {
   errorForScanResponse,
   fetchScanAvailable,
+  planScanEntry,
   scanGamePhotos,
   ScanConsentRequiredError,
   ScanDisabledError,
-  ScanFailedError
+  ScanFailedError,
+  ONE_PHOTO_LIMIT_MESSAGE
 } = await import('./gameScanner');
+const { SEED_GAMES } = await import('../data/seedGames');
 
 const file = {} as File;
 
@@ -61,9 +73,135 @@ describe('scan consent gate', () => {
     });
     expect(failed).toBeInstanceOf(ScanFailedError);
     expect(failed.message).not.toMatch(/gemini|모델/);
-    expect(
-      errorForScanResponse({ code: 'VALIDATION', error: '사진은 한 번에 4장까지 보낼 수 있습니다.' }).message
-    ).toBe('사진은 한 번에 4장까지 보낼 수 있습니다.');
+    expect(errorForScanResponse({ code: 'VALIDATION', error: '사진은 한 장만 보낼 수 있습니다.' }).message).toBe(
+      '사진은 한 장만 보낼 수 있습니다.'
+    );
     expect(errorForScanResponse({ code: 'VALIDATION', error: '모델 목록 gemini-x' })).toBeInstanceOf(ScanFailedError);
+  });
+});
+
+describe('one photo, many games', () => {
+  const seeds = SEED_GAMES.filter((game) => game.title === '카탄' || game.title === '스플렌더');
+
+  beforeEach(() => {
+    fetchMock.mockReset();
+    localStorage.removeItem('boardlog_gemini_user_key');
+    storage.setPhotoRecognitionEnabled(true);
+    storage.grantPhotoScanConsent();
+  });
+
+  it('rejects a second photo before compressing or calling the server', async () => {
+    await expect(scanGamePhotos([file, file], seeds)).rejects.toThrow(ONE_PHOTO_LIMIT_MESSAGE);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('sends the one photo to the server when the server key is on', async () => {
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ available: true }) })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          games: [
+            { title: '카탄', confidence: 0.91 },
+            { title: 'Splendor', confidence: 0.8 },
+            { title: '없는게임', confidence: 0.4 },
+            { title: '카탄!', confidence: 0.2 }
+          ]
+        })
+      });
+
+    const found = await scanGamePhotos([file], seeds);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(String(fetchMock.mock.calls[1]?.[0])).toContain('/api/scan-games');
+    const body = JSON.parse(String(fetchMock.mock.calls[1]?.[1]?.body));
+    expect(body.images).toHaveLength(1);
+    expect(body.images[0].mimeType).toBe('image/jpeg');
+    expect(found.map((candidate) => candidate.match?.game.title ?? candidate.detection.title)).toEqual([
+      '카탄',
+      '스플렌더',
+      '없는게임'
+    ]);
+    expect(found.filter((candidate) => candidate.match === null)).toHaveLength(1);
+  });
+
+  it('skips a stuck server check when a personal key is already saved', async () => {
+    localStorage.setItem('boardlog_gemini_user_key', 'already-saved');
+    fetchMock.mockImplementation(() => new Promise(() => undefined));
+    await expect(planScanEntry()).resolves.toBe('ready');
+    expect(fetchMock).not.toHaveBeenCalled();
+    localStorage.removeItem('boardlog_gemini_user_key');
+  });
+
+  it('opens the connect guide when the availability GET is 405', async () => {
+    fetchMock.mockResolvedValue({ status: 405, json: async () => ({ error: '허용되지 않은 요청입니다.' }) });
+    await expect(planScanEntry({ timeoutMs: 200 })).resolves.toBe('connect');
+  });
+
+  it('does not stay pending when the native HTTP call never settles', async () => {
+    const previous = (globalThis as { Capacitor?: unknown }).Capacitor;
+    (globalThis as { Capacitor?: unknown }).Capacitor = {
+      isNativePlatform: () => true,
+      Plugins: { CapacitorHttp: { request: () => new Promise(() => undefined) } }
+    };
+    fetchMock.mockImplementation(() => new Promise(() => undefined));
+    try {
+      const started = Date.now();
+      await expect(fetchScanAvailable({ timeoutMs: 40 })).resolves.toBe(false);
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(Date.now() - started).toBeLessThan(500);
+    } finally {
+      if (previous === undefined) delete (globalThis as { Capacitor?: unknown }).Capacitor;
+      else (globalThis as { Capacitor?: unknown }).Capacitor = previous;
+    }
+    await expect(planScanEntry({ timeoutMs: 40 })).resolves.toBe('connect');
+  });
+
+  it('uses the device key when the server answers 405, and never puts that key in the url', async () => {
+    const secret = 'device-key-not-a-server-secret';
+    localStorage.setItem('boardlog_gemini_user_key', secret);
+    const log = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    fetchMock.mockResolvedValueOnce({ ok: false, status: 405, json: async () => ({}) }).mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        candidates: [
+          { content: { parts: [{ text: JSON.stringify({ games: [{ title: '카탄', confidence: 0.9 }] }) }] } }
+        ]
+      })
+    });
+
+    const found = await scanGamePhotos([file], seeds);
+    const googleCall = fetchMock.mock.calls[1];
+    const url = String(googleCall?.[0]);
+    const headers = googleCall?.[1]?.headers as Record<string, string>;
+    expect(url).toContain('generativelanguage.googleapis.com');
+    expect(url).not.toContain(secret);
+    expect(headers['x-goog-api-key']).toBe(secret);
+    expect(String(googleCall?.[1]?.body)).not.toContain(secret);
+    expect(found.map((candidate) => candidate.match?.game.title)).toEqual(['카탄']);
+    expect(log.mock.calls.flat().join(' ')).not.toContain(secret);
+    log.mockRestore();
+    localStorage.removeItem('boardlog_gemini_user_key');
+  });
+
+  it('gives up on a hanging read and says to try again', async () => {
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ available: true }) })
+      .mockImplementationOnce((_url: string, init?: RequestInit) => {
+        return new Promise((_resolve, reject) => {
+          init?.signal?.addEventListener('abort', () => reject(new Error('aborted')));
+        });
+      });
+    await expect(scanGamePhotos([file], seeds, { clientTimeoutMs: 40 })).rejects.toThrow(/다시 시도/);
+  });
+
+  it('keeps a personal-key rejection when the wait has not run out', async () => {
+    localStorage.setItem('boardlog_gemini_user_key', 'device-key-not-a-server-secret');
+    fetchMock
+      .mockResolvedValueOnce({ ok: false, status: 405, json: async () => ({}) })
+      .mockResolvedValueOnce({ status: 401, ok: false, json: async () => ({ error: 'nope' }) });
+    await expect(scanGamePhotos([file], seeds)).rejects.toMatchObject({ kind: 'invalid' });
+    localStorage.removeItem('boardlog_gemini_user_key');
   });
 });

@@ -69,6 +69,8 @@
 | D-053 | (선반) | 홈 레일·게임 상세·마이 전시대·하고 싶음·태그·한 줄 메모. 필드는 선택. 하고 싶음은 등록 경험치를 주지 않음 | Implemented, 소유자 사후 검토 | 2026-11-13 |
 | D-054 | (백업) | JSON 백업에 `boardlog_progress`를 넣는다. 예전 파일은 progress 없이 그대로 읽힌다. 안드로이드 자동 백업은 끈다 | Implemented, 소유자 사후 검토 | 2026-11-14 |
 | D-055 | (화면) | 주요 버튼은 황동 명판, 보조 버튼은 네이비 판과 황동 테. 앱 화면에 보라를 쓰지 않는다 | Implemented, 소유자 사후 검토 | 2026-11-16 |
+| D-057 | (사진 인식) | 상자 사진은 1장. 한 장에서 여러 게임을 읽고, 시드와 맞춘 뒤 고른 것만 한 번에 등록 | Implemented, 소유자 사후 검토 | 2026-11-24 |
+| D-058 | (사진 인식) | 서버 키가 없으면 기기의 본인 Gemini 키로 직접 읽는다. 키는 백업과 서버에 없다 | Implemented, 소유자 사후 검토 | 2026-11-28 |
 
 ### D-001 두 축 동등
 - **Question:** P1-Q01 보드로그가 가장 먼저 해결해야 할 사람
@@ -447,6 +449,17 @@
 - **그대로 둠:** 카카오 노랑 `#FEE500`, 파괴 동작 `#C4453C`, 아이콘·스플래시·`theme-color`의 `#4834D4`. 화면 클래스 이름은 그대로 두고 `src/index.css` 토큰이 칠한다
 - **하지 않음:** 병합, 배포, 데이터 형식
 - **Impacted:** docs/design/DESIGN.md, src/index.css
+
+### D-057 사진 한 장에서 여러 게임
+- **결정 (2026-11-24):** 상자 사진은 한 번에 1장만 고르거나 찍는다. 다시 고르면 그 한 장이 바뀐다. Gemini는 그 사진의 게임을 `games` 배열로 돌려주고, 각 항목은 제목과 확신도다. 브라우저는 제목마다 시드 목록과 맞추고 같은 게임은 한 번만 남긴다. 결과에서 빼거나 이름을 고치고, 빠뜨린 게임은 직접 적어 한 번에 등록한다
+- **그대로 둠:** 긴 변 1600 JPEG 축소, 캔버스로 EXIF 제거, 동의 전 요청 금지, 인식 스위치. 나이 확인은 이 결정이 넣거나 빼지 않는다
+- **하지 않음:** 병합, 배포, Gemini 실호출
+- **Impacted:** api/scan-games.ts, src/utils/scanRecognition.ts, src/components/GameScanModal.tsx, docs/design/02-requirements.md, docs/design/04-architecture.md
+
+### D-058 본인 제미나이 키는 기기에만
+- **결정 (2026-11-28):** 서버의 사진 인식이 꺼져 있으면(키가 없거나 조회가 405) 사용자가 Google AI Studio의 키를 이 기기에 연결한다. 안드로이드는 Capacitor Preferences, 웹은 localStorage. 그 키로 기기가 Gemini에 직접 요청하고, 프롬프트와 응답 형식은 서버와 같은 모듈을 쓴다. 서버가 가능하면 서버가 먼저다
+- **하지 않음:** 키를 보드로그 서버, 로그, 분석 이벤트, JSON 백업에 넣지 않는다. 운영 키는 저장소에 없다. 만 18세는 고지이고, 나이 차단은 이 결정이 만들지 않는다
+- **Impacted:** src/utils/geminiDirect.ts, src/utils/scanPrompt.ts, src/services/geminiKeyStore.ts, src/components/GeminiKeyForm.tsx
 
 | ID | 내용 | 해결 조건 / 담당 |
 |---|---|---|

@@ -5,6 +5,9 @@ export interface CompressionResult {
   height: number;
 }
 
+/** Longest edge sent to Gemini. A smaller edge dropped titles on a shelf photo. */
+export const SCAN_IMAGE_MAX_EDGE = 1600;
+
 /**
  * Compresses an image file using HTML Canvas:
  * - Max dimension: 1600px
@@ -27,7 +30,7 @@ export async function compressImage(file: File, rotationDeg: number = 0): Promis
       img.onerror = () => reject(new Error('이미지 데이터를 파싱할 수 없습니다.'));
       img.onload = () => {
         try {
-          const maxDim = 1600;
+          const maxDim = SCAN_IMAGE_MAX_EDGE;
           let { width, height } = img;
 
           // Scale down if larger than maxDim
